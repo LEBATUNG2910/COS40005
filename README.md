@@ -52,8 +52,8 @@ You will need the following installed on your computer:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/your-repository-name.git
-cd your-repository-name
+git clone https://github.com/LEBATUNG2910/COS40005.git
+cd COS40005
 
 # Install dependencies
 npm install
