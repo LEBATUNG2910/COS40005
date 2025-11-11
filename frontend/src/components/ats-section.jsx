@@ -1,5 +1,6 @@
 import { motion } from "framer-motion"
 import pic4 from '../assets/pic4.jpg'
+
 function ATSSection() {
   const features = [
     { icon: "🔒", title: "Readable contact information" },
@@ -8,9 +9,16 @@ function ATSSection() {
   ]
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-r from-blue-900 via-purple-900 to-pink-800">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-r from-blue-900 to-black">
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[url('/abstract-geometric-flow.png')] opacity-20" />
+        {/* Using a placeholder background, update with your /abstract-geometric-flow.png if needed */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 30%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 30%)",
+          }}
+        />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -25,8 +33,9 @@ function ATSSection() {
               Resumes optimized for Applicant Tracking Systems (ATS)
             </h2>
             <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-              Every template has been expertly reviewed by Certified Professional Resume Writers to ensure it's not only
-              ATS-proof but recruiter-friendly.
+              Every template has been expertly reviewed by Certified
+              Professional Resume Writers to ensure it's not only ATS-proof but
+              recruiter-friendly.
             </p>
 
             <div className="space-y-4 mb-8">
@@ -40,7 +49,9 @@ function ATSSection() {
                   className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10"
                 >
                   <span className="text-2xl">{feature.icon}</span>
-                  <span className="text-white font-semibold">{feature.title}</span>
+                  <span className="text-white font-semibold">
+                    {feature.title}
+                  </span>
                 </motion.div>
               ))}
             </div>
@@ -60,11 +71,16 @@ function ATSSection() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
             className="relative"
+            style={{ perspective: "1000px" }} // Add perspective for 3D rotate
           >
             <div className="relative z-10 bg-gradient-to-br from-cyan-400 to-purple-600 p-1 rounded-2xl shadow-2xl">
               <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden">
                 <div className="relative h-96 bg-gradient-to-br from-cyan-200 to-purple-200">
-                  <img src={pic4} alt="ATS Check" className="object-cover w-full h-full" />
+                  <img
+                    src={pic4}
+                    alt="ATS Check"
+                    className="object-cover w-full h-full"
+                  />
                 </div>
               </div>
             </div>
@@ -72,7 +88,7 @@ function ATSSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default ATSSection
+export default ATSSection;

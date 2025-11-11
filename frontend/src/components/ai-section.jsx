@@ -9,12 +9,14 @@ function AISection() {
   ]
 
   return (
-    <section className="relative py-20 bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 overflow-hidden">
+    // Updated main background gradient
+    <section className="relative py-20 bg-gradient-to-r from-blue-900 to-black overflow-hidden">
       <div className="absolute inset-0 opacity-30">
+        {/* Updated motion gradient */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-20 blur-3xl"
+          className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-700 opacity-20 blur-3xl"
         />
       </div>
 
@@ -45,9 +47,11 @@ function AISection() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="bg-gradient-to-r from-cyan-500 to-purple-600 p-1 rounded-lg"
+                // Updated feature card gradient
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 p-1 rounded-lg"
               >
-                <div className="bg-gray-900 p-4 rounded-md">
+                {/* Updated feature card inner background */}
+                <div className="bg-blue-950 p-4 rounded-md">
                   <h4 className="text-white font-semibold mb-1">{feature.title}</h4>
                   <p className="text-gray-300 text-sm">{feature.description}</p>
                 </div>
@@ -62,9 +66,12 @@ function AISection() {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            <div className="relative bg-gradient-to-br from-cyan-400 to-purple-600 p-1 rounded-2xl shadow-2xl">
-              <div className="bg-gray-900 rounded-2xl overflow-hidden p-6">
-                <div className="bg-gradient-to-br from-cyan-300 to-purple-600 rounded-lg h-64 flex items-center justify-center">
+            {/* Updated image card gradient */}
+            <div className="relative bg-gradient-to-br from-cyan-400 to-blue-600 p-1 rounded-2xl shadow-2xl">
+              {/* Updated image card inner background */}
+              <div className="bg-blue-950 rounded-2xl overflow-hidden p-6">
+                {/* Updated image placeholder gradient */}
+                <div className="bg-gradient-to-br from-cyan-300 to-blue-500 rounded-lg h-64 flex items-center justify-center">
                   <img
                     src={pic2}
                     alt="AI Features"
@@ -83,10 +90,11 @@ function AISection() {
           transition={{ duration: 0.6 }}
           className="text-center mt-12"
         >
+          {/* Updated button gradient */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
           >
             Explore AI Features →
           </motion.button>

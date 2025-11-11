@@ -14,12 +14,11 @@ function App() {
     <>
     <Header/>
     <Hero/>
-    <SocialProof />
     <TemplateShowcase />
-    <Features />
+    <SocialProof />
     <ATSSection />
-    <CareerTools />
     <Testimonials />
+    <CareerTools />
     <AISection />
     <Footer />
     </> 
