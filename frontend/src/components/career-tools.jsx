@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import pic5 from "../assets/pic5.png"
 
-// --- SVG Icons for Tabs ---
-// Using inline SVGs to match the design better than emojis
+
 const ResumeIcon = () => (
   <svg
     className="w-5 h-5"
