@@ -2,8 +2,10 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import pic5 from "../assets/pic5.png"
-
+import pic5 from "../assets/pic5.png";
+import pic6 from "../assets/pic6.png";
+import pic7 from "../assets/pic7.png";
+import pic8 from "../assets/pic8.png";
 
 const ResumeIcon = () => (
   <svg
@@ -81,6 +83,43 @@ const tools = [
   { name: "Job Tracker", icon: <TargetIcon /> },
 ];
 
+// --- Data Structure for Tool Details ---
+const toolDetails = [
+  {
+    name: "Resume Builder",
+    title: "A feature-packed resume builder",
+    description:
+      "Easily edit your resume with HIREWISE's drag-and-drop resume builder. Choose from different templates, various backgrounds and sections.",
+    buttonText: "Build Your Resume \u2192", 
+    image: pic5,
+  },
+  {
+    name: "Resume Checker",
+    title: "Get instant AI-powered feedback",
+    description:
+      "Our AI Resume Checker analyzes your resume for ATS-friendliness, common mistakes, and areas for improvement. Get a score and actionable tips to land more interviews.",
+    buttonText: "Check Your Resume \u2192",
+    image: pic6,
+  },
+  {
+    name: "Cover Letter Generator",
+    title: "Create a matching cover letter in minutes",
+    description:
+      "Generate a professional cover letter that matches your resume's design. Our AI helps you tailor the content to the specific job you're applying for.",
+    buttonText: "Generate Cover Letter \u2192",
+    image: pic7,
+  },
+  {
+    name: "Job Tracker",
+    title: "Organize your job search",
+    description:
+      "Keep track of all your applications in one place. Manage statuses, save job descriptions, and set reminders so you never miss a follow-up.",
+    buttonText: "Track Your Jobs \u2192",
+    image: pic8,
+  },
+];
+// --- End New Data ---
+
 const careerPaths = [
   {
     name: "Senior professionals & executives",
@@ -119,6 +158,8 @@ export default function CareerTools() {
     "Senior professionals & executives"
   );
 
+  // Find the data for the currently active tool and path
+  const currentToolData = toolDetails.find((t) => t.name === activeTool);
   const currentPathData = careerPaths.find((p) => p.name === activePath);
 
   const containerVariants = {
@@ -181,7 +222,7 @@ export default function CareerTools() {
           ))}
         </motion.div>
 
-        {/* Tool Content (Shows Resume Builder content as per image) */}
+        {/* Tool Content (Shows content based on activeTool) */}
         <motion.div
           key={activeTool} // Re-animate when tool changes
           initial={{ opacity: 0, y: 20 }}
@@ -189,38 +230,41 @@ export default function CareerTools() {
           transition={{ duration: 0.5 }}
           className="grid md:grid-cols-2 gap-12 items-center"
         >
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="text-center md:text-left"
-          >
-            {/* Using a placeholder for the builder UI */}
-            <img
-              src={pic5}
-              alt="Resume Builder"
-              className="rounded-xl shadow-xl w-full"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              A feature-packed resume builder
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Easily edit your resume with Enhancv's drag-and-drop resume
-              builder. Choose from different templates, various backgrounds and
-              sections.
-            </p>
-            <button className="font-semibold text-indigo-600 hover:text-indigo-700">
-              Build Your Resume →
-            </button>
-          </motion.div>
+          {currentToolData && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }} // Animate on key change
+                transition={{ duration: 0.6 }}
+                className="text-center md:text-left"
+              >
+                <img
+                  src={currentToolData.image}
+                  alt={currentToolData.title}
+                  className="rounded-xl shadow-xl w-full"
+                  onError={(e) => {
+                    // Fallback for broken images
+                    e.currentTarget.src = `https://placehold.co/600x450/6B7280/FFFFFF?text=Preview+Error`;
+                  }}
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }} // Animate on key change
+                transition={{ duration: 0.6 }}
+              >
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                  {currentToolData.title}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {currentToolData.description}
+                </p>
+                <button className="font-semibold text-indigo-600 hover:text-indigo-700">
+                  {currentToolData.buttonText}
+                </button>
+              </motion.div>
+            </>
+          )}
         </motion.div>
 
         {/* --- Dotted Separator --- */}
