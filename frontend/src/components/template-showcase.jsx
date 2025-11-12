@@ -1,7 +1,11 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import resume1 from "../assets/resume1.jpg";
+import classic from "../assets/classic.png";
+import creative from "../assets/creative.jpg";
 
 // --- SVG Icons ---
 const CheckCircleIcon = () => (
@@ -58,11 +62,13 @@ const ColumnsIcon = () => (
 
 function TemplateShowcase() {
   const [page, setPage] = useState(0);
+  const [direction, setDirection] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const templates = [
-    { id: 1, title: "Modern", query: "modern resume", dark: false },
-    { id: 2, title: "Classic", query: "classic resume", dark: false },
-    { id: 3, title: "Creative", query: "creative resume", dark: false },
+    { id: 1, title: "Modern", query: "modern resume", dark: false, img: resume1 },
+    { id: 2, title: "Classic", query: "classic resume", dark: false, img: classic },
+    { id: 3, title: "Creative", query: "creative resume", dark: false, img: creative },
     { id: 4, title: "Professional", query: "professional resume", dark: false },
     { id: 5, title: "Dark Mode", query: "dark resume", dark: true },
     { id: 6, title: "Minimalist", query: "minimal resume", dark: false },
@@ -90,16 +96,21 @@ function TemplateShowcase() {
   const TEMPLATES_PER_PAGE = 5;
   const totalPages = Math.ceil(templates.length / TEMPLATES_PER_PAGE);
 
-  const paginate = (newPage) => {
+  // Auto-play functionality
+  useEffect(() => {
+    if (isPaused) return;
+
+    const interval = setInterval(() => {
+      setDirection(1); // Always move forward
+      setPage((prevPage) => (prevPage + 1) % totalPages);
+    }, 3000); // 3 seconds
+
+    return () => clearInterval(interval);
+  }, [isPaused, totalPages]);
+
+  const handlePaginate = (newPage) => {
+    setDirection(newPage > page ? 1 : -1);
     setPage(newPage);
-  };
-
-  const nextPage = () => {
-    setPage((prev) => (prev + 1) % totalPages);
-  };
-
-  const prevPage = () => {
-    setPage((prev) => (prev - 1 + totalPages) % totalPages);
   };
 
   const variants = {
@@ -117,13 +128,6 @@ function TemplateShowcase() {
       x: direction < 0 ? 300 : -300,
       opacity: 0,
     }),
-  };
-
-  // We need to track direction for the animation
-  const [direction, setDirection] = useState(0);
-  const handlePaginate = (newPage) => {
-    setDirection(newPage > page ? 1 : -1);
-    setPage(newPage);
   };
 
   const currentTemplates = templates.slice(
@@ -147,7 +151,11 @@ function TemplateShowcase() {
         </motion.div>
 
         {/* Carousel */}
-        <div className="relative">
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           {/* Navigation Arrows */}
           <button
             onClick={() => handlePaginate((page - 1 + totalPages) % totalPages)}
@@ -163,7 +171,7 @@ function TemplateShowcase() {
           </button>
 
           {/* Carousel Viewport */}
-          <div className="overflow-hidden relative h-[420px]">
+          <div className="overflow-hidden relative h-[340px]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={page}
@@ -180,21 +188,24 @@ function TemplateShowcase() {
               >
                 {currentTemplates.map((template) => {
                   const placeholderSrc = template.dark
-                    ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume` // Dark bg, light text
-                    : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`; // White bg, dark text
+                    ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume`
+                    : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`;
+
+                  // Use local image if available, otherwise use placeholder
+                  const imageSrc = template.img || placeholderSrc;
 
                   return (
                     <div
                       key={template.id}
                       className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
                     >
-                      <div className="h-[380px]">
+                      <div className="h-[340px] overflow-hidden">
                         <img
-                          src={placeholderSrc}
+                          src={imageSrc}
                           alt={template.title}
-                          className="object-cover w-full h-full object-top group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
-                            e.currentTarget.src = `https://placehold.co/300x400/F9FAFB/374151?text=Preview+Error`;
+                            e.currentTarget.src = placeholderSrc;
                           }}
                         />
                       </div>
@@ -213,7 +224,7 @@ function TemplateShowcase() {
               key={i}
               onClick={() => handlePaginate(i)}
               className={`h-2 w-2 rounded-full transition-all ${
-                page === i ? "bg-indigo-600 w-4" : "bg-gray-900"
+                page === i ? "bg-indigo-600 w-4" : "bg-gray-400"
               }`}
             />
           ))}
@@ -251,4 +262,5 @@ function TemplateShowcase() {
     </section>
   );
 }
+
 export default TemplateShowcase;

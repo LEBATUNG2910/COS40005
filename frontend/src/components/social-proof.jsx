@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 // A simple SVG component for the decorative swirls
 const SwirlIcon = ({ className }) => (
   <svg
-    className={`absolute w-32 h-32 text-gray-300 ${className}`}
+    // Updated swirl color to be subtle on the dark background
+    className={`absolute w-32 h-32 text-blue-800 ${className}`}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 100 100"
@@ -56,7 +57,8 @@ export default function SocialProof() {
   };
 
   return (
-    <section className="relative py-20 bg-gray-50 overflow-hidden">
+    // Updated background gradient
+    <section className="relative py-20 bg-gradient-to-r from-blue-900 to-black overflow-hidden">
       {/* Decorative Swirls */}
       <SwirlIcon className="top-0 left-0 -translate-x-1/4 -translate-y-1/4 opacity-50" />
       <SwirlIcon className="bottom-0 right-0 translate-x-1/4 translate-y-1/4 rotate-180 opacity-50" />
@@ -75,12 +77,13 @@ export default function SocialProof() {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="bg-violet-50 rounded-xl p-6 text-center shadow-sm"
+                // Updated stat box styling
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center shadow-sm border border-white/10"
               >
-                <h3 className="text-4xl md:text-5xl font-bold text-violet-600 mb-2">
+                <h3 className="text-4xl md:text-5xl font-bold text-cyan-400 mb-2">
                   {stat.number}
                 </h3>
-                <p className="text-gray-600">{stat.label}</p>
+                <p className="text-gray-300">{stat.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -92,25 +95,26 @@ export default function SocialProof() {
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            {/* Updated text colors */}
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
               Chosen by{" "}
-              <span className="text-violet-600">10 million</span> job
+              <span className="text-cyan-400">10 million</span> job
               applicants around the world
             </h2>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-300 mb-4">
               Enhancv is a modern resume builder that helps you create
               applications with personality and professionalism. Our tools are
               trusted by millions-helping at every step of the job hunt,
               emphasizing your experience, character, value, and skills.
             </p>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-300 mb-4">
               We combine flexible, ATS-friendly templates with intuitive tools and
               tailored content suggestions. The resume builder supports multiple
               languages and includes everything from drag-and-drop customization
               to matching cover letters-so job seekers can present a complete,
               polished story.
             </p>
-            <p className="text-gray-700">
+            <p className="text-gray-300">
               At Enhancv, we believe the best resumes feel human. That's why we
               help you personalize your application around your unique
               experiences-so you stand out, feel confident, and land interviews

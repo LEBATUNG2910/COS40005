@@ -11,7 +11,6 @@ function ATSSection() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-r from-blue-900 to-black">
       <div className="absolute inset-0 opacity-10">
-        {/* Using a placeholder background, update with your /abstract-geometric-flow.png if needed */}
         <div
           className="absolute inset-0 opacity-20"
           style={{
