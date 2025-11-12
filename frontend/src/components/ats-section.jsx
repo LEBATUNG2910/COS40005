@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import pic4 from '../assets/pic4.jpg'
+import pic4 from '../assets/pic4.png'
 
 function ATSSection() {
   const features = [

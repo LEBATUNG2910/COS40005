@@ -3,6 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
+// --- Local Image Imports ---
+// Make sure these paths are correct for your project structure
 import resume1 from "../assets/resume1.jpg";
 import classic from "../assets/classic.png";
 import creative from "../assets/creative.jpg";
@@ -60,10 +62,42 @@ const ColumnsIcon = () => (
 );
 // --- End SVG Icons ---
 
+// --- Custom Hook for Window Size ---
+// This hook helps us detect if we are on mobile or desktop
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: undefined,
+    height: undefined,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+    // Set size on mount
+    handleResize();
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+    // Clean up event listener on unmount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []); // Empty array ensures this effect runs only on mount and unmount
+
+  return windowSize;
+}
+// --- End Custom Hook ---
+
+
 function TemplateShowcase() {
   const [page, setPage] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Get window width
+  const { width } = useWindowSize();
+  const isMobile = width < 768; // Tailwind's 'md' breakpoint
 
   const templates = [
     { id: 1, title: "Modern", query: "modern resume", dark: false, img: resume1 },
@@ -93,8 +127,20 @@ function TemplateShowcase() {
     },
   ];
 
-  const TEMPLATES_PER_PAGE = 5;
-  const totalPages = Math.ceil(templates.length / TEMPLATES_PER_PAGE);
+  // --- Responsive Pagination Logic ---
+  const TEMPLATES_PER_PAGE_DESKTOP = 5;
+  const TEMPLATES_PER_PAGE_MOBILE = 1;
+
+  const templatesPerPage = isMobile ? TEMPLATES_PER_PAGE_MOBILE : TEMPLATES_PER_PAGE_DESKTOP;
+  const totalPages = Math.ceil(templates.length / templatesPerPage);
+  const gridCols = isMobile ? 'grid-cols-1' : 'md:grid-cols-5';
+  
+  // Reset page if totalPages changes (e.g., on resize)
+  useEffect(() => {
+    setPage(0);
+  }, [totalPages]);
+  // --- End Responsive Pagination Logic ---
+
 
   // Auto-play functionality
   useEffect(() => {
@@ -103,13 +149,22 @@ function TemplateShowcase() {
     const interval = setInterval(() => {
       setDirection(1); // Always move forward
       setPage((prevPage) => (prevPage + 1) % totalPages);
-    }, 3000); // 3 seconds
+    }, 5000); // 5 seconds
 
     return () => clearInterval(interval);
   }, [isPaused, totalPages]);
 
   const handlePaginate = (newPage) => {
-    setDirection(newPage > page ? 1 : -1);
+    // Manually handle pagination direction
+    const newDirection = newPage > page ? 1 : -1;
+    // Handle wrap-around cases
+    if (newPage === 0 && page === totalPages - 1) {
+        setDirection(1);
+    } else if (newPage === totalPages - 1 && page === 0) {
+        setDirection(-1);
+    } else {
+        setDirection(newDirection);
+    }
     setPage(newPage);
   };
 
@@ -131,8 +186,8 @@ function TemplateShowcase() {
   };
 
   const currentTemplates = templates.slice(
-    page * TEMPLATES_PER_PAGE,
-    (page + 1) * TEMPLATES_PER_PAGE
+    page * templatesPerPage,
+    (page + 1) * templatesPerPage
   );
 
   return (
@@ -151,7 +206,7 @@ function TemplateShowcase() {
         </motion.div>
 
         {/* Carousel */}
-        <div 
+        <div
           className="relative"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
@@ -171,7 +226,8 @@ function TemplateShowcase() {
           </button>
 
           {/* Carousel Viewport */}
-          <div className="overflow-hidden relative h-[340px]">
+          {/* Set a fixed height for the viewport to avoid layout shift */}
+          <div className="overflow-hidden relative h-[340px] sm:h-[340px]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={page}
@@ -184,27 +240,30 @@ function TemplateShowcase() {
                   x: { type: "spring", stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 },
                 }}
-                className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 absolute w-full"
+                // Apply responsive grid columns
+                className={`grid ${gridCols} gap-4 absolute w-full`}
               >
                 {currentTemplates.map((template) => {
                   const placeholderSrc = template.dark
                     ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume`
                     : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`;
-
+                  
                   // Use local image if available, otherwise use placeholder
                   const imageSrc = template.img || placeholderSrc;
 
                   return (
                     <div
                       key={template.id}
-                      className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
+                      // For mobile, we need to center the single item
+                      className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-300 overflow-hidden sm:max-w-xs mx-auto w-full max-w-sm"
                     >
                       <div className="h-[340px] overflow-hidden">
                         <img
                           src={imageSrc}
                           alt={template.title}
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
+                            // Fallback to placeholder if local image fails
                             e.currentTarget.src = placeholderSrc;
                           }}
                         />

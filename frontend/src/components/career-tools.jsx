@@ -293,14 +293,14 @@ export default function CareerTools() {
                 onClick={() => setActivePath(path.name)}
                 className={`flex items-center gap-3 p-3 w-full text-left rounded-lg transition-colors ${
                   activePath === path.name
-                    ? "text-indigo-600"
+                    ? "text-black"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <span
                   className={`w-3 h-3 rounded-full ${
                     activePath === path.name
-                      ? "bg-indigo-600"
+                      ? "bg-cyan-500"
                       : "bg-gray-300"
                   }`}
                 ></span>
@@ -324,7 +324,7 @@ export default function CareerTools() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <p className="text-gray-600 mb-6 text-lg">
+                <p className="text-black mb-6 text-lg">
                   {currentPathData.description}
                 </p>
                 <ul className="space-y-2">
@@ -344,7 +344,7 @@ export default function CareerTools() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="text-gray-700 font-medium">
+                      <span className="text-black font-medium">
                         {bullet}
                       </span>
                     </li>
