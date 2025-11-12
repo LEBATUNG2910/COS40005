@@ -73,9 +73,9 @@ function Header() {
 
           {/* --- Desktop Auth Buttons --- */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="text-black hover:text-gray-900 transition">
+            <Link to="/auth" className="text-black hover:text-gray-900 transition">
               Sign in
-            </button>
+            </Link>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
