@@ -67,7 +67,7 @@ function Hero() {
             <motion.div variants={itemVariants} className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-yellow-400">
+                  <span key={i} className="text-2xl text-yellow-400">
                     ★
                   </span>
                 ))}

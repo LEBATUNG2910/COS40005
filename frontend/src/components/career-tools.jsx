@@ -8,79 +8,79 @@ import pic7 from "../assets/pic7.png";
 import pic8 from "../assets/pic8.png";
 
 const ResumeIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    />
-  </svg>
+    <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+    </svg>
 );
 
 const CheckIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
+    <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+    </svg>
 );
 
 const LetterIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-    />
-  </svg>
+    <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+    </svg>
 );
 
 const TargetIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
-  </svg>
+    <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+    </svg>
 );
 
 // --- Data for the component ---
 const tools = [
-  { name: "Resume Builder", icon: <ResumeIcon /> },
-  { name: "Resume Checker", icon: <CheckIcon /> },
-  { name: "Cover Letter Generator", icon: <LetterIcon /> },
-  { name: "Job Tracker", icon: <TargetIcon /> },
+    { name: "Resume Builder", icon: <ResumeIcon /> },
+    { name: "Resume Checker", icon: <CheckIcon /> },
+    { name: "Cover Letter Generator", icon: <LetterIcon /> },
+    { name: "Job Tracker", icon: <TargetIcon /> },
 ];
 
 // --- Data Structure for Tool Details ---
@@ -121,81 +121,81 @@ const toolDetails = [
 // --- End New Data ---
 
 const careerPaths = [
-  {
-    name: "Senior professionals & executives",
-    image: "https://placehold.co/300x300/6366F1/FFFFFF?text=Senior",
-    description:
-      "Our layouts are designed for strategic impact—highlighting leadership, team performance, and business value. Build your CV in a single- or two-page format with tools like a board representation.",
-    bullets: ["Managers", "Team leads", "Directors and above"],
-  },
-  {
-    name: "First-time job seekers",
-    image: "https://placehold.co/300x300/EC4899/FFFFFF?text=Entry",
-    description:
-      "Make a great first impression. Our templates help you focus on your skills, education, and projects, even if you don't have extensive work experience. We guide you on what to write.",
-    bullets: ["Students", "Graduates", "Interns"],
-  },
-  {
-    name: "Professionals seeking structure",
-    image: "https://placehold.co/300x300/10B981/FFFFFF?text=Pro",
-    description:
-      "Get a clear, ATS-friendly structure that recruiters love. Our builder helps you organize your accomplishments and skills into a polished, easy-to-read document that stands out.",
-    bullets: ["Career changers", "Mid-level", "Specialists"],
-  },
-  {
-    name: "Creative professionals",
-    image: "https://placehold.co/300x300/F59E0B/FFFFFF?text=Creative",
-    description:
-      "Showcase your portfolio and unique skills with a resume that's as creative as you are. Choose from modern layouts that let your personality and work shine through, without sacrificing professionalism.",
-    bullets: ["Designers", "Writers", "Marketers"],
-  },
+    {
+        name: "Senior professionals & executives",
+        image: "https://placehold.co/300x300/6366F1/FFFFFF?text=Senior",
+        description:
+            "Our layouts are designed for strategic impact—highlighting leadership, team performance, and business value. Build your CV in a single- or two-page format with tools like a board representation.",
+        bullets: ["Managers", "Team leads", "Directors and above"],
+    },
+    {
+        name: "First-time job seekers",
+        image: "https://placehold.co/300x300/EC4899/FFFFFF?text=Entry",
+        description:
+            "Make a great first impression. Our templates help you focus on your skills, education, and projects, even if you don't have extensive work experience. We guide you on what to write.",
+        bullets: ["Students", "Graduates", "Interns"],
+    },
+    {
+        name: "Professionals seeking structure",
+        image: "https://placehold.co/300x300/10B981/FFFFFF?text=Pro",
+        description:
+            "Get a clear, ATS-friendly structure that recruiters love. Our builder helps you organize your accomplishments and skills into a polished, easy-to-read document that stands out.",
+        bullets: ["Career changers", "Mid-level", "Specialists"],
+    },
+    {
+        name: "Creative professionals",
+        image: "https://placehold.co/300x300/F59E0B/FFFFFF?text=Creative",
+        description:
+            "Showcase your portfolio and unique skills with a resume that's as creative as you are. Choose from modern layouts that let your personality and work shine through, without sacrificing professionalism.",
+        bullets: ["Designers", "Writers", "Marketers"],
+    },
 ];
 
 // --- Main Component ---
 export default function CareerTools() {
-  const [activeTool, setActiveTool] = useState("Resume Builder");
-  const [activePath, setActivePath] = useState(
-    "Senior professionals & executives"
-  );
+    const [activeTool, setActiveTool] = useState("Resume Builder");
+    const [activePath, setActivePath] = useState(
+        "Senior professionals & executives",
+    );
 
   // Find the data for the currently active tool and path
   const currentToolData = toolDetails.find((t) => t.name === activeTool);
   const currentPathData = careerPaths.find((p) => p.name === activePath);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+            },
+        },
+    };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  };
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.6 },
+        },
+    };
 
-  return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* --- Top Section: All the career tools --- */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            All the career tools you need
-          </h2>
-        </motion.div>
+    return (
+        <section className="py-20 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* --- Top Section: All the career tools --- */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-12"
+                >
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+                        All the career tools you need
+                    </h2>
+                </motion.div>
 
         {/* Tools Tabs */}
         <motion.div
