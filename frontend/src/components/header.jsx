@@ -54,9 +54,9 @@ function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold">
+          <Link to="/" className="text-2xl font-bold">
             <span className="text-cyan-500">HIREWISE</span>
-          </div>
+          </Link>
 
           {/* --- Desktop Nav --- */}
           <nav className="hidden md:flex items-center gap-8">
@@ -76,6 +76,7 @@ function Header() {
             <Link to="/auth" className="text-black hover:text-gray-900 transition">
               Sign in
             </Link>
+            <Link to="/process">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -83,6 +84,7 @@ function Header() {
             >
               Get Started
             </motion.button>
+            </Link>
           </div>
 
           {/* --- Mobile Menu Button --- */}

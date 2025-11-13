@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
- import SignUp from "../signup/sign_up"
+import SignUp from "../signup/sign_up"
 import SignIn from "../signin/sign_in"
 
 export default function AuthPage() {

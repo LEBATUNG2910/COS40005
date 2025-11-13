@@ -212,8 +212,8 @@ export default function CareerTools() {
               onClick={() => setActiveTool(tool.name)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors ${
                 activeTool === tool.name
-                  ? "bg-indigo-100 text-indigo-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-indigo-100 text-cyan-500"
+                  : "bg-gray-100 text-black hover:bg-gray-200"
               }`}
             >
               {tool.icon}
@@ -259,7 +259,7 @@ export default function CareerTools() {
                 <p className="text-gray-600 mb-6">
                   {currentToolData.description}
                 </p>
-                <button className="font-semibold text-indigo-600 hover:text-indigo-700">
+                <button className="font-semibold text-black hover:text-cyan-500">
                   {currentToolData.buttonText}
                 </button>
               </motion.div>

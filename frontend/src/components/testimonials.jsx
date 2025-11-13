@@ -103,7 +103,7 @@ export default function Testimonials() {
           transition={{ duration: 0.6 }}
           className="text-center mt-12"
         >
-          <button className="text-blue-600 hover:text-blue-700 font-semibold">Read reviews or leave yours →</button>
+          <button className="text-black hover:text-cyan-500 font-semibold">Read reviews or leave yours →</button>
         </motion.div>
       </div>
     </section>

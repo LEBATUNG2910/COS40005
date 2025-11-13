@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import resume1 from "../assets/resume1.jpg";
 import classic from "../assets/classic.png";
 import creative from "../assets/creative.jpg";
+import profes from "../assets/profes.png"
+import darkresume from "../assets/dark-resume.jpg"
 
 // --- SVG Icons ---
 const CheckCircleIcon = () => (
@@ -103,8 +105,8 @@ function TemplateShowcase() {
     { id: 1, title: "Modern", query: "modern resume", dark: false, img: resume1 },
     { id: 2, title: "Classic", query: "classic resume", dark: false, img: classic },
     { id: 3, title: "Creative", query: "creative resume", dark: false, img: creative },
-    { id: 4, title: "Professional", query: "professional resume", dark: false },
-    { id: 5, title: "Dark Mode", query: "dark resume", dark: true },
+    { id: 4, title: "Professional", query: "professional resume", dark: false, img: profes },
+    { id: 5, title: "Dark Mode", query: "dark resume", dark: true, img: darkresume },
     { id: 6, title: "Minimalist", query: "minimal resume", dark: false },
     { id: 7, title: "Academic", query: "academic cv", dark: false },
     { id: 8, title: "Tech", query: "tech resume", dark: false },
@@ -214,13 +216,13 @@ function TemplateShowcase() {
           {/* Navigation Arrows */}
           <button
             onClick={() => handlePaginate((page - 1 + totalPages) % totalPages)}
-            className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
+            className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-gray-300 transition-all"
           >
             &#8249;
           </button>
           <button
             onClick={() => handlePaginate((page + 1) % totalPages)}
-            className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
+            className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-gray-300 transition-all"
           >
             &#8250;
           </button>
