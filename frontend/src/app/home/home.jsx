@@ -6,7 +6,7 @@ import ATSSection from "../../components/ats-section"
 import CareerTools from "../../components/career-tools"
 import Testimonials from "../../components/testimonials"
 import AISection from "../../components/ai-section"
-import Footer from "../../components/footer"
+
 
 export function Home() {
     return(
