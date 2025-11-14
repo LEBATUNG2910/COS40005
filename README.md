@@ -1,61 +1,127 @@
-# 🧑‍💼 Modern Resume Builder Landing Page
+# 🧑‍💼 Modern Resume Builder — Landing Page & Web App
 
-A **responsive and animated landing page** for a modern resume builder application.  
-Built with **React**, **Tailwind CSS**, and **Framer Motion** to create a visually appealing and engaging user experience.
+A clean, responsive, and animation-rich **Resume Builder application** built with **React + Vite**, **Tailwind CSS**, and **Framer Motion**.  
+Includes a beautiful landing page, authentication flow, resume upload system, AI-powered tools, and an interactive template showcase.
 
 ---
 
 ## ✨ Features
 
-The landing page includes several interactive and informative sections:
+### 🎯 Modern Landing Page  
+A fully responsive landing page with smooth scroll-triggered animations:
 
-### 🧠 ATS-Optimized Section (`ATSSection.jsx`)
-Explains the importance of **Applicant Tracking System (ATS)** optimization, complete with feature blurbs such as:
-- ✅ Readable contact information  
-- ✅ Optimized skills section  
-- ✅ Recruiter-friendly design  
-
-### 🎨 Template Showcase (`TemplateShowcase.jsx`)
-A **dynamic, paginated carousel** that allows users to browse through various resume templates, such as:
-- Modern  
-- Classic  
-- Dark Mode  
-
-### 🌟 Social Proof (`SocialProof.jsx`)
-A **trust-building** section displaying key statistics and company mission statement:
-- 📊 15M+ resumes created  
-- 💼 Empowering job seekers worldwide  
-
-### 💫 Rich Animations
-Smooth, **scroll-based animations** powered by **Framer Motion**, giving the page a modern and dynamic feel.
+- **Hero Section** — Animated headline + call-to-action buttons  
+- **AI Resume Assistant** (`ai-section.jsx`)  
+- **ATS Optimization Section** (`ats-section.jsx`)  
+- **Career Tools Section** (`career-tools.jsx`)  
+- **Testimonials & Social Proof** (`testimonials.jsx`, `social-proof.jsx`)  
+- **Template Showcase Carousel** (`template-showcase.jsx`)  
+- **Features & Footer** sections for extra branding  
 
 ---
 
-## 💻 Tech Stack
+### 🧠 AI-Powered Tools (Expandable)
+The webapp includes or supports future AI integration:
 
-- ⚛️ **React** (with `"use client"` directive, compatible with frameworks like Next.js)  
-- 🎨 **Tailwind CSS** for utility-first styling  
-- 🌀 **Framer Motion** for declarative animations  
+- 📝 AI resume evaluation  
+- 🎯 Keyword optimization for job descriptions  
+- 📊 Score-based CV rating system  
+- 🔍 AI job-match suggestions (planned)  
+
+---
+
+### 📄 Resume Template System  
+Users can browse resume templates through an animated carousel:
+
+- Modern, Minimalist, Dark Mode, Corporate themes  
+- Pagination & swipe animations  
+- High-quality template previews  
+- Ready for future “Edit Template Online” upgrade  
+
+---
+
+### 🔐 Authentication System (`app/auth/`)
+Included features:
+
+- Login (`sign_in.jsx`)  
+- Register (`sign_up.jsx`)  
+- Clean UI & animations  
+- Ready to connect with backend (NestJS / Node / Firebase / Supabase)  
+
+---
+
+### 📤 Resume Upload Flow (`app/upload/`)
+A smooth upload interface:
+
+- Drag-and-drop upload  
+- Upload preview  
+- Ready to integrate with AI text extraction  
+- Supports PDF / DOCX  
+
+---
+
+## 🧱 Tech Stack
+
+| Technology | Purpose |
+|-----------|---------|
+| **React + Vite** | Frontend framework & Dev tool |
+| **Tailwind CSS** | Utility-first styling |
+| **Framer Motion** | Page & scroll animations |
+| **Lucide Icons** | Clean SVG icons |
+| **Context API / Custom Hooks** | Theme and UI state |
+| **Shadcn/UI (optional)** | Component system |
+| **PostCSS / Autoprefixer** | Styling pipeline |
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these steps to set up and run the project locally.
+### 1️⃣ Prerequisites  
+- Node.js 18+  
+- npm or yarn  
 
-### ✅ Prerequisites
-You will need the following installed on your computer:
-- [Node.js](https://nodejs.org/) (v18 or later)
-- npm or yarn
-
-### 📦 Installation
+### 2️⃣ Installation  
 
 ```bash
-# Clone the repository
-git clone https://github.com/LEBATUNG2910/COS40005.git
-cd COS40005
+# Clone the project
+git clone https://github.com/your-username/your-repository.git
+cd your-repository
 
 # Install dependencies
 npm install
 # or
 yarn install
+
+src/
+ ├── app/
+ │    ├── home/
+ │    │    └── home.jsx
+ │    ├── auth/
+ │    │    ├── sign_in.jsx
+ │    │    └── sign_up.jsx
+ │    └── upload/
+ │         └── cv-upload.jsx
+ │
+ ├── assets/                 # Images, icons, illustrations
+ │
+ ├── components/
+ │    ├── ui/                # Reusable UI components
+ │    ├── ai-section.jsx
+ │    ├── ats-section.jsx
+ │    ├── career-tools.jsx
+ │    ├── features.jsx
+ │    ├── footer.jsx
+ │    ├── header.jsx
+ │    ├── hero.jsx
+ │    ├── social-proof.jsx
+ │    ├── template-showcase.jsx
+ │    ├── testimonials.jsx
+ │    └── theme-provider.jsx
+ │
+ ├── hooks/                  # Custom hooks
+ ├── lib/                    # Utility functions
+ ├── styles/                 # Global styles
+ │
+ ├── App.jsx
+ ├── main.jsx
+ └── index.css
