@@ -84,7 +84,7 @@ A smooth upload interface:
 
 ```bash
 # Clone the project
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/LEBATUNG2910/COS40005.git
 cd COS40005
 
 # Install dependencies
