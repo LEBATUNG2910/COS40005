@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { title } from "framer-motion/client";
 
 // --- SVG Icons for Mobile Menu ---
 const MenuIcon = () => (
@@ -37,6 +38,7 @@ function Header() {
 
   // Define nav links in one place
   const navLinks = [
+    { title: "Upload CV", path:'/upload'},
     { title: "Resources", path: "#" },
     { title: "Career Center", path: "#" },
     { title: "Blog", path: "#" },

@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import AuthPage from "./app/auth/page"
 import { Home } from './app/home/home'
 import HowItWork from './app/process/HowItWork'
+import CvUpload from './app/upload/cv-upload'
 import Footer from './components/footer'
 import Header from './components/header'
 
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path='/upload' element={<CvUpload/>} />
           <Route path='/process' element={<HowItWork/>} />
         </Routes>
       </main>
