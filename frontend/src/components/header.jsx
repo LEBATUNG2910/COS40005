@@ -127,10 +127,11 @@ function Header() {
               
               {/* Add mobile auth buttons */}
               <div className="border-t border-gray-100 my-2"></div>
-              
-              <button className="py-2 px-3 rounded hover:bg-gray-100 transition text-black text-left">
+              <Link to='/auth' onClick={() => setIsMobileMenuOpen(false)} 
+              className="py-2 px-3 rounded hover:bg-gray-100 transition text-black text-left">
                 Sign in
-              </button>
+              </Link>
+              <Link to='/process' onClick={() => setIsMobileMenuOpen(false)}>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -138,6 +139,7 @@ function Header() {
               >
                 Get Started
               </motion.button>
+              </Link>
             </nav>
           </motion.div>
         )}
