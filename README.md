@@ -85,7 +85,7 @@ A smooth upload interface:
 ```bash
 # Clone the project
 git clone https://github.com/your-username/your-repository.git
-cd your-repository
+cd COS40005
 
 # Install dependencies
 npm install
