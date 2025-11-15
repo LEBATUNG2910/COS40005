@@ -1,25 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-
-// --- Local Image Imports ---
-// Make sure these paths are correct for your project structure
-import resume1 from "../assets/resume1.jpg";
-import classic from "../assets/classic.png";
-import creative from "../assets/creative.jpg";
-<<<<<<< HEAD
-import profes from "../assets/profes.png";
-import darkresume from "../assets/dark-resume.jpg";
-=======
-import profes from "../assets/profes.png"
-import darkresume from "../assets/dark-resume.jpg"
-import pic21 from "../assets/pic21.jpg"
-import pic22 from "../assets/pic22.jpg"
-import pic23 from "../assets/pic23.jpg"
-import pic24 from "../assets/pic24.jpg"
-import pic25 from "../assets/pic25.jpg"
->>>>>>> refs/remotes/origin/master
+import { useState } from "react";
 
 // --- SVG Icons ---
 const CheckCircleIcon = () => (
@@ -74,103 +56,31 @@ const ColumnsIcon = () => (
 );
 // --- End SVG Icons ---
 
-// --- Custom Hook for Window Size ---
-// This hook helps us detect if we are on mobile or desktop
-function useWindowSize() {
-    const [windowSize, setWindowSize] = useState({
-        width: undefined,
-        height: undefined,
-    });
-
-    useEffect(() => {
-        function handleResize() {
-            setWindowSize({
-                width: window.innerWidth,
-                height: window.innerHeight,
-            });
-        }
-        // Set size on mount
-        handleResize();
-        // Add event listener
-        window.addEventListener("resize", handleResize);
-        // Clean up event listener on unmount
-        return () => window.removeEventListener("resize", handleResize);
-    }, []); // Empty array ensures this effect runs only on mount and unmount
-
-    return windowSize;
-}
-// --- End Custom Hook ---
-
 function TemplateShowcase() {
     const [page, setPage] = useState(0);
-    const [direction, setDirection] = useState(0);
-    const [isPaused, setIsPaused] = useState(false);
 
-    // Get window width
-    const { width } = useWindowSize();
-    const isMobile = width < 768; // Tailwind's 'md' breakpoint
-
-<<<<<<< HEAD
     const templates = [
-        {
-            id: 1,
-            title: "Modern",
-            query: "modern resume",
-            dark: false,
-            img: resume1,
-        },
-        {
-            id: 2,
-            title: "Classic",
-            query: "classic resume",
-            dark: false,
-            img: classic,
-        },
-        {
-            id: 3,
-            title: "Creative",
-            query: "creative resume",
-            dark: false,
-            img: creative,
-        },
+        { id: 1, title: "Modern", query: "modern resume", dark: false },
+        { id: 2, title: "Classic", query: "classic resume", dark: false },
+        { id: 3, title: "Creative", query: "creative resume", dark: false },
         {
             id: 4,
             title: "Professional",
             query: "professional resume",
             dark: false,
-            img: profes,
         },
-        {
-            id: 5,
-            title: "Dark Mode",
-            query: "dark resume",
-            dark: true,
-            img: darkresume,
-        },
+        { id: 5, title: "Dark Mode", query: "dark resume", dark: true },
         { id: 6, title: "Minimalist", query: "minimal resume", dark: false },
         { id: 7, title: "Academic", query: "academic cv", dark: false },
         { id: 8, title: "Tech", query: "tech resume", dark: false },
         { id: 9, title: "Bold", query: "bold resume", dark: false },
         { id: 10, title: "Elegant", query: "elegant resume", dark: true },
     ];
-=======
-  const templates = [
-    { id: 1, title: "Modern", query: "modern resume", dark: false, img: resume1 },
-    { id: 2, title: "Classic", query: "classic resume", dark: false, img: classic },
-    { id: 3, title: "Creative", query: "creative resume", dark: false, img: creative },
-    { id: 4, title: "Professional", query: "professional resume", dark: false, img: profes },
-    { id: 5, title: "Dark Mode", query: "dark resume", dark: true, img: darkresume },
-    { id: 6, title: "Minimalist", query: "minimal resume", dark: false, img: pic21 },
-    { id: 7, title: "Academic", query: "academic cv", dark: false, img: pic22 },
-    { id: 8, title: "Tech", query: "tech resume", dark: false, img: pic23 },
-    { id: 9, title: "Bold", query: "bold resume", dark: false, img: pic24 },
-    { id: 10, title: "Elegant", query: "elegant resume", dark: true, img: pic25 },
-  ];
->>>>>>> refs/remotes/origin/master
 
     const features = [
         {
             icon: <CheckCircleIcon />,
+
             text: "ATS-friendly professionally designed resumes",
         },
         {
@@ -183,46 +93,19 @@ function TemplateShowcase() {
         },
     ];
 
-    // --- Responsive Pagination Logic ---
-    const TEMPLATES_PER_PAGE_DESKTOP = 5;
-    const TEMPLATES_PER_PAGE_MOBILE = 1;
+    const TEMPLATES_PER_PAGE = 5;
+    const totalPages = Math.ceil(templates.length / TEMPLATES_PER_PAGE);
 
-    const templatesPerPage = isMobile
-        ? TEMPLATES_PER_PAGE_MOBILE
-        : TEMPLATES_PER_PAGE_DESKTOP;
-    const totalPages = Math.ceil(templates.length / templatesPerPage);
-    const gridCols = isMobile ? "grid-cols-1" : "md:grid-cols-5";
-
-    // Reset page if totalPages changes (e.g., on resize)
-    useEffect(() => {
-        setPage(0);
-    }, [totalPages]);
-    // --- End Responsive Pagination Logic ---
-
-    // Auto-play functionality
-    useEffect(() => {
-        if (isPaused) return;
-
-        const interval = setInterval(() => {
-            setDirection(1); // Always move forward
-            setPage((prevPage) => (prevPage + 1) % totalPages);
-        }, 5000); // 5 seconds
-
-        return () => clearInterval(interval);
-    }, [isPaused, totalPages]);
-
-    const handlePaginate = (newPage) => {
-        // Manually handle pagination direction
-        const newDirection = newPage > page ? 1 : -1;
-        // Handle wrap-around cases
-        if (newPage === 0 && page === totalPages - 1) {
-            setDirection(1);
-        } else if (newPage === totalPages - 1 && page === 0) {
-            setDirection(-1);
-        } else {
-            setDirection(newDirection);
-        }
+    const paginate = (newPage) => {
         setPage(newPage);
+    };
+
+    const nextPage = () => {
+        setPage((prev) => (prev + 1) % totalPages);
+    };
+
+    const prevPage = () => {
+        setPage((prev) => (prev - 1 + totalPages) % totalPages);
     };
 
     const variants = {
@@ -242,9 +125,16 @@ function TemplateShowcase() {
         }),
     };
 
+    // We need to track direction for the animation
+    const [direction, setDirection] = useState(0);
+    const handlePaginate = (newPage) => {
+        setDirection(newPage > page ? 1 : -1);
+        setPage(newPage);
+    };
+
     const currentTemplates = templates.slice(
-        page * templatesPerPage,
-        (page + 1) * templatesPerPage,
+        page * TEMPLATES_PER_PAGE,
+        (page + 1) * TEMPLATES_PER_PAGE,
     );
 
     return (
@@ -262,85 +152,27 @@ function TemplateShowcase() {
                     </h2>
                 </motion.div>
 
-<<<<<<< HEAD
                 {/* Carousel */}
-                <div
-                    className="relative"
-                    onMouseEnter={() => setIsPaused(true)}
-                    onMouseLeave={() => setIsPaused(false)}
-                >
+                <div className="relative">
                     {/* Navigation Arrows */}
+
                     <button
                         onClick={() =>
                             handlePaginate((page - 1 + totalPages) % totalPages)
                         }
-                        className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-black/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-slate-900 transition-all"
-=======
-        {/* Carousel */}
-        <div
-          className="relative"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
-          {/* Navigation Arrows */}
-          <button
-            onClick={() => handlePaginate((page - 1 + totalPages) % totalPages)}
-            className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
-          >
-            &#8249;
-          </button>
-          <button
-            onClick={() => handlePaginate((page + 1) % totalPages)}
-            className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
-          >
-            &#8250;
-          </button>
-
-          {/* Carousel Viewport */}
-          {/* Set a fixed height for the viewport to avoid layout shift */}
-          <div className="overflow-hidden relative h-[340px] sm:h-[340px]">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.div
-                key={page}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                // Apply responsive grid columns
-                className={`grid ${gridCols} gap-4 absolute w-full`}
-              >
-                {currentTemplates.map((template) => {
-                  const placeholderSrc = template.dark
-                    ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume`
-                    : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`;
-                  
-                  // Use local image if available, otherwise use placeholder
-                  const imageSrc = template.img || placeholderSrc;
-
-                  return (
-                    <div
-                      key={template.id}
-                      // For mobile, we need to center the single item
-                      className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-300 overflow-hidden sm:max-w-xs mx-auto w-full max-w-sm"
->>>>>>> refs/remotes/origin/master
+                        className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
                     >
                         &#8249;
                     </button>
                     <button
                         onClick={() => handlePaginate((page + 1) % totalPages)}
-                        className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-black/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-slate-900 transition-all"
+                        className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
                     >
                         &#8250;
                     </button>
 
                     {/* Carousel Viewport */}
-                    {/* Set a fixed height for the viewport to avoid layout shift */}
-                    <div className="overflow-hidden relative h-[340px] sm:h-[340px]">
+                    <div className="overflow-hidden relative h-[420px]">
                         <AnimatePresence
                             initial={false}
                             custom={direction}
@@ -359,35 +191,28 @@ function TemplateShowcase() {
                                         stiffness: 300,
                                         damping: 30,
                                     },
+
                                     opacity: { duration: 0.2 },
                                 }}
-                                // Apply responsive grid columns
-                                className={`grid ${gridCols} gap-4 absolute w-full`}
+                                className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 absolute w-full"
                             >
                                 {currentTemplates.map((template) => {
                                     const placeholderSrc = template.dark
-                                        ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume`
-                                        : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`;
-
-                                    // Use local image if available, otherwise use placeholder
-                                    const imageSrc =
-                                        template.img || placeholderSrc;
+                                        ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume` // Dark bg, light text
+                                        : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`; // White bg, dark text
 
                                     return (
                                         <div
                                             key={template.id}
-                                            // For mobile, we need to center the single item
-                                            className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-300 overflow-hidden sm:max-w-xs mx-auto w-full max-w-sm"
+                                            className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
                                         >
-                                            <div className="h-[340px] overflow-hidden">
+                                            <div className="h-[380px]">
                                                 <img
-                                                    src={imageSrc}
+                                                    src={placeholderSrc}
                                                     alt={template.title}
-                                                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                                                    className="object-cover w-full h-full object-top group-hover:scale-105 transition-transform duration-300"
                                                     onError={(e) => {
-                                                        // Fallback to placeholder if local image fails
-                                                        e.currentTarget.src =
-                                                            placeholderSrc;
+                                                        e.currentTarget.src = `https://placehold.co/300x400/F9FAFB/374151?text=Preview+Error`;
                                                     }}
                                                 />
                                             </div>
@@ -406,7 +231,7 @@ function TemplateShowcase() {
                             key={i}
                             onClick={() => handlePaginate(i)}
                             className={`h-2 w-2 rounded-full transition-all ${
-                                page === i ? "bg-indigo-600 w-4" : "bg-gray-400"
+                                page === i ? "bg-indigo-600 w-4" : "bg-gray-900"
                             }`}
                         />
                     ))}
@@ -449,6 +274,4 @@ function TemplateShowcase() {
         </section>
     );
 }
-
 export default TemplateShowcase;
-
