@@ -8,8 +8,18 @@ import { useState, useEffect } from "react";
 import resume1 from "../assets/resume1.jpg";
 import classic from "../assets/classic.png";
 import creative from "../assets/creative.jpg";
+<<<<<<< HEAD
 import profes from "../assets/profes.png";
 import darkresume from "../assets/dark-resume.jpg";
+=======
+import profes from "../assets/profes.png"
+import darkresume from "../assets/dark-resume.jpg"
+import pic21 from "../assets/pic21.jpg"
+import pic22 from "../assets/pic22.jpg"
+import pic23 from "../assets/pic23.jpg"
+import pic24 from "../assets/pic24.jpg"
+import pic25 from "../assets/pic25.jpg"
+>>>>>>> refs/remotes/origin/master
 
 // --- SVG Icons ---
 const CheckCircleIcon = () => (
@@ -100,6 +110,7 @@ function TemplateShowcase() {
     const { width } = useWindowSize();
     const isMobile = width < 768; // Tailwind's 'md' breakpoint
 
+<<<<<<< HEAD
     const templates = [
         {
             id: 1,
@@ -142,6 +153,20 @@ function TemplateShowcase() {
         { id: 9, title: "Bold", query: "bold resume", dark: false },
         { id: 10, title: "Elegant", query: "elegant resume", dark: true },
     ];
+=======
+  const templates = [
+    { id: 1, title: "Modern", query: "modern resume", dark: false, img: resume1 },
+    { id: 2, title: "Classic", query: "classic resume", dark: false, img: classic },
+    { id: 3, title: "Creative", query: "creative resume", dark: false, img: creative },
+    { id: 4, title: "Professional", query: "professional resume", dark: false, img: profes },
+    { id: 5, title: "Dark Mode", query: "dark resume", dark: true, img: darkresume },
+    { id: 6, title: "Minimalist", query: "minimal resume", dark: false, img: pic21 },
+    { id: 7, title: "Academic", query: "academic cv", dark: false, img: pic22 },
+    { id: 8, title: "Tech", query: "tech resume", dark: false, img: pic23 },
+    { id: 9, title: "Bold", query: "bold resume", dark: false, img: pic24 },
+    { id: 10, title: "Elegant", query: "elegant resume", dark: true, img: pic25 },
+  ];
+>>>>>>> refs/remotes/origin/master
 
     const features = [
         {
@@ -237,6 +262,7 @@ function TemplateShowcase() {
                     </h2>
                 </motion.div>
 
+<<<<<<< HEAD
                 {/* Carousel */}
                 <div
                     className="relative"
@@ -249,6 +275,59 @@ function TemplateShowcase() {
                             handlePaginate((page - 1 + totalPages) % totalPages)
                         }
                         className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-black/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-slate-900 transition-all"
+=======
+        {/* Carousel */}
+        <div
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Navigation Arrows */}
+          <button
+            onClick={() => handlePaginate((page - 1 + totalPages) % totalPages)}
+            className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
+          >
+            &#8249;
+          </button>
+          <button
+            onClick={() => handlePaginate((page + 1) % totalPages)}
+            className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
+          >
+            &#8250;
+          </button>
+
+          {/* Carousel Viewport */}
+          {/* Set a fixed height for the viewport to avoid layout shift */}
+          <div className="overflow-hidden relative h-[340px] sm:h-[340px]">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.div
+                key={page}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                }}
+                // Apply responsive grid columns
+                className={`grid ${gridCols} gap-4 absolute w-full`}
+              >
+                {currentTemplates.map((template) => {
+                  const placeholderSrc = template.dark
+                    ? `https://placehold.co/300x400/1F2937/E5E7EB?text=${template.title}+Resume`
+                    : `https://placehold.co/300x400/FFFFFF/374151?text=${template.title}+Resume`;
+                  
+                  // Use local image if available, otherwise use placeholder
+                  const imageSrc = template.img || placeholderSrc;
+
+                  return (
+                    <div
+                      key={template.id}
+                      // For mobile, we need to center the single item
+                      className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-300 overflow-hidden sm:max-w-xs mx-auto w-full max-w-sm"
+>>>>>>> refs/remotes/origin/master
                     >
                         &#8249;
                     </button>
