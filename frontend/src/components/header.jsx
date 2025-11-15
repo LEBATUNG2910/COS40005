@@ -65,7 +65,7 @@ function Header() {
               <Link
                 key={link.title}
                 to={link.path}
-                className="text-black hover:text-gray-900 transition"
+                className="text-gray-600 hover:text-black transition"
               >
                 {link.title}
               </Link>
@@ -74,17 +74,15 @@ function Header() {
 
           {/* --- Desktop Auth Buttons --- */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth" className="text-black hover:text-gray-900 transition">
+            <Link to="/auth" className="text-gray-600 hover:text-black transition">
               Sign in
             </Link>
             <Link to="/process">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium"
             >
               Get Started
-            </motion.button>
+            </button>
             </Link>
           </div>
 

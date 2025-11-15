@@ -4,92 +4,73 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, Check } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
+import pic9 from '../../assets/pic9.jpg'
+import pic10 from '../../assets/pic10.jpg'
+import pic11 from '../../assets/pic11.jpg'
+import pic12 from '../../assets/pic12.jpg'
+import pic13 from '../../assets/pic13.jpg'
+import pic14 from '../../assets/pic14.jpg'
+import pic15 from '../../assets/pic15.jpg'
+import pic16 from '../../assets/pic16.jpg'
+import pic17 from '../../assets/pic17.jpg'
+import pic18 from '../../assets/pic18.jpg'
+import pic19 from '../../assets/pic19.jpg'
+import pic20 from '../../assets/pic20.jpg'
 
 export default function ResumeTemplateSelection() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
 
+  const [hideHeader, setHideHeader] = useState(false)
+
+  /** 🔥 Detect scroll direction */
+  useEffect(() => {
+    let lastScroll = 0
+
+    const handleScroll = () => {
+      const currentScroll = window.scrollY
+
+      if (currentScroll > lastScroll && currentScroll > 80) {
+        // scroll down → hide
+        setHideHeader(true)
+      } else {
+        // scroll up → show
+        setHideHeader(false)
+      }
+
+      lastScroll = currentScroll
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   const templates = [
-    {
-      id: 1,
-      name: "Double Column",
-      image: "/resume-template-double-column-professional.jpg",
-    },
-    {
-      id: 2,
-      name: "Ivy League",
-      image: "/resume-template-ivy-league-clean.jpg",
-    },
-    {
-      id: 3,
-      name: "Elegant",
-      image: "/resume-template-elegant-teal-sidebar.jpg",
-    },
-    {
-      id: 4,
-      name: "Contemporary",
-      image: "/resume-template-contemporary-modern.jpg",
-    },
-    {
-      id: 5,
-      name: "Polished",
-      image: "/resume-template-polished-navy-blue.jpg",
-    },
-    {
-      id: 6,
-      name: "Modern",
-      image: "/resume-template-modern-orange-accent.jpg",
-    },
-    {
-      id: 7,
-      name: "Creative",
-      image: "/resume-template-creative-navy-sidebar.jpg",
-    },
-    {
-      id: 8,
-      name: "Timeline",
-      image: "/resume-template-timeline-modern.jpg",
-    },
-    {
-      id: 9,
-      name: "Stylish",
-      image: "/resume-template-stylish-light-blue.jpg",
-    },
-    {
-      id: 10,
-      name: "Single Column",
-      image: "/resume-template-single-column-clean.jpg",
-    },
-    {
-      id: 11,
-      name: "Elegant with Logos",
-      image: "/resume-template-elegant-teal-logos.jpg",
-    },
-    {
-      id: 12,
-      name: "Double Column with Logos",
-      image: "/resume-template-double-column-logos-blue.jpg",
-    },
+    { id: 1, name: "Double Column", image: pic9 },
+    { id: 2, name: "Ivy League", image: pic10 },
+    { id: 3, name: "Elegant", image: pic11 },
+    { id: 4, name: "Contemporary", image: pic12 },
+    { id: 5, name: "Polished", image: pic13 },
+    { id: 6, name: "Modern", image: pic14 },
+    { id: 7, name: "Creative", image: pic15 },
+    { id: 8, name: "Timeline", image: pic16 },
+    { id: 9, name: "Stylish", image: pic17 },
+    { id: 10, name: "Single Column", image: pic18 },
+    { id: 11, name: "Elegant with Logos", image: pic19 },
+    { id: 12, name: "Double Column with Logos", image: pic20 },
   ]
 
-  // Simulate loading on mount
+  // Fake loading
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 2000)
+    const timer = setTimeout(() => setIsLoading(false), 2000)
     return () => clearTimeout(timer)
   }, [])
 
-  // Loading skeleton animation
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -107,24 +88,22 @@ export default function ResumeTemplateSelection() {
     )
   }
 
-  const steps = [
-    { id: 1, name: "Start" },
-    { id: 2, name: "Customize" },
-    { id: 3, name: "Finish" },
-  ];
-  const currentStep = 3;
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header with Progress */}
+
+      {/* 🔥 Header hides on scroll */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ y: 0, opacity: 1 }}
+        animate={{
+          y: hideHeader ? -80 : 0,
+          opacity: hideHeader ? 0 : 1,
+        }}
+        transition={{ duration: 0.35 }}
         className="sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-3 items-center">
+
             {/* Back Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -136,39 +115,26 @@ export default function ResumeTemplateSelection() {
               <span className="font-medium">Back</span>
             </motion.button>
 
-            {/* Progress Bar - Centered */}
+            {/* Progress Steps */}
             <nav className="flex items-center justify-center space-x-4">
-              {[
-                { id: 1, name: "Start" },
-                { id: 2, name: "Customize" },
-                { id: 3, name: "Finish" },
-              ].map((step) => (
-                <div key={step.id} className="flex items-center gap-2">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center gap-2">
                   <motion.div
                     animate={{
-                      scale: step.id === 3 ? 1.1 : 1,
-                      backgroundColor:
-                        step.id === 3
-                          ? "#10B981" // Green-500
-                          : "#D1D5DB", // Gray-300
-                      borderColor:
-                        step.id === 3
-                          ? "#10B981" // Green-500
-                          : "#D1D5DB", // Gray-300
+                      scale: step === 3 ? 1.1 : 1,
+                      backgroundColor: step === 3 ? "#10B981" : "#D1D5DB",
+                      borderColor: step === 3 ? "#10B981" : "#D1D5DB",
                     }}
                     transition={{ type: "spring", stiffness: 300 }}
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
                   >
-                    {step.id}
+                    {step}
                   </motion.div>
-                  {step.id < 3 && (
-                    <div className="w-16 h-0.5 bg-gray-300" />
-                  )}
+                  {step < 3 && <div className="w-16 h-0.5 bg-gray-300" />}
                 </div>
               ))}
             </nav>
 
-            {/* Empty div for grid balance */}
             <div></div>
           </div>
         </div>
@@ -181,70 +147,27 @@ export default function ResumeTemplateSelection() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
       >
-        {/* User Avatar Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mb-12"
-        >
+
+        {/* Avatar Section */}
+        <div className="text-center mb-12">
           <div className="relative inline-block mb-8">
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="relative"
-            >
-              {/* Decorative shapes */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-12 opacity-10"
-              >
-                <svg viewBox="0 0 200 200" className="w-32 h-32">
-                  <circle cx="100" cy="50" r="40" fill="#06B6D4" />
-                  <circle cx="150" cy="120" r="30" fill="#EC4899" />
-                  <circle cx="50" cy="130" r="35" fill="#10B981" />
-                </svg>
-              </motion.div>
-
-              {/* Avatar */}
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 via-cyan-100 to-teal-100 flex items-center justify-center overflow-hidden shadow-xl">
-                <div className="text-6xl">👤</div>
-              </div>
-            </motion.div>
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 via-cyan-100 to-teal-100 flex items-center justify-center">
+              <div className="text-6xl">👤</div>
+            </div>
           </div>
-
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-3xl font-bold text-gray-900 mb-2"
-          >
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Please select a template for your resume.
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-lg text-gray-600"
-          >
+          </h1>
+          <p className="text-lg text-gray-600">
             You can always change it later.
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
-        {/* Templates Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
+        {/* Template grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {templates.map((template, idx) => (
             <motion.div
               key={template.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + idx * 0.05 }}
               whileHover={{ y: -8 }}
               onClick={() => setSelectedTemplate(template.id)}
               className={`group cursor-pointer relative overflow-hidden rounded-xl shadow-md transition-all ${
@@ -253,63 +176,43 @@ export default function ResumeTemplateSelection() {
                   : "hover:shadow-lg"
               }`}
             >
-              {/* Template Image */}
               <div className="aspect-[3/4] bg-gray-100 overflow-hidden relative">
-                <motion.img
+                <img
                   src={template.image}
                   alt={template.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
 
-                {/* Overlay on hover */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  className="absolute inset-0 bg-black/20 flex items-center justify-center"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    className="bg-white text-gray-900 px-4 py-2 rounded-full font-semibold"
-                  >
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                  <div className="bg-white text-gray-900 px-4 py-2 rounded-full font-semibold">
                     Choose
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
               </div>
 
-              {/* Template Name */}
-              <div className="p-4 bg-white">
-                <p className="text-center font-semibold text-gray-900">{template.name}</p>
+              <div className="p-4 bg-white text-center font-semibold">
+                {template.name}
               </div>
 
-              {/* Selected Indicator */}
               {selectedTemplate === template.id && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-3 right-3 bg-gradient-to-br from-cyan-500 to-teal-500 text-white p-1 rounded-full shadow-lg"
-                >
+                <div className="absolute top-3 right-3 bg-gradient-to-br from-cyan-500 to-teal-500 text-white p-1 rounded-full shadow-lg">
                   <Check className="h-5 w-5" />
-                </motion.div>
+                </div>
               )}
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* CTA Button */}
         {selectedTemplate && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
             className="text-center mt-12"
           >
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(6,182,212,0.3)" }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all"
-            >
+            <button className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl">
               Continue with Selected Template
-            </motion.button>
+            </button>
           </motion.div>
         )}
       </motion.div>

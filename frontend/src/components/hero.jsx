@@ -119,20 +119,16 @@ function Hero() {
 
             {/* --- Các nút bấm --- */}
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-3 rounded-lg font-semibold transition"
               >
                 Build Your Resume
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              </button>
+              <button
                 className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:border-gray-400 transition"
               >
                 Get Your Resume Score
-              </motion.button>
+              </button>
             </motion.div>
 
             <motion.div variants={itemVariants}>
@@ -141,15 +137,14 @@ function Hero() {
                 <span className="font-bold">4,988 Reviews on Trustpilot</span>
                 <span>28,482 users achieved their dream jobs</span>
               </div>
-
-              {/* 1. Các ngôi sao
+              1. Các ngôi sao
               <div className="flex gap-1 mb-2 ml-10">
                 {[...Array(5)].map((_, i) => (
                   <span key={i} className="text-2xl text-yellow-400">
                     ★
                   </span>
                 ))}
-              </div> */}
+              </div>
             </motion.div>
           </motion.div>
 

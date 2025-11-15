@@ -116,7 +116,7 @@ export default function HowItWorks() {
             </motion.button>
           </Link>
 
-          <Link to="/templates"> {/* Giả sử "No" sẽ dẫn đến trang chọn template */}
+          <Link to="/home"> {/* Giả sử "No" sẽ dẫn đến trang chọn template */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

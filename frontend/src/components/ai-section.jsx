@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+
 import pic2 from "../assets/pic2.jpg";
 
 function AISection() {
@@ -18,10 +19,8 @@ function AISection() {
     ];
 
     return (
-        // Updated main background gradient
         <section className="relative py-20 bg-gradient-to-r from-blue-900 to-black overflow-hidden">
             <div className="absolute inset-0 opacity-30">
-                {/* Updated motion gradient */}
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{
@@ -67,10 +66,9 @@ function AISection() {
                                     delay: index * 0.1,
                                     duration: 0.6,
                                 }}
-                                // Updated feature card gradient
-                                className="bg-gradient-to-r from-cyan-500 to-blue-600 p-1 rounded-lg"
+                                // Giảm padding từ p-1 xuống p-[1px] để viền mỏng hơn
+                                className="bg-gradient-to-r from-cyan-500 to-blue-600 p-[1px] rounded-lg"
                             >
-                                {/* Updated feature card inner background */}
                                 <div className="bg-blue-950 p-4 rounded-md">
                                     <h4 className="text-white font-semibold mb-1">
                                         {feature.title}
@@ -90,11 +88,9 @@ function AISection() {
                         transition={{ duration: 0.8 }}
                         className="relative"
                     >
-                        {/* Updated image card gradient */}
-                        <div className="relative bg-gradient-to-br from-cyan-400 to-blue-600 p-1 rounded-2xl shadow-2xl">
-                            {/* Updated image card inner background */}
+                        {/* Giảm padding từ p-1 xuống p-[1px] để viền mỏng hơn */}
+                        <div className="relative bg-gradient-to-br from-cyan-400 to-blue-600 p-[1px] rounded-2xl shadow-2xl">
                             <div className="bg-blue-950 rounded-2xl overflow-hidden p-6">
-                                {/* Updated image placeholder gradient */}
                                 <div className="bg-gradient-to-br from-cyan-300 to-blue-500 rounded-lg h-64 flex items-center justify-center">
                                     <img
                                         src={pic2}
@@ -114,11 +110,8 @@ function AISection() {
                     transition={{ duration: 0.6 }}
                     className="text-center mt-12"
                 >
-                    {/* Updated button gradient */}
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
+                        className="bg-gradient-to-r from-cyan-500 to-blue-900 hover:from-cyan-400 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-xl transition-all duration-300"
                     >
                         Explore AI Features →
                     </motion.button>
@@ -127,5 +120,5 @@ function AISection() {
         </section>
     );
 }
-export default AISection;
 
+export default AISection;
