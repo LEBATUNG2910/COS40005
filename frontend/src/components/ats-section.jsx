@@ -23,7 +23,6 @@ function ATSSection() {
 
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
                 <div className="grid md:grid-cols-2 gap-12 items-center">
-
                     {/* LEFT SECTION */}
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
@@ -32,12 +31,16 @@ function ATSSection() {
                         transition={{ duration: 0.8 }}
                     >
                         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                            Resumes optimized for Applicant Tracking Systems (ATS)
+                            Resumes optimized for{" "}
+                            <div className="text-cyan-400">
+                                Applicant Tracking Systems (ATS)
+                            </div>
                         </h2>
 
                         <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-                            Every template has been expertly reviewed by Certified Professional
-                            Resume Writers to ensure it's not only ATS-proof but recruiter-friendly.
+                            Every template has been expertly reviewed by
+                            Certified Professional Resume Writers to ensure it's
+                            not only ATS-proof but recruiter-friendly.
                         </p>
 
                         {/* FEATURES */}
@@ -49,8 +52,14 @@ function ATSSection() {
                                         key={index}
                                         initial={{ opacity: 0, x: -20 }}
                                         whileInView={{ opacity: 1, x: 0 }}
-                                        viewport={{ once: true, margin: "-100px" }}
-                                        transition={{ delay: index * 0.1, duration: 0.6 }}
+                                        viewport={{
+                                            once: true,
+                                            margin: "-100px",
+                                        }}
+                                        transition={{
+                                            delay: index * 0.1,
+                                            duration: 0.6,
+                                        }}
                                         className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10"
                                     >
                                         <span className="text-2xl text-cyan-400">
@@ -65,9 +74,7 @@ function ATSSection() {
                             })}
                         </div>
 
-                        <motion.button
-                            className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-3 rounded-lg font-semibold transition"
-                        >
+                        <motion.button className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-3 rounded-lg font-semibold transition">
                             Build an ATS-Friendly Resume
                         </motion.button>
                     </motion.div>
@@ -81,7 +88,7 @@ function ATSSection() {
                         className="relative"
                         style={{ perspective: "1000px" }}
                     >
-                        <div className="relative z-10 bg-gradient-to-br from-cyan-400 to-purple-600 p-1 rounded-2xl shadow-2xl">
+                        <div className="relative z-10 bg-gradient-to-br from-cyan-200 to-purple-200 p-1 rounded-xl shadow-2xl">
                             <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden">
                                 <div className="relative h-96 bg-gradient-to-br from-cyan-200 to-purple-200">
                                     <img
@@ -93,7 +100,6 @@ function ATSSection() {
                             </div>
                         </div>
                     </motion.div>
-
                 </div>
             </div>
         </section>

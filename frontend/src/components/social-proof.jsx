@@ -96,20 +96,20 @@ export default function SocialProof() {
                         viewport={{ once: true, margin: "-100px" }}
                     >
                         {/* Updated text colors */}
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                             Chosen by{" "}
                             <span className="text-cyan-400">10 million</span>{" "}
                             job applicants around the world
                         </h2>
-                        <p className="text-gray-300 mb-4">
-                            Enhancv is a modern resume builder that helps you
-                            create applications with personality and
-                            professionalism. Our tools are trusted by
-                            millions-helping at every step of the job hunt,
-                            emphasizing your experience, character, value, and
-                            skills.
+                        <p className="text-gray-300 mb-4 inline-block">
+                            <span className="text-cyan-400">HIREWISE</span> is a
+                            modern resume builder that helps you create
+                            applications with personality and professionalism.
+                            Our tools are trusted by millions-helping at every
+                            step of the job hunt, emphasizing your experience,
+                            character, value, and skills.
                         </p>
-                        <p className="text-gray-300 mb-4">
+                        <p className="text-gray-300 mb-4 inline-block">
                             We combine flexible, ATS-friendly templates with
                             intuitive tools and tailored content suggestions.
                             The resume builder supports multiple languages and
@@ -118,11 +118,11 @@ export default function SocialProof() {
                             a complete, polished story.
                         </p>
                         <p className="text-gray-300">
-                            At Enhancv, we believe the best resumes feel human.
-                            That's why we help you personalize your application
-                            around your unique experiences-so you stand out,
-                            feel confident, and land interviews that align with
-                            your goals.
+                            At<span className="text-cyan-400">HIREWISE</span>,
+                            we believe the best resumes feel human. That's why
+                            we help you personalize your application around your
+                            unique experiences-so you stand out, feel confident,
+                            and land interviews that align with your goals.
                         </p>
                     </motion.div>
                 </div>
@@ -130,4 +130,3 @@ export default function SocialProof() {
         </section>
     );
 }
-
