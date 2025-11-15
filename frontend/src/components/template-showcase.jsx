@@ -160,13 +160,13 @@ function TemplateShowcase() {
                         onClick={() =>
                             handlePaginate((page - 1 + totalPages) % totalPages)
                         }
-                        className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
+                        className="absolute -left-4 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-black/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
                     >
                         &#8249;
                     </button>
                     <button
                         onClick={() => handlePaginate((page + 1) % totalPages)}
-                        className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
+                        className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-black/70 backdrop-blur-sm rounded-full h-10 w-10 flex items-center justify-center shadow-md hover:bg-black transition-all"
                     >
                         &#8250;
                     </button>
