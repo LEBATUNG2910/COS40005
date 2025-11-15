@@ -10,6 +10,11 @@ import classic from "../assets/classic.png";
 import creative from "../assets/creative.jpg";
 import profes from "../assets/profes.png"
 import darkresume from "../assets/dark-resume.jpg"
+import pic21 from "../assets/pic21.jpg"
+import pic22 from "../assets/pic22.jpg"
+import pic23 from "../assets/pic23.jpg"
+import pic24 from "../assets/pic24.jpg"
+import pic25 from "../assets/pic25.jpg"
 
 // --- SVG Icons ---
 const CheckCircleIcon = () => (
@@ -107,11 +112,11 @@ function TemplateShowcase() {
     { id: 3, title: "Creative", query: "creative resume", dark: false, img: creative },
     { id: 4, title: "Professional", query: "professional resume", dark: false, img: profes },
     { id: 5, title: "Dark Mode", query: "dark resume", dark: true, img: darkresume },
-    { id: 6, title: "Minimalist", query: "minimal resume", dark: false },
-    { id: 7, title: "Academic", query: "academic cv", dark: false },
-    { id: 8, title: "Tech", query: "tech resume", dark: false },
-    { id: 9, title: "Bold", query: "bold resume", dark: false },
-    { id: 10, title: "Elegant", query: "elegant resume", dark: true },
+    { id: 6, title: "Minimalist", query: "minimal resume", dark: false, img: pic21 },
+    { id: 7, title: "Academic", query: "academic cv", dark: false, img: pic22 },
+    { id: 8, title: "Tech", query: "tech resume", dark: false, img: pic23 },
+    { id: 9, title: "Bold", query: "bold resume", dark: false, img: pic24 },
+    { id: 10, title: "Elegant", query: "elegant resume", dark: true, img: pic25 },
   ];
 
   const features = [
