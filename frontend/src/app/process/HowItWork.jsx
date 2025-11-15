@@ -2,331 +2,131 @@
 
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import {
-  CheckCircle,
-  Zap,
-  FileText,
-  BarChart3,
-  Share2,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react"; // Giữ lại icon này cho các nút
 
+// --- Component Chính ---
 export default function HowItWorks() {
+  // Dữ liệu cho các bước
   const steps = [
-    {
-      icon: FileText,
-      title: "1. Choose Your Template",
-      description:
-        "Select from 20+ professionally designed resume templates tailored for different industries and career levels.",
-      features: [
-        "ATS-optimized designs",
-        "Modern & creative layouts",
-        "Easy to customize",
-      ],
-    },
-    {
-      icon: Zap,
-      title: "2. Use AI-Powered Builder",
-      description:
-        "Our intelligent resume builder guides you through each section with AI suggestions and real-time improvements.",
-      features: [
-        "Smart suggestions",
-        "Real-time grammar check",
-        "Content optimization",
-      ],
-    },
-    {
-      icon: BarChart3,
-      title: "3. Customize Your Design",
-      description:
-        "Personalize colors, fonts, sections, and layout to match your style while maintaining ATS compatibility.",
-      features: [
-        "Custom colors & fonts",
-        "Flexible layouts",
-        "Multiple page options",
-      ],
-    },
-    {
-      icon: CheckCircle,
-      title: "4. Optimize for ATS",
-      description:
-        "Ensure your resume passes Applicant Tracking Systems with our built-in ATS checker and formatting tools.",
-      features: ["ATS scoring", "Format validation", "Keyword optimization"],
-    },
-    {
-      icon: Share2,
-      title: "5. Download & Share",
-      description:
-        "Export your resume as PDF or share directly with employers. Track your resume's performance.",
-      features: ["Multiple formats", "Direct sharing", "Performance tracking"],
-    },
+    { id: 1, name: "Start" },
+    { id: 2, name: "Customize" },
+    { id: 3, name: "Finish" },
   ];
-
-  const benefits = [
-    { icon: "✓", text: "Save hours on resume building" },
-    { icon: "✓", text: "Increase interview callback rates" },
-    { icon: "✓", text: "Get hired faster with optimized content" },
-    { icon: "✓", text: "Cover letters generator included" },
-    { icon: "✓", text: "Unlimited resume updates" },
-    { icon: "✓", text: "Career coaching resources" },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
+  const currentStep = 1; // Đặt bước hiện tại là 1
 
   return (
-    // Updated main background
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-black">
-      {/* Hero Section */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto"
-      >
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-center mb-16"
-        >
-          {/* Updated text colors */}
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-            How to Build Your Perfect Resume
-          </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Follow these 5 simple steps to create a professional resume that gets
-            you noticed by employers
-          </p>
-        </motion.div>
-
-        {/* Steps Timeline */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-12"
-        >
-          {steps.map((step, index) => {
-            const IconComponent = step.icon;
-            return (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                // Updated card background
-                className="bg-white/5 backdrop-blur-md rounded-xl shadow-lg hover:shadow-2xl transition-shadow p-8 border border-white/10"
-              >
-                <div className="flex flex-col sm:flex-row gap-6">
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 10 }}
-                    className="flex-shrink-0"
-                  >
-                    {/* Icon background already matches */}
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500">
-                      <IconComponent className="h-8 w-8 text-white" />
-                    </div>
-                  </motion.div>
-                  <div className="flex-grow">
-                    {/* Updated text colors */}
-                    <h3 className="text-2xl font-bold text-white mb-3">
-                      {step.title}
-                    </h3>
-                    <p className="text-gray-300 mb-4">{step.description}</p>
-                    <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {step.features.map((feature, idx) => (
-                        <motion.li
-                          key={idx}
-                          initial={{ x: -10, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.5 + idx * 0.1 }}
-                          // Updated text color
-                          className="flex items-center gap-2 text-sm text-gray-200"
-                        >
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                          {feature}
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </motion.section>
-
-      {/* Benefits Section */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-        // Updated benefits background
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-black/20"
-      >
-        <div className="max-w-6xl mx-auto">
-          <motion.h2
-            initial={{ y: 20, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            // Updated text color
-            className="text-4xl font-bold text-center text-white mb-16"
-          >
-            Why Choose HIREWISE?
-          </motion.h2>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {benefits.map((benefit, idx) => (
-              <motion.div
-                key={idx}
-                variants={itemVariants}
-                whileHover={{ y: -5 }}
-                // Updated benefit card background
-                className="bg-white/5 backdrop-blur-md rounded-lg p-6 shadow-md hover:shadow-lg transition-all border border-white/10"
-              >
-                <div className="flex items-start gap-4">
-                  <span className="text-2xl font-bold text-green-500">
-                    {benefit.icon}
-                  </span>
-                  {/* Updated text color */}
-                  <p className="text-gray-200 font-medium">{benefit.text}</p>
-                </div>
-              </motion.div>
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center justify-center p-6 relative">
+      
+      {/* --- Header: Steps và Nút Login --- */}
+      <div className="absolute top-0 left-0 right-0 w-full max-w-5xl mx-auto px-6 pt-8">
+        <div className="flex justify-center items-center">
+          
+          {/* Thanh tiến trình (Steps) */}
+          <nav className="flex items-center space-x-4">
+            {steps.map((step) => (
+              <div key={step.id} className="flex items-center gap-2">
+                <motion.div
+                  animate={{
+                    scale: step.id === currentStep ? 1.1 : 1,
+                    backgroundColor:
+                      step.id === currentStep
+                        ? "#10B981" // Green-500
+                        : "#D1D5DB", // Gray-300
+                    borderColor:
+                      step.id === currentStep
+                        ? "#10B981" // Green-500
+                        : "#D1D5DB", // Gray-300
+                  }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                >
+                  {step.id}
+                </motion.div>
+                {step.id < steps.length && (
+                  <div className="w-16 h-0.5 bg-gray-300" />
+                )}
+              </div>
             ))}
-          </motion.div>
+          </nav>
+
+          {/* Nút Login */}
+          {/* <Link to="/auth">
+            <button className="text-sm font-semibold text-gray-700 hover:text-black border border-gray-300 px-4 py-1.5 rounded-lg transition-colors">
+              Login
+            </button>
+          </Link> */}
         </div>
-      </motion.section>
+      </div>
 
-      {/* Tips Section */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-        className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto"
+      {/* --- Nội dung chính --- */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="text-center flex flex-col items-center"
       >
-        <motion.h2
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          // Updated text color
-          className="text-4xl font-bold text-center text-white mb-16"
-        >
-          Pro Tips for Resume Success
-        </motion.h2>
-
+        {/* User Avatar Section */}
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="text-center mb-12"
         >
-          {[
-            {
-              title: "Use Keywords from Job Descriptions",
-              desc: "Mirror language from the job posting to improve ATS scoring and relevance",
-            },
-            {
-              title: "Quantify Your Achievements",
-              desc: "Use numbers and metrics to showcase the impact of your work",
-            },
-            {
-              title: "Keep It Concise",
-              desc: "Stick to 1-2 pages maximum to maintain recruiter attention",
-            },
-            {
-              title: "Tailor for Each Position",
-              desc: "Customize your resume for each job application to increase success rates",
-            },
-            {
-              title: "Use Action Verbs",
-              desc: "Start bullet points with strong action words like 'led', 'managed', 'developed'",
-            },
-            {
-              title: "Proofread Carefully",
-              desc: "Typos and errors can hurt your chances - our checker helps prevent this",
-            },
-          ].map((tip, idx) => (
+          <div className="relative inline-block mb-8">
             <motion.div
-              key={idx}
-              variants={itemVariants}
-              // Updated tip card background
-              className="bg-white/5 backdrop-blur-md rounded-lg p-6 border border-white/10"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+              className="relative"
             >
-              {/* Updated text colors */}
-              <h4 className="text-lg font-bold text-white mb-2">
-                {tip.title}
-              </h4>
-              <p className="text-gray-300">{tip.desc}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </motion.section>
+              {/* Decorative shapes */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute -inset-12 opacity-10"
+              >
+                <svg viewBox="0 0 200 200" className="w-32 h-32">
+                  <circle cx="100" cy="50" r="40" fill="#06B6D4" />
+                  <circle cx="150" cy="120" r="30" fill="#EC4899" />
+                  <circle cx="50" cy="130" r="35" fill="#10B981" />
+                </svg>
+              </motion.div>
 
-      {/* CTA Section */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-        // Updated CTA background
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-cyan-500 to-blue-600"
-      >
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto text-center"
-        >
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to Build Your Resume?
-          </h2>
-          <p className="text-xl text-white/90 mb-8">
-            Start creating a professional resume in minutes with HIREWISE
-          </p>
-          <Link to="/auth">
-          <motion.button
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            // Inverted button colors
-            className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 mx-auto shadow-lg transition-all"
-          >
-            Build Your Resume
-            <ArrowRight className="h-5 w-5" />
-          </motion.button>
-          </Link>
+              {/* Avatar */}
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 via-cyan-100 to-teal-100 flex items-center justify-center overflow-hidden shadow-xl">
+                <div className="text-6xl">👤</div>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
-      </motion.section>
+
+        {/* Câu hỏi */}
+        <h2 className="text-3xl font-semibold text-gray-800 mb-8">
+          Do you have an existing resume to use as a starting point?
+        </h2>
+
+        {/* Các nút lựa chọn */}
+        <div className="flex gap-4">
+          <Link to="/upload">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-10 py-3 rounded-lg text-lg transition-colors shadow-md"
+            >
+              Yes
+            </motion.button>
+          </Link>
+
+          <Link to="/templates"> {/* Giả sử "No" sẽ dẫn đến trang chọn template */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-purple-500 hover:bg-purple-600 text-white font-semibold px-10 py-3 rounded-lg text-lg transition-colors shadow-md"
+            >
+              No
+            </motion.button>
+          </Link>
+        </div>
+      </motion.div>
     </div>
   );
 }

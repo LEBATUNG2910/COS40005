@@ -6,6 +6,7 @@ import HowItWork from './app/process/HowItWork'
 import CvUpload from './app/upload/cv-upload'
 import Footer from './components/footer'
 import Header from './components/header'
+import ResumeTemplateSelection from './app/selection/ResumeTemplateSelection'
 
 function App() {
   const location = useLocation();
@@ -21,6 +22,7 @@ function App() {
           <Route path="/auth" element={<AuthPage />} />
           <Route path='/upload' element={<CvUpload/>} />
           <Route path='/process' element={<HowItWork/>} />
+          <Route path='/selection' element={<ResumeTemplateSelection/>} />
         </Routes>
       </main>
       {!hideFooter && <Footer />}

@@ -1,14 +1,17 @@
 "use client"
 import { useState, useRef, useCallback } from 'react'
-import { Upload, FileText, Check, X, AlertCircle, Download } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom' // M_Note: Thêm Link
+import { Upload, FileText, Check, X, AlertCircle, Download, ArrowLeft } from 'lucide-react' 
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { useFileUpload } from '../../hooks/use-file-upload'
+import { motion } from "framer-motion";
 
 //Function to upload CV
 export default function CVUpload() {
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef(null)
+const navigate = useNavigate(); // M_Note: Khởi tạo navigate
 
   const {
     file,
@@ -69,9 +72,64 @@ export default function CVUpload() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  const steps = [
+    { id: 1, name: "Start" },
+    { id: 2, name: "Customize" },
+    { id: 3, name: "Finish" },
+  ];
+  const currentStep = 2; // Đặt bước hiện tại là 2
+
   return (
-    <div className="min-h-screen bg-white pt-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-white pt-8">
+      
+      {/* --- Header với nút Back và Steps --- */}
+      <div className="max-w-5xl mx-auto px-6 mb-8">
+        <div className="grid grid-cols-3 items-center">
+          
+          {/* Nút Back */}
+          <Link
+            to="/process"
+            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors w-fit"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-semibold">Back</span>
+          </Link>
+
+          {/* Thanh tiến trình (Steps) */}
+          <nav className="flex items-center justify-center space-x-4">
+            {steps.map((step) => (
+              <div key={step.id} className="flex items-center gap-2">
+                <motion.div
+                  animate={{
+                    scale: step.id === currentStep ? 1.1 : 1,
+                    backgroundColor:
+                      step.id === currentStep
+                        ? "#10B981" // Green-500
+                        : "#D1D5DB", // Gray-300
+                    borderColor:
+                      step.id === currentStep
+                        ? "#10B981" // Green-500
+                        : "#D1D5DB", // Gray-300
+                  }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                >
+                  {step.id}
+                </motion.div>
+                {step.id < steps.length && (
+                  <div className="w-16 h-0.5 bg-gray-300" />
+                )}
+              </div>
+            ))}
+          </nav>
+          
+          {/* Div trống để căn giữa steps */}
+          <div></div>
+        </div>
+      </div>
+
+      {/* --- Nội dung chính --- */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-4">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Upload Your CV
@@ -226,9 +284,14 @@ export default function CVUpload() {
                     >
                       Upload Another
                     </Button>
-                    <Button className="min-w-[120px] bg-cyan-500 hover:bg-cyan-600 text-white">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Report
+                    {/* M_Note: Đã cập nhật nút này để điều hướng */}
+                    <Button 
+                      className="min-w-[120px] bg-cyan-500 hover:bg-cyan-600 text-white"
+                      onClick={() => navigate('/selection')}
+                    >
+                      {/* M_Note: Đổi icon và text */}
+                      <Check className="w-4 h-4 mr-2" />
+                      Go to Selection
                     </Button>
                   </>
                 )}
