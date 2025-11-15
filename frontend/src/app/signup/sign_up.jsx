@@ -79,8 +79,8 @@ export default function SignUp() {
             value={formData.fullName}
             onChange={handleChange}
             placeholder="Enter full name"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-              errors.fullName ? "border-red-500" : "border-gray-300"
+            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
+              errors.fullName ? "border-red-500" : "border-cyan-500"
             }`}
           />
           {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
@@ -95,8 +95,8 @@ export default function SignUp() {
             value={formData.phoneNumber}
             onChange={handleChange}
             placeholder="Enter phone number"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-              errors.phoneNumber ? "border-red-500" : "border-gray-300"
+            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
+              errors.phoneNumber ? "border-red-500" : "border-cyan-500"
             }`}
           />
           {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
@@ -111,8 +111,8 @@ export default function SignUp() {
             value={formData.email}
             onChange={handleChange}
             placeholder="Enter email"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-              errors.email ? "border-red-500" : "border-gray-300"
+            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
+              errors.email ? "border-red-500" : "border-cyan-500"
             }`}
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -128,8 +128,8 @@ export default function SignUp() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter password"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-10 ${
-                errors.password ? "border-red-500" : "border-gray-300"
+              className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all pr-10 ${
+                errors.password ? "border-red-500" : "border-cyan-500"
               }`}
             />
             <button
@@ -153,8 +153,8 @@ export default function SignUp() {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Re-enter password"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-10 ${
-                errors.confirmPassword ? "border-red-500" : "border-gray-300"
+              className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all pr-10 ${
+                errors.confirmPassword ? "border-red-500" : "border-cyan-500"
               }`}
             />
             <button
@@ -180,7 +180,7 @@ export default function SignUp() {
                   value={gender}
                   checked={formData.gender === gender}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-500 cursor-pointer"
+                  className="w-4 h-4 text-cyan-500 cursor-pointer "
                 />
                 <span className="text-sm text-gray-700 capitalize">{gender}</span>
               </label>
@@ -196,15 +196,15 @@ export default function SignUp() {
               name="agreeToTerms"
               checked={formData.agreeToTerms}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-500 rounded cursor-pointer mt-0.5"
+              className="w-4 h-4 text-cyan-400 bg-white rounded cursor-pointer mt-0.5 accent-cyan-500"
             />
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-white-600">
               I agree to the{" "}
-              <a href="#" className="text-blue-500 hover:underline">
+              <a href="#" className="text-cyan-500 hover:underline">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="text-blue-500 hover:underline">
+              <a href="#" className="text-cyan-500 hover:underline">
                 Privacy Policy
               </a>
             </span>
@@ -215,7 +215,7 @@ export default function SignUp() {
               name="receiveNewsletter"
               checked={formData.receiveNewsletter}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-500 rounded cursor-pointer mt-0.5"
+              className="w-4 h-4 text-cyan-500 rounded focus:ring-2 focus:ring-cyan-500 cursor-pointer mt-0.5 accent-cyan-500"
             />
             <span className="text-xs text-gray-600">Receive promotional information and news from Lang Chats</span>
           </label>
@@ -224,7 +224,7 @@ export default function SignUp() {
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 animate-fade-in"
+          className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 animate-fade-in"
           style={{ animationDelay: "0.8s" }}
         >
           Sign Up
