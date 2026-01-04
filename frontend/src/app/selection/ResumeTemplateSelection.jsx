@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Check } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
+
+// Assuming these paths are correct for your project
 import pic9 from '../../assets/pic9.jpg'
 import pic10 from '../../assets/pic10.jpg'
 import pic11 from '../../assets/pic11.jpg'
@@ -21,24 +23,18 @@ export default function ResumeTemplateSelection() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
-
   const [hideHeader, setHideHeader] = useState(false)
 
   /** 🔥 Detect scroll direction */
   useEffect(() => {
     let lastScroll = 0
-
     const handleScroll = () => {
       const currentScroll = window.scrollY
-
       if (currentScroll > lastScroll && currentScroll > 80) {
-        // scroll down → hide
         setHideHeader(true)
       } else {
-        // scroll up → show
         setHideHeader(false)
       }
-
       lastScroll = currentScroll
     }
 
@@ -69,7 +65,7 @@ export default function ResumeTemplateSelection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <motion.div
             animate={{ rotate: 360 }}
@@ -89,8 +85,7 @@ export default function ResumeTemplateSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-
+    <div className="min-h-screen bg-gray-50 pb-24">
       {/* 🔥 Header hides on scroll */}
       <motion.div
         initial={{ y: 0, opacity: 1 }}
@@ -99,122 +94,132 @@ export default function ResumeTemplateSelection() {
           opacity: hideHeader ? 0 : 1,
         }}
         transition={{ duration: 0.35 }}
-        className="sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200"
+        className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-3 items-center">
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
             {/* Back Button */}
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ x: -4 }}
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors w-fit"
+              className="flex items-center gap-2 text-gray-600 hover:text-cyan-600 transition-colors font-medium"
             >
               <ArrowLeft className="h-5 w-5" />
-              <span className="font-medium">Back</span>
+              <span>Back</span>
             </motion.button>
 
             {/* Progress Steps */}
-            <nav className="flex items-center justify-center space-x-4">
+            <nav className="hidden sm:flex items-center space-x-4">
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center gap-2">
-                  <motion.div
-                    animate={{
-                      scale: step === 3 ? 1.1 : 1,
-                      backgroundColor: step === 3 ? "#10B981" : "#D1D5DB",
-                      borderColor: step === 3 ? "#10B981" : "#D1D5DB",
-                    }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      step === 3 ? "bg-cyan-500 text-white shadow-md shadow-cyan-200" : "bg-gray-200 text-gray-500"
+                    }`}
                   >
                     {step}
-                  </motion.div>
-                  {step < 3 && <div className="w-16 h-0.5 bg-gray-300" />}
+                  </div>
+                  {step < 3 && <div className="w-8 h-0.5 bg-gray-200" />}
                 </div>
               ))}
             </nav>
 
-            <div></div>
+            <div className="w-16"></div> {/* Spacer for alignment */}
           </div>
         </div>
       </motion.div>
 
       {/* Main Content */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
-
-        {/* Avatar Section */}
-        <div className="text-center mb-12">
-          <div className="relative inline-block mb-8">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 via-cyan-100 to-teal-100 flex items-center justify-center">
-              <div className="text-6xl">👤</div>
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Please select a template for your resume.
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            Choose your resume template
           </h1>
-          <p className="text-lg text-gray-600">
-            You can always change it later.
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+            Our templates are professionally designed to pass Applicant Tracking Systems (ATS). You can switch designs at any time.
           </p>
         </div>
 
         {/* Template grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {templates.map((template, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          {templates.map((template) => (
             <motion.div
               key={template.id}
-              whileHover={{ y: -8 }}
+              whileHover={{ y: -10 }}
               onClick={() => setSelectedTemplate(template.id)}
-              className={`group cursor-pointer relative overflow-hidden rounded-xl shadow-md transition-all ${
+              className={`group cursor-pointer relative flex flex-col rounded-2xl transition-all duration-300 ${
                 selectedTemplate === template.id
-                  ? "ring-2 ring-cyan-500 shadow-xl"
-                  : "hover:shadow-lg"
+                  ? "ring-4 ring-cyan-500/20"
+                  : ""
               }`}
             >
-              <div className="aspect-[3/4] bg-gray-100 overflow-hidden relative">
+              {/* Image Frame: Fixed aspect ratio for standard documents (A4/Letter) */}
+              <div className={`relative aspect-[1/1.4] rounded-xl overflow-hidden bg-white border-2 transition-all duration-300 shadow-sm ${
+                selectedTemplate === template.id ? "border-cyan-500 shadow-xl" : "border-gray-100 hover:border-cyan-200"
+              }`}>
                 <img
                   src={template.image}
                   alt={template.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  /* object-contain ensures the whole picture fits without stretching or cropping */
+                  className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.03]"
                 />
 
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-full font-semibold">
-                    Choose
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="bg-white/90 backdrop-blur shadow-xl text-gray-900 px-6 py-2 rounded-full font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                    Use Template
                   </div>
                 </div>
+
+                {/* Selection Badge */}
+                <AnimatePresence>
+                  {selectedTemplate === template.id && (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute top-4 right-4 bg-cyan-500 text-white p-2 rounded-full shadow-lg z-10"
+                    >
+                      <Check className="h-5 w-5 stroke-[3px]" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              <div className="p-4 bg-white text-center font-semibold">
-                {template.name}
+              {/* Template Title */}
+              <div className="mt-4 text-center">
+                <span className={`text-lg font-bold transition-colors ${
+                  selectedTemplate === template.id ? "text-cyan-600" : "text-gray-700"
+                }`}>
+                  {template.name}
+                </span>
               </div>
-
-              {selectedTemplate === template.id && (
-                <div className="absolute top-3 right-3 bg-gradient-to-br from-cyan-500 to-teal-500 text-white p-1 rounded-full shadow-lg">
-                  <Check className="h-5 w-5" />
-                </div>
-              )}
             </motion.div>
           ))}
         </div>
 
-        {selectedTemplate && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mt-12"
-          >
-            <button className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl">
-              Continue with Selected Template
-            </button>
-          </motion.div>
-        )}
+        {/* Floating Action Button */}
+        <AnimatePresence>
+          {selectedTemplate && (
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="fixed bottom-10 left-0 right-0 flex justify-center z-50"
+            >
+              <button className="bg-gray-900 hover:bg-black text-white px-10 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 transition-all active:scale-95">
+                <span>Continue with this design</span>
+                <div className="h-6 w-px bg-white/20" />
+                <ArrowLeft className="h-5 w-5 rotate-180" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   )

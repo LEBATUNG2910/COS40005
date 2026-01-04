@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import typhoon from '../assets/typhoon.png'
 
 // --- SVG Icons for Mobile Menu ---
 const MenuIcon = () => (
@@ -37,10 +38,9 @@ function Header() {
 
   // Define nav links in one place
   const navLinks = [
-    { title: "Upload CV", path:'/upload'},
-    { title: "Resources", path: "#" },
+    // { title: "Resources", path: "/resource" },
+    { title: "Blog", path: "/resource" },
     { title: "Career Center", path: "#" },
-    { title: "Blog", path: "#" },
     { title: "Pricing", path: "#" },
     { title: "For Organizations", path: "#" },
   ];
@@ -55,9 +55,16 @@ function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold">
-            <span className="text-cyan-500">HIREWISE</span>
-          </Link>
+          <Link to="/" className="flex items-center text-2xl font-bold">
+      {/* Inserted the image before the text span */}
+      {/* Adjust 'h-8' (height) and 'mr-2' (margin-right) as needed */}
+      <img
+        src="/typhoon.png"
+        alt="HireWise Logo"
+        className="h-8 w-auto mr-2"
+      />
+      <span className="text-cyan-500">HIREWISE</span>
+    </Link>
 
           {/* --- Desktop Nav --- */}
           <nav className="hidden md:flex items-center gap-8">

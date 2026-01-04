@@ -7,6 +7,7 @@ import CvUpload from './app/upload/cv-upload'
 import Footer from './components/footer'
 import Header from './components/header'
 import ResumeTemplateSelection from './app/selection/ResumeTemplateSelection'
+import Resource from './app/resource/Resource'
 
 function App() {
   const location = useLocation();
@@ -23,6 +24,8 @@ function App() {
           <Route path='/upload' element={<CvUpload/>} />
           <Route path='/process' element={<HowItWork/>} />
           <Route path='/selection' element={<ResumeTemplateSelection/>} />
+          <Route path='/resource' element={<Resource/>} />
+
         </Routes>
       </main>
       {!hideFooter && <Footer />}
