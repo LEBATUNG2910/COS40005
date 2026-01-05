@@ -3,42 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import typhoon from '../assets/typhoon.png'
-
-// --- SVG Icons for Mobile Menu ---
-const MenuIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-// --- End SVG Icons ---
+import { Menu, X } from "lucide-react"; // ← added lucide-react icons
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Define nav links in one place
   const navLinks = [
-    // { title: "Resources", path: "/resource" },
     { title: "Blog", path: "/resource" },
     { title: "Career Center", path: "#" },
     { title: "Pricing", path: "#" },
@@ -50,21 +21,20 @@ function Header() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      // Added relative positioning for the dropdown
       className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 relative"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
+          
+          {/* --- Logo --- */}
           <Link to="/" className="flex items-center text-2xl font-bold">
-      {/* Inserted the image before the text span */}
-      {/* Adjust 'h-8' (height) and 'mr-2' (margin-right) as needed */}
-      <img
-        src="/typhoon.png"
-        alt="HireWise Logo"
-        className="h-8 w-auto mr-2"
-      />
-      <span className="text-cyan-500">HIREWISE</span>
-    </Link>
+            <img
+              src="/typhoon.png"
+              alt="HireWise Logo"
+              className="h-8 w-auto mr-2"
+            />
+            <span className="text-cyan-500">HIREWISE</span>
+          </Link>
 
           {/* --- Desktop Nav --- */}
           <nav className="hidden md:flex items-center gap-8">
@@ -85,11 +55,9 @@ function Header() {
               Sign in
             </Link>
             <Link to="/process">
-            <button
-              className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium"
-            >
-              Get Started
-            </button>
+              <button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium">
+                Get Started
+              </button>
             </Link>
           </div>
 
@@ -99,7 +67,7 @@ function Header() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-gray-700"
             >
-              {isMobileMenuOpen ? <XIcon /> : <MenuIcon />}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -113,7 +81,6 @@ function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            // This panel is hidden on md screens and up
             className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg border-t border-gray-200"
           >
             <nav className="flex flex-col p-4">
@@ -122,27 +89,30 @@ function Header() {
                   key={link.title}
                   to={link.path}
                   className="py-2 px-3 rounded hover:bg-gray-100 transition text-black"
-                  // Close menu on link click
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.title}
                 </Link>
               ))}
-              
-              {/* Add mobile auth buttons */}
+
+              {/* Mobile Auth */}
               <div className="border-t border-gray-100 my-2"></div>
-              <Link to='/auth' onClick={() => setIsMobileMenuOpen(false)} 
-              className="py-2 px-3 rounded hover:bg-gray-100 transition text-black text-left">
+              <Link
+                to="/auth"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-2 px-3 rounded hover:bg-gray-100 transition text-black text-left"
+              >
                 Sign in
               </Link>
-              <Link to='/process' onClick={() => setIsMobileMenuOpen(false)}>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium w-full mt-2"
-              >
-                Get Started
-              </motion.button>
+
+              <Link to="/process" onClick={() => setIsMobileMenuOpen(false)}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium w-full mt-2"
+                >
+                  Get Started
+                </motion.button>
               </Link>
             </nav>
           </motion.div>
