@@ -1,46 +1,50 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignIn() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     emailOrPhone: "",
     password: "",
     rememberMe: false,
-  })
+  });
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState({})
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }))
-  }
+    }));
+  };
 
   const validateForm = () => {
-    const newErrors = {}
+    const newErrors = {};
 
     if (!formData.emailOrPhone.trim()) {
-      newErrors.emailOrPhone = "Email or phone number is required"
+      newErrors.emailOrPhone = "Email or phone number is required";
     }
     if (!formData.password) {
-      newErrors.password = "Password is required"
+      newErrors.password = "Password is required";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      console.log("Sign in data:", formData)
+      console.log("Sign in data:", formData);
+      navigate("/home");
     }
-  }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 animate-slide-up">
@@ -50,7 +54,8 @@ export default function SignIn() {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email or Phone */}
+
+        {/* Email / Phone */}
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Email or Phone Number
@@ -61,9 +66,9 @@ export default function SignIn() {
             value={formData.emailOrPhone}
             onChange={handleChange}
             placeholder="Enter email or phone number"
-            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
-              errors.emailOrPhone ? "border-red-500" : "border-cyan-500"
-            }`}
+            className={`w-full px-4 py-2 bg-white text-black border rounded-lg
+              focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all
+              ${errors.emailOrPhone ? "border-red-500" : "border-cyan-500"}`}
           />
           {errors.emailOrPhone && (
             <p className="text-red-500 text-xs mt-1">{errors.emailOrPhone}</p>
@@ -82,9 +87,9 @@ export default function SignIn() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter password"
-              className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all pr-10 ${
-                errors.password ? "border-red-500" : "border-cyan-500"
-              }`}
+              className={`w-full px-4 py-2 bg-white text-black border rounded-lg pr-10
+                focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all
+                ${errors.password ? "border-red-500" : "border-cyan-500"}`}
             />
             <button
               type="button"
@@ -99,7 +104,7 @@ export default function SignIn() {
           )}
         </div>
 
-        {/* Remember Me and Forgot Password */}
+        {/* Remember Me + Forgot Password */}
         <div
           className="flex justify-between items-center animate-fade-in"
           style={{ animationDelay: "0.3s" }}
@@ -110,10 +115,11 @@ export default function SignIn() {
               name="rememberMe"
               checked={formData.rememberMe}
               onChange={handleChange}
-              className="w-4 h-4 text-gray-500 rounded cursor-pointer accent-cyan-500"
+              className="w-4 h-4 bg-white accent-cyan-500 cursor-pointer"
             />
             <span className="text-sm text-gray-700">Remember me</span>
           </label>
+
           <a href="#" className="text-sm text-cyan-500 hover:underline">
             Forgot password?
           </a>
@@ -138,12 +144,15 @@ export default function SignIn() {
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* SSO Login Options */}
+        {/* SSO Buttons */}
         <div className="space-y-3">
+
           {/* Google */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300
+              hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium
+              py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
             style={{ animationDelay: "0.6s" }}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -158,14 +167,16 @@ export default function SignIn() {
           {/* Microsoft */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300
+              hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium
+              py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
             style={{ animationDelay: "0.65s" }}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#f25022" d="M1 1h10v10H1z"/>
-              <path fill="#00a4ef" d="M13 1h10v10H13z"/>
-              <path fill="#7fba00" d="M1 13h10v10H1z"/>
-              <path fill="#ffb900" d="M13 13h10v10H13z"/>
+              <path fill="#f25022" d="M1 1h10v10H1z" />
+              <path fill="#00a4ef" d="M13 1h10v10H13z" />
+              <path fill="#7fba00" d="M1 13h10v10H1z" />
+              <path fill="#ffb900" d="M13 13h10v10H13z" />
             </svg>
             Continue with Microsoft
           </button>
@@ -173,11 +184,13 @@ export default function SignIn() {
           {/* GitHub */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300
+              hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium
+              py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
             style={{ animationDelay: "0.7s" }}
           >
             <svg className="w-5 h-5" fill="#181717" viewBox="0 0 24 24">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
             </svg>
             Continue with GitHub
           </button>
@@ -185,11 +198,13 @@ export default function SignIn() {
           {/* Apple */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300
+              hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium
+              py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
             style={{ animationDelay: "0.75s" }}
           >
             <svg className="w-5 h-5" fill="#000" viewBox="0 0 24 24">
-              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
             </svg>
             Continue with Apple
           </button>
@@ -197,7 +212,9 @@ export default function SignIn() {
           {/* Facebook */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300
+              hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium
+              py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in"
             style={{ animationDelay: "0.8s" }}
           >
             <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
@@ -205,8 +222,10 @@ export default function SignIn() {
             </svg>
             Continue with Facebook
           </button>
+
         </div>
+
       </form>
     </div>
-  )
+  );
 }

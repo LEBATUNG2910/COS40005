@@ -3,10 +3,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X } from "lucide-react"; // ← added lucide-react icons
+import { Menu, X, User } from "lucide-react";
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Define nav links in one place
   const navLinks = [
@@ -51,9 +52,41 @@ function Header() {
 
           {/* --- Desktop Auth Buttons --- */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth" className="text-gray-600 hover:text-black transition">
-              Sign in
-            </Link>
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsUserMenuOpen(true)}
+              onMouseLeave={() => setIsUserMenuOpen(false)}
+            >
+              <button className="text-gray-600 hover:text-black transition">
+                <User/>
+              </button>
+              
+              {/* User Dropdown Menu */}
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2"
+                  >
+                    <Link
+                      to="/account"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                    >
+                      Account
+                    </Link>
+                    <Link
+                      to="/auth"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                    >
+                      Logout
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <Link to="/process">
               <button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium">
                 Get Started

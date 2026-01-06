@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import SignUp from "../signup/sign_up"
 import SignIn from "../signin/sign_in"
 
+
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false)
 
@@ -13,21 +14,33 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <motion.h1
+
+          {/* --- CHANGE 2 & 3: Flex container for Logo + Text with shared animation --- */}
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl font-bold text-blue-500 mb-2"
+            className="flex items-center justify-center mb-2" // Added flex layout centering
           >
-            HIREWISE
-          </motion.h1>
+            {/* Added Image */}
+            <img
+              src='./typhoon.png'
+              alt="Hirewise Logo"
+              className="h-12 w-auto mr-3" // Sizing and spacing right
+            />
+            {/* H1 is no longer a motion component itself, just standard H1 */}
+            <h1 className="text-4xl font-bold text-cyan-500">
+              HIREWISE
+            </h1>
+          </motion.div>
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-gray-600"
           >
-            Sign in to access full services
+            {/* Add a subtitle here if needed */}
           </motion.p>
         </div>
 

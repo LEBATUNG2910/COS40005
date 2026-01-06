@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, CheckCircle } from "lucide-react"
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -18,6 +18,7 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -30,28 +31,26 @@ export default function SignUp() {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required"
-    }
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "Phone number is required"
-    }
+    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required"
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required"
+
     if (!formData.email.trim()) {
       newErrors.email = "Email is required"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format"
     }
+
     if (!formData.password) {
       newErrors.password = "Password is required"
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters"
     }
-    if (formData.password !== formData.confirmPassword) {
+
+    if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match"
-    }
-    if (!formData.agreeToTerms) {
+
+    if (!formData.agreeToTerms)
       newErrors.agreeToTerms = "You must agree to the terms"
-    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -61,180 +60,236 @@ export default function SignUp() {
     e.preventDefault()
     if (validateForm()) {
       console.log("Sign up data:", formData)
+      setShowSuccessModal(true)
     }
   }
 
+  const handleGoToLogin = () => window.location.reload()
+
+  const inputBase =
+    "text-black w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 animate-slide-up">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Sign Up</h2>
-      <p className="text-gray-600 text-sm mb-6">Create a new account to use Lang Chats services</p>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
-          <input
-            type="text"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            placeholder="Enter full name"
-            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
-              errors.fullName ? "border-red-500" : "border-cyan-500"
-            }`}
-          />
-          {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
-        </div>
-
-        {/* Phone Number */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            placeholder="Enter phone number"
-            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
-              errors.phoneNumber ? "border-red-500" : "border-cyan-500"
-            }`}
-          />
-          {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
-        </div>
-
-        {/* Email */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter email"
-            className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all ${
-              errors.email ? "border-red-500" : "border-cyan-500"
-            }`}
-          />
-          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-        </div>
-
-        {/* Password */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.4s" }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter password"
-              className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all pr-10 ${
-                errors.password ? "border-red-500" : "border-cyan-500"
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-        </div>
-
-        {/* Confirm Password */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.5s" }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password *</label>
-          <div className="relative">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Re-enter password"
-              className={`w-full px-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all pr-10 ${
-                errors.confirmPassword ? "border-red-500" : "border-cyan-500"
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-            >
-              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
-        </div>
-
-        {/* Gender */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.6s" }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
-          <div className="flex gap-6">
-            {["male", "female", "other"].map((gender) => (
-              <label key={gender} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="gender"
-                  value={gender}
-                  checked={formData.gender === gender}
-                  onChange={handleChange}
-                  className="w-4 h-4 text-cyan-500 cursor-pointer "
-                />
-                <span className="text-sm text-gray-700 capitalize">{gender}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Checkboxes */}
-        <div className="space-y-3 animate-fade-in" style={{ animationDelay: "0.7s" }}>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              name="agreeToTerms"
-              checked={formData.agreeToTerms}
-              onChange={handleChange}
-              className="w-4 h-4 text-cyan-400 bg-white rounded cursor-pointer mt-0.5 accent-cyan-500"
-            />
-            <span className="text-xs text-white-600">
-              I agree to the{" "}
-              <a href="#" className="text-cyan-500 hover:underline">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-cyan-500 hover:underline">
-                Privacy Policy
-              </a>
-            </span>
-          </label>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              name="receiveNewsletter"
-              checked={formData.receiveNewsletter}
-              onChange={handleChange}
-              className="w-4 h-4 text-cyan-500 rounded focus:ring-2 focus:ring-cyan-500 cursor-pointer mt-0.5 accent-cyan-500"
-            />
-            <span className="text-xs text-gray-600">Receive promotional information and news from Lang Chats</span>
-          </label>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 animate-fade-in"
-          style={{ animationDelay: "0.8s" }}
-        >
-          Sign Up
-        </button>
-
-        {/* Disclaimer */}
-        <p className="text-xs text-gray-500 text-center mt-4">
-          By signing up, you confirm that you have read and agree to the terms above.
+    <>
+      <div className="bg-white rounded-lg shadow-lg p-8 animate-slide-up relative">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Sign Up</h2>
+        <p className="text-gray-600 text-sm mb-6">
+          Create a new account to use Lang Chats services
         </p>
-      </form>
-    </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* Full Name */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Full Name *
+            </label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="Enter full name"
+              className={`text-black ${inputBase} ${
+                errors.fullName ? "border-red-500" : "border-cyan-500"
+              }`}
+            />
+            {errors.fullName && (
+              <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
+            )}
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Phone Number *
+            </label>
+            <input
+              type="tel"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              placeholder="Enter phone number"
+              className={`text-black ${inputBase} ${
+                errors.phoneNumber ? "border-red-500" : "border-cyan-500"
+              }`}
+            />
+            {errors.phoneNumber && (
+              <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Email *
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter email"
+              className={`text-black ${inputBase} ${
+                errors.email ? "border-red-500" : "border-cyan-500"
+              }`}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Password *
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter password"
+                className={`text-black ${inputBase} pr-10 ${
+                  errors.password ? "border-red-500" : "border-cyan-500"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Confirm Password *
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Re-enter password"
+                className={`text-black ${inputBase} pr-10 ${
+                  errors.confirmPassword ? "border-red-500" : "border-cyan-500"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.confirmPassword}
+              </p>
+            )}
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Gender
+            </label>
+            <div className="flex gap-6">
+              {["male", "female", "other"].map((gender) => (
+                <label key={gender} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={gender}
+                    checked={formData.gender === gender}
+                    onChange={handleChange}
+                    className="w-4 h-4 bg-white accent-cyan-500 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-700 capitalize">
+                    {gender}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Checkboxes */}
+          <div className="space-y-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="agreeToTerms"
+                checked={formData.agreeToTerms}
+                onChange={handleChange}
+                className="w-4 h-4 bg-white accent-cyan-500 cursor-pointer"
+              />
+              <span className="text-xs text-cyan-500 hover:underline">
+                I agree to the Terms of Service & Privacy Policy
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="receiveNewsletter"
+                checked={formData.receiveNewsletter}
+                onChange={handleChange}
+                className="w-4 h-4 bg-white accent-cyan-500 cursor-pointer"
+              />
+              <span className="text-xs text-gray-600">
+                Receive promotional information and news from Lang Chats
+              </span>
+            </label>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg transition-all"
+          >
+            Sign Up
+          </button>
+
+          <p className="text-xs text-gray-500 text-center mt-4">
+            By signing up, you confirm that you have read and agree to the terms above.
+          </p>
+        </form>
+      </div>
+
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center mx-4">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-green-500" />
+            </div>
+
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              Account Created!
+            </h3>
+            <p className="text-gray-600 mb-8">
+              Your account has been successfully registered. Please log in to continue.
+            </p>
+
+            <button
+              onClick={handleGoToLogin}
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

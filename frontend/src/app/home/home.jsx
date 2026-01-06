@@ -1,4 +1,3 @@
-import Header from '../../components/header'
 import Hero from '../../components/hero'
 import TemplateShowcase from "../../components/template-showcase"
 import SocialProof from "../../components/social-proof"
