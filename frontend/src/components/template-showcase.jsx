@@ -9,7 +9,7 @@ import { CheckCircle, Layers, Columns } from "lucide-react"; // Import Lucide ic
 import pic9 from "../assets/pic9.jpg";
 import pic10 from "../assets/pic10.jpg";
 import pic11 from "../assets/pic11.jpg";
-import pic12 from "../assets/pic12.jpg";
+import pic22 from "../assets/pic22.jpg";
 import pic13 from "../assets/pic13.jpg";
 import pic14 from "../assets/pic14.jpg";
 import pic15 from "../assets/pic15.jpg";
@@ -25,7 +25,7 @@ function TemplateShowcase() {
     { id: 1, title: "Modern", image: pic9 },
     { id: 2, title: "Classic", image: pic10 },
     { id: 3, title: "Creative", image: pic11 },
-    { id: 4, title: "Professional", image: pic12 },
+    { id: 4, title: "Professional", image: pic22 },
     { id: 5, title: "Dark Mode", image: pic13 },
     { id: 6, title: "Minimalist", image: pic14 },
     { id: 7, title: "Academic", image: pic15 },
@@ -149,9 +149,6 @@ function TemplateShowcase() {
                     className="group cursor-pointer bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
                   >
                     <div className="h-[380px] w-full relative">
-                       {/* object-cover: Ensures image covers the area (no empty space).
-                         object-top: Ensures the top of the resume is always visible if cropping occurs.
-                       */}
                       <img
                         src={template.image}
                         alt={template.title}

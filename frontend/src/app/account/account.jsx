@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Crown, FileText, Edit3, X } from "lucide-react";
+import { ArrowLeft, Crown, FileText, Edit3, X, Check, Zap, AlertCircle } from "lucide-react";
 
 function Account() {
   const [fullName, setFullName] = useState("Le Ba Tung");
   const [email] = useState("bumieba2910@gmail.com");
   const [language, setLanguage] = useState("English");
   const [newsletter, setNewsletter] = useState(true);
+  
+  // New state for the Pro Card functions
+  const [billingCycle, setBillingCycle] = useState("yearly");
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header would go here */}
-      
+    <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
@@ -49,13 +50,13 @@ function Account() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 flex flex-col xl:flex-row gap-6">
             
             {/* Profile Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-sm p-6"
+              className="flex-1 bg-white rounded-lg shadow-sm p-6 h-full"
             >
               <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Profile</h1>
 
@@ -127,11 +128,6 @@ function Account() {
                 </label>
               </div>
 
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium mb-6">
-                Change Cookie Preferences
-              </button>
-
-              {/* Delete Account */}
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Account</h3>
                 <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -145,75 +141,102 @@ function Account() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-lg shadow-sm border-2 border-cyan-500 p-6"
+              // Added h-full and flex column layout to distribute content
+              className="flex-1 bg-white rounded-lg shadow-sm border-2 border-cyan-500 p-6 h-full flex flex-col"
             >
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Get more with Pro</h2>
-                <button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition font-medium">
-                  Upgrade
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900">Get more with Pro</h2>
+                    <p className="text-sm text-gray-500 mt-1">Unlock your full potential</p>
+                </div>
+                <div className="bg-cyan-100 p-2 rounded-full">
+                    <Crown className="w-6 h-6 text-cyan-600" />
+                </div>
+              </div>
+
+              {/* NEW: Usage Stats (Adds height and context) */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="w-4 h-4 text-orange-500" />
+                    <span className="text-sm font-semibold text-gray-700">Free Plan Limit Reached</span>
+                </div>
+                
+                <div className="mb-3">
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>Resumes</span>
+                        <span>1 / 1</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-orange-500 h-2 rounded-full w-full"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>Cover Letters</span>
+                        <span>0 / 1</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-gray-300 h-2 rounded-full w-0"></div>
+                    </div>
+                </div>
+              </div>
+
+              {/* NEW: Billing Cycle Toggle */}
+              <div className="bg-gray-100 p-1 rounded-lg flex mb-6">
+                <button 
+                    onClick={() => setBillingCycle('monthly')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition ${billingCycle === 'monthly' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                    Monthly
+                </button>
+                <button 
+                    onClick={() => setBillingCycle('yearly')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition ${billingCycle === 'yearly' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                    Yearly <span className="text-xs text-green-600 font-bold ml-1">-20%</span>
                 </button>
               </div>
 
-              <p className="text-gray-600 mb-4">
-                <span className="font-semibold">For as little as $3.23 / m.</span> Starting from a month.
-              </p>
+              {/* Price Display */}
+              <div className="mb-6">
+                 <p className="text-3xl font-bold text-gray-900">
+                    {billingCycle === 'yearly' ? '$3.23' : '$5.00'}
+                    <span className="text-sm font-normal text-gray-500"> / month</span>
+                 </p>
+                 <p className="text-sm text-gray-500 mt-1">
+                    {billingCycle === 'yearly' ? 'Billed $38.76 yearly' : 'Billed monthly'}
+                 </p>
+              </div>
 
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3">
-                  <Crown className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <span className="text-gray-700">Add Pro Sections</span>
+              {/* Features List */}
+              <ul className="space-y-4 mb-8 flex-grow">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-700 text-sm">Unlimited resumes & cover letters</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <span className="text-gray-700">Compact template</span>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-700 text-sm">Access to premium templates</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Edit3 className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <span className="text-gray-700">Unlimited entries</span>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-700 text-sm">AI-powered content suggestions</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <span className="text-gray-700">300 resumes and cover letters</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <X className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <span className="text-gray-700">Remove branding</span>
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-700 text-sm">Remove branding from PDF</span>
                 </li>
               </ul>
+
+              <button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg transition font-medium flex items-center justify-center gap-2">
+                <Zap className="w-4 h-4" />
+                Upgrade to Pro
+              </button>
             </motion.div>
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 mt-12 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500 text-sm mb-4">
-            Resumes recruiters love
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-            <a href="#" className="hover:text-gray-900">Resume Examples</a>
-            <span>•</span>
-            <a href="#" className="hover:text-gray-900">Upgrade</a>
-            <span>•</span>
-            <a href="#" className="hover:text-gray-900">Terms</a>
-            <span>•</span>
-            <a href="#" className="hover:text-gray-900">Privacy</a>
-            <span>•</span>
-            <a href="#" className="hover:text-gray-900">Blog</a>
-            <span>•</span>
-            <a href="#" className="hover:text-gray-900">help@enhancv.com</a>
-            <span>•</span>
-            <a href="#" className="hover:text-gray-900">Log Out</a>
-          </div>
-          <p className="text-center text-gray-500 text-xs mt-4">
-            © 2026 Enhancv. All Rights Reserved.
-          </p>
-          <p className="text-center text-gray-400 text-xs mt-2">
-            This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
