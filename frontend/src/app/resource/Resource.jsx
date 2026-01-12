@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, ExternalLink, MessageSquare, Loader2 } from 'lucide-react';
+import { Clock, Calendar, ExternalLink, MessageSquare, Loader2, X, User, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Resource = () => {
@@ -8,12 +8,16 @@ const Resource = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 🔥 NEW: State for the Crawler / Modal
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [postDetails, setPostDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+
   useEffect(() => {
     const fetchRedditData = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Fetching from r/react "hot" feed as per your code
         const response = await fetch('https://www.reddit.com/r/react/hot.json?limit=25');
 
         if (!response.ok) {
@@ -22,26 +26,25 @@ const Resource = () => {
 
         const json = await response.json();
 
-        // Map Reddit data to our UI shape
         const formattedData = json.data.children.map((child) => {
           const post = child.data;
-
-          // Helper to guess category based on title keywords
           const { category, type } = categorizePost(post.title, post.selftext);
 
           return {
             id: post.id,
             category: category,
-            type: type, // Matches your activeTab values
+            type: type,
             title: post.title,
-            // Convert UNIX timestamp to readable date
+            // 🔥 NEW: Store permalink for crawling later
+            permalink: post.permalink,
+            // 🔥 NEW: Store selftext for preview
+            selftext: post.selftext, 
             date: new Date(post.created_utc * 1000).toLocaleDateString('en-US', {
               month: 'short', day: 'numeric', year: 'numeric'
             }),
-            // Use comment count as a metric
             readTime: `${post.num_comments} comments`,
+            commentCount: post.num_comments, // stored as number for logic
             url: `https://www.reddit.com${post.permalink}`,
-            // Check for valid thumbnail URL
             image: (post.thumbnail && post.thumbnail.startsWith('http')) ? post.thumbnail : undefined,
             author: post.author,
             score: post.score
@@ -60,7 +63,7 @@ const Resource = () => {
     fetchRedditData();
   }, []);
 
-  // Simple keyword matching to assign categories
+  // Existing Category Logic
   const categorizePost = (title, body) => {
     const text = (title + " " + (body || "")).toLowerCase();
 
@@ -75,7 +78,41 @@ const Resource = () => {
     }
   };
 
-  // Filter logic
+  // 🔥 NEW: Crawler Function (Fetches comments & full text)
+  const fetchPostDetails = async (permalink) => {
+    setDetailsLoading(true);
+    setPostDetails(null);
+    try {
+      // Append .json to get the data format
+      const response = await fetch(`https://www.reddit.com${permalink}.json`);
+      const json = await response.json();
+
+      // Reddit API returns an array: [0] = post, [1] = comments
+      const originalPost = json[0].data.children[0].data;
+      const comments = json[1].data.children.map(child => child.data);
+
+      setPostDetails({
+        fullText: originalPost.selftext,
+        comments: comments.slice(0, 10) // Limit to top 10 comments
+      });
+    } catch (err) {
+      console.error("Failed to crawl details:", err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  // 🔥 NEW: Handlers for Modal
+  const openPost = (post) => {
+    setSelectedPost(post);
+    fetchPostDetails(post.permalink);
+  };
+
+  const closePost = () => {
+    setSelectedPost(null);
+    setPostDetails(null);
+  };
+
   const filteredResources = activeTab === 'all'
     ? resources
     : resources.filter(item => item.type === activeTab);
@@ -111,7 +148,7 @@ const Resource = () => {
           </div>
         </div>
 
-        {/* Content Area with Animation */}
+        {/* Content Area */}
         {loading ? (
            <div className="flex justify-center items-center h-64">
              <Loader2 className="animate-spin text-blue-600 w-12 h-12" />
@@ -125,10 +162,9 @@ const Resource = () => {
             <p>No posts found for this category right now.</p>
           </div>
         ) : (
-          /* Wrap grid in AnimatePresence and motion.div */
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab} // Trigger animation when tab changes
+              key={activeTab}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -136,11 +172,10 @@ const Resource = () => {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
             >
               {filteredResources.map((resource) => (
-                <a
+                <div
                   key={resource.id}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  // 🔥 CHANGED: Use onClick instead of href to open modal
+                  onClick={() => openPost(resource)}
                   className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer flex flex-col h-full group"
                 >
                   {/* Category Tag */}
@@ -161,13 +196,12 @@ const Resource = () => {
                   {/* Author Info */}
                   <p className="text-sm text-gray-400 mb-4">Posted by u/{resource.author}</p>
 
-                  {/* Optional Image or Description Placeholder */}
+                  {/* Image or Placeholder */}
                   {resource.image ? (
-                     <div className="mb-4 w-full h-40 overflow-hidden rounded-lg bg-gray-100">
-                       <img src={resource.image} alt="Preview" className="w-full h-full object-cover" />
-                     </div>
+                      <div className="mb-4 w-full h-40 overflow-hidden rounded-lg bg-gray-100">
+                        <img src={resource.image} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
                   ) : (
-                    // If no image, show a snippet or visual placeholder
                     <div className="mb-4 w-full h-32 bg-gray-50 rounded-lg border border-dashed border-gray-200 flex items-center justify-center">
                       <span className="text-4xl">⚛️</span>
                     </div>
@@ -193,7 +227,7 @@ const Resource = () => {
                         </span>
                     </div>
                   </div>
-                </a>
+                </div>
               ))}
             </motion.div>
           </AnimatePresence>
@@ -202,13 +236,91 @@ const Resource = () => {
         {/* Bottom Banner */}
         <div className="bg-cyan-500 rounded-2xl overflow-hidden shadow-xl relative mt-16">
            <div className="px-8 py-12 text-center md:text-left relative z-10">
-              <h2 className="text-3xl font-bold text-white mb-4">Need personalized advice?</h2>
-              <p className="text-cyan-100 mb-6">Our AI analyzes thousands of successful tech resumes to build yours.</p>
-              <button className="bg-white text-black font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-100 transition-colors">
-                  Build React Resume
-              </button>
+             <h2 className="text-3xl font-bold text-white mb-4">Need personalized advice?</h2>
+             <p className="text-cyan-100 mb-6">Our AI analyzes thousands of successful tech resumes to build yours.</p>
+             <button className="bg-white text-black font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-100 transition-colors">
+                 Build React Resume
+             </button>
            </div>
         </div>
+
+        {/* 🔥 NEW: Modal for Deep Details */}
+        <AnimatePresence>
+          {selectedPost && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={closePost} className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              {/* Modal Box */}
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 20 }} 
+                animate={{ scale: 1, opacity: 1, y: 0 }} 
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative bg-white w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 pr-8">{selectedPost.title}</h2>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                      <span className="flex items-center"><User size={14} className="mr-1"/> {selectedPost.author}</span>
+                      <span className="flex items-center text-orange-500"><ArrowUp size={14} className="mr-1"/> {selectedPost.score} points</span>
+                    </div>
+                  </div>
+                  <button onClick={closePost} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={20}/></button>
+                </div>
+
+                {/* Modal Content - Scrollable */}
+                <div className="overflow-y-auto p-6 space-y-6">
+                  {detailsLoading ? (
+                    <div className="flex justify-center py-12"><Loader2 className="animate-spin text-blue-600 w-8 h-8"/></div>
+                  ) : (
+                    <>
+                      {/* Full Post Text */}
+                      <div className="prose prose-blue max-w-none text-gray-700 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                         {postDetails?.fullText ? (
+                           <div className="whitespace-pre-line">{postDetails.fullText}</div>
+                         ) : (
+                           <em className="text-gray-400">No text content (likely an image or link post)</em>
+                         )}
+                      </div>
+                      
+                      <a href={selectedPost.url} target="_blank" rel="noreferrer" className="inline-flex items-center text-blue-600 hover:underline font-medium">
+                        View original thread on Reddit <ExternalLink size={14} className="ml-1"/>
+                      </a>
+
+                      {/* Comments Section */}
+                      <div className="mt-6">
+                        <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
+                          <MessageSquare size={18} className="mr-2"/> Top Comments
+                        </h3>
+                        <div className="space-y-4">
+                          {postDetails?.comments && postDetails.comments.length > 0 ? (
+                            postDetails.comments.map((comment) => (
+                              comment.body ? (
+                                <div key={comment.id} className="border-l-2 border-gray-200 pl-4 py-2">
+                                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span className="font-bold text-gray-700">{comment.author}</span>
+                                    <span>{comment.score} pts</span>
+                                  </div>
+                                  <p className="text-sm text-gray-600 leading-relaxed">{comment.body}</p>
+                                </div>
+                              ) : null
+                            ))
+                          ) : (
+                             <p className="text-gray-400 text-sm">No comments loaded.</p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

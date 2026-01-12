@@ -7,57 +7,15 @@ import { ArrowRight } from "lucide-react"; // Giữ lại icon này cho các nú
 // --- Component Chính ---
 export default function HowItWorks() {
   // Dữ liệu cho các bước
-  const steps = [
-    { id: 1, name: "Start" },
-    { id: 2, name: "Customize" },
-    { id: 3, name: "Finish" },
-  ];
-  const currentStep = 1; // Đặt bước hiện tại là 1
+  // const steps = [
+  //   { id: 1, name: "Start" },
+  //   { id: 2, name: "Customize" },
+  //   { id: 3, name: "Finish" },
+  // ];
+  // const currentStep = 1; // Đặt bước hiện tại là 1
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center justify-center p-6 relative">
-      
-      {/* --- Header: Steps và Nút Login --- */}
-      <div className="absolute top-0 left-0 right-0 w-full max-w-5xl mx-auto px-6 pt-8">
-        <div className="flex justify-center items-center">
-          
-          {/* Thanh tiến trình (Steps) */}
-          <nav className="flex items-center space-x-4">
-            {steps.map((step) => (
-              <div key={step.id} className="flex items-center gap-2">
-                <motion.div
-                  animate={{
-                    scale: step.id === currentStep ? 1.1 : 1,
-                    backgroundColor:
-                      step.id === currentStep
-                        ? "#10B981" // Green-500
-                        : "#D1D5DB", // Gray-300
-                    borderColor:
-                      step.id === currentStep
-                        ? "#10B981" // Green-500
-                        : "#D1D5DB", // Gray-300
-                  }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
-                >
-                  {step.id}
-                </motion.div>
-                {step.id < steps.length && (
-                  <div className="w-16 h-0.5 bg-gray-300" />
-                )}
-              </div>
-            ))}
-          </nav>
-
-          {/* Nút Login */}
-          {/* <Link to="/auth">
-            <button className="text-sm font-semibold text-gray-700 hover:text-black border border-gray-300 px-4 py-1.5 rounded-lg transition-colors">
-              Login
-            </button>
-          </Link> */}
-        </div>
-      </div>
-
       {/* --- Nội dung chính --- */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
