@@ -9,7 +9,7 @@ import Header from './components/header'
 import ResumeTemplateSelection from './app/selection/ResumeTemplateSelection'
 import Resource from './app/resource/Resource'
 import Account from './app/account/account'
-import CvAnalyst from './app/cv-analyst/page'
+import PrivateRoute from './components/PrivateRoute'
 
 // 🔥 IMPORT THE CONTEXT PROVIDER
 import { FileProvider } from './context/FileContext'
@@ -28,15 +28,29 @@ function App() {
 
         <main className="flex-grow">
           <Routes>
+            {/* ✅ Trang công khai — ai cũng vào được */}
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path='/upload' element={<CvUpload/>} />
             <Route path='/process' element={<HowItWork/>} />
-            <Route path='/selection' element={<ResumeTemplateSelection/>} />
             <Route path='/resource' element={<Resource/>} />
-            <Route path='/account' element={<Account/>} />
-            <Route path="/cv-analyst" element={<CvAnalyst />} />
+
+            {/* 🔒 Trang bảo vệ — phải đăng nhập mới vào được */}
+            <Route path='/upload' element={
+              <PrivateRoute>
+                <CvUpload/>
+              </PrivateRoute>
+            } />
+            <Route path='/selection' element={
+              <PrivateRoute>
+                <ResumeTemplateSelection/>
+              </PrivateRoute>
+            } />
+            <Route path='/account' element={
+              <PrivateRoute>
+                <Account/>
+              </PrivateRoute>
+            } />
           </Routes>
         </main>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Eye, EyeOff, CheckCircle } from "lucide-react"
+import { authService } from "../../services/authService" // ✅ THÊM IMPORT NÀY
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ export default function SignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) // ✅ THÊM LOADING STATE
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -56,11 +58,19 @@ export default function SignUp() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (validateForm()) {
-      console.log("Sign up data:", formData)
+    if (!validateForm()) return
+
+    setIsLoading(true) // ✅ Bắt đầu loading
+    try {
+      const data = await authService.register(formData)
+      authService.saveToken(data.accessToken, false)
       setShowSuccessModal(true)
+    } catch (err) {
+      setErrors({ general: err.message })
+    } finally {
+      setIsLoading(false) // ✅ Kết thúc loading
     }
   }
 
@@ -237,6 +247,9 @@ export default function SignUp() {
                 I agree to the Terms of Service & Privacy Policy
               </span>
             </label>
+            {errors.agreeToTerms && (
+              <p className="text-red-500 text-xs mt-1">{errors.agreeToTerms}</p>
+            )}
 
             <label className="flex items-start gap-2 cursor-pointer">
               <input
@@ -252,12 +265,20 @@ export default function SignUp() {
             </label>
           </div>
 
+          {/* ✅ Hiển thị lỗi từ server */}
+          {errors.general && (
+            <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
+              {errors.general}
+            </p>
+          )}
+
           {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg transition-all"
+            disabled={isLoading}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all"
           >
-            Sign Up
+            {isLoading ? "Creating account..." : "Sign Up"} {/* ✅ Loading text */}
           </button>
 
           <p className="text-xs text-gray-500 text-center mt-4">
@@ -273,14 +294,12 @@ export default function SignUp() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-
             <h3 className="text-2xl font-bold text-gray-800 mb-2">
               Account Created!
             </h3>
             <p className="text-gray-600 mb-8">
               Your account has been successfully registered. Please log in to continue.
             </p>
-
             <button
               onClick={handleGoToLogin}
               className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg"

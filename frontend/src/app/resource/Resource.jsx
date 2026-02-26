@@ -18,7 +18,7 @@ const Resource = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://www.reddit.com/r/react/hot.json?limit=25');
+        const response = await fetch('http://localhost:3001/api/reddit/hot?limit=25');
 
         if (!response.ok) {
           throw new Error('Failed to fetch from Reddit');
@@ -84,7 +84,9 @@ const Resource = () => {
     setPostDetails(null);
     try {
       // Append .json to get the data format
-      const response = await fetch(`https://www.reddit.com${permalink}.json`);
+      const response = await fetch(
+  `http://localhost:3001/api/reddit/post?permalink=${encodeURIComponent(permalink)}`
+);
       const json = await response.json();
 
       // Reddit API returns an array: [0] = post, [1] = comments
