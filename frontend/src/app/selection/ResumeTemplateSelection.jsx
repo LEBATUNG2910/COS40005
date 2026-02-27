@@ -48,7 +48,7 @@ export default function ResumeTemplateSelection() {
   const handleContinue = () => {
     if (selectedTemplate) {
       setSelectedTemplateId(selectedTemplate); // Save ID to Context
-      navigate('/cv-analyst'); // Navigate
+      navigate('/analyst'); // Navigate
     }
   }
 

@@ -10,6 +10,7 @@ import ResumeTemplateSelection from './app/selection/ResumeTemplateSelection'
 import Resource from './app/resource/Resource'
 import Account from './app/account/account'
 import PrivateRoute from './components/PrivateRoute'
+import CvAnalyst from './app/analyst/page'
 
 // 🔥 IMPORT THE CONTEXT PROVIDER
 import { FileProvider } from './context/FileContext'
@@ -22,9 +23,9 @@ function App() {
     // 🔥 WRAP EVERYTHING WITH FILEPROVIDER
     <FileProvider>
       <div className="min-h-screen flex flex-col">
-        
+
         {/* Only render Header if hideLayout is false */}
-        {!hideLayout && <Header/>}
+        {!hideLayout && <Header />}
 
         <main className="flex-grow">
           <Routes>
@@ -32,26 +33,28 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path='/process' element={<HowItWork/>} />
-            <Route path='/resource' element={<Resource/>} />
+            <Route path='/process' element={<HowItWork />} />
+            <Route path='/resource' element={<Resource />} />
 
             {/* 🔒 Trang bảo vệ — phải đăng nhập mới vào được */}
             <Route path='/upload' element={
               <PrivateRoute>
-                <CvUpload/>
+                <CvUpload />
               </PrivateRoute>
             } />
             <Route path='/selection' element={
               <PrivateRoute>
-                <ResumeTemplateSelection/>
+                <ResumeTemplateSelection />
               </PrivateRoute>
             } />
             <Route path='/account' element={
               <PrivateRoute>
-                <Account/>
+                <Account />
               </PrivateRoute>
             } />
+            <Route path='/analyst' element={<PrivateRoute><CvAnalyst /></PrivateRoute>} />
           </Routes>
+          
         </main>
 
         {/* Only render Footer if hideLayout is false */}
