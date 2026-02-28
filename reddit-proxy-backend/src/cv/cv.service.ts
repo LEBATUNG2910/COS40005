@@ -104,8 +104,6 @@ export class CvService {
     const cvSkills = this.extractSkills(cv.extractedText);
     const missingSkills = jdSkills.filter(s => !cvSkills.includes(s));
 
-    // ✅ FIX: Luôn gọi AI kể cả khi missingSkills rỗng
-    // AI sẽ tự suggest skills quan trọng dựa trên JD dù CV có đủ keywords
     const aiAnalysis = await this.callGeminiAI(cv.extractedText, jobDescription, missingSkills);
 
     return {
@@ -127,25 +125,54 @@ export class CvService {
     const tokenize = (text: string) =>
       text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(t => t.length > 2);
 
-    const cvTokens = tokenize(cvText);
-    const jdTokens = tokenize(jdText);
+    // Stop words để loại bỏ các từ không có ý nghĩa
+    const stopWords = new Set([
+      'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was',
+      'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'may',
+      'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'does', 'let',
+      'put', 'say', 'she', 'too', 'use', 'with', 'that', 'this', 'have', 'from',
+      'they', 'will', 'been', 'into', 'more', 'also', 'what', 'than', 'then',
+      'when', 'your', 'each', 'able', 'work', 'well',
+    ]);
+
+    const tokenizeFiltered = (text: string) =>
+      tokenize(text).filter(t => !stopWords.has(t));
+
+    const cvTokens = tokenizeFiltered(cvText);
+    const jdTokens = tokenizeFiltered(jdText);
+
+    // Tính term frequency cho CV
     const tf = new Map<string, number>();
     cvTokens.forEach(t => tf.set(t, (tf.get(t) || 0) + 1));
 
-    const avgdl = cvTokens.length || 1;
+    // ✅ FIX: avgdl là hằng số thực tế (~400 tokens cho CV trung bình)
+    // thay vì dùng độ dài chính document đó (gây normalize sai)
+    const avgdl = 400;
+
     let score = 0;
     const uniqueJdTerms = [...new Set(jdTokens)];
 
     uniqueJdTerms.forEach(term => {
       const f = tf.get(term) || 0;
       if (f > 0) {
+        // ✅ BM25 chuẩn: normalization dựa trên avgdl thực tế
         const bm25 = (f * (k1 + 1)) / (f + k1 * (1 - b + b * (cvTokens.length / avgdl)));
         score += bm25;
       }
     });
 
+    // ✅ Bonus: cộng thêm skill match score để tăng độ chính xác
+    const jdSkills = this.extractSkills(jdText);
+    const cvSkills = this.extractSkills(cvText);
+    const skillMatchRatio = jdSkills.length > 0
+      ? cvSkills.filter(s => jdSkills.includes(s)).length / jdSkills.length
+      : 0;
+
     const maxPossible = uniqueJdTerms.length * (k1 + 1);
-    return maxPossible === 0 ? 0 : Math.min(score / maxPossible, 1);
+    const bm25Score = maxPossible === 0 ? 0 : Math.min(score / maxPossible, 1);
+
+    // Kết hợp BM25 (70%) + skill match (30%) để điểm phản ánh thực tế hơn
+    return Math.min(bm25Score * 0.7 + skillMatchRatio * 0.3, 1);
   }
 
   private extractSkills(text: string): string[] {
@@ -168,7 +195,6 @@ export class CvService {
       ? missingSkills.join(', ')
       : 'No keyword-based missing skills detected, but analyze the CV depth and suggest improvements anyway';
 
-    // ✅ FIX: Prompt mạnh hơn — luôn yêu cầu 3 suggestions dù CV có đủ skill keywords
     const prompt = `You are an expert career coach and senior technical recruiter with 15+ years experience.
 
 CV TEXT (first 3000 chars):
@@ -217,8 +243,9 @@ Rules:
 - Strengths and weaknesses must reference specific things in their CV`;
 
     try {
+      // ✅ FIX: Đổi từ gemini-1.5-flash (deprecated) sang gemini-2.0-flash
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -226,7 +253,7 @@ Rules:
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               temperature: 0.3,
-              maxOutputTokens: 3000,  // ✅ tăng lên để đủ chỗ cho 3 suggestions
+              maxOutputTokens: 3000,
             },
           }),
         }
@@ -241,14 +268,12 @@ Rules:
         throw new Error('Gemini returned empty response');
       }
 
-      // ✅ FIX: Clean mạnh hơn — xử lý nhiều trường hợp Gemini wrap JSON
       let cleaned = rawText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
         .replace(/^\s*json\s*/i, '')
         .trim();
 
-      // Tìm JSON object trong response nếu có text thừa
       const jsonStart = cleaned.indexOf('{');
       const jsonEnd = cleaned.lastIndexOf('}');
       if (jsonStart !== -1 && jsonEnd !== -1) {
@@ -257,7 +282,6 @@ Rules:
 
       const parsed = JSON.parse(cleaned);
 
-      // ✅ Validate: đảm bảo suggestions luôn có ít nhất 1 item
       if (!parsed.suggestions || parsed.suggestions.length === 0) {
         parsed.suggestions = this.buildFallbackSuggestions(missingSkills);
       }
@@ -265,7 +289,6 @@ Rules:
       return parsed;
     } catch (err) {
       console.error('Gemini AI error:', err);
-      // ✅ Fallback tốt hơn với real resources
       return {
         strengths: [
           'CV has been analyzed and shows relevant experience',
@@ -282,7 +305,6 @@ Rules:
     }
   }
 
-  // ✅ Helper: tạo suggestions với real resources khi AI fail
   private buildFallbackSuggestions(missingSkills: string[]): any[] {
     const resourceMap: Record<string, any[]> = {
       'docker': [
