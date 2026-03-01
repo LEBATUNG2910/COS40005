@@ -132,8 +132,8 @@ Profile management with sidebar navigation (inspired by Enhancv):
 | `/selection` | `ResumeTemplateSelection.jsx` | Template picker (Step 2) |
 | `/analyst` | `page.jsx` | CV analysis dashboard (Step 3) |
 | `/account` | `account.jsx` | User profile & settings |
-| `/process` | — | Entry point / onboarding |
-| `/resource` | — | Blog / resources |
+| `/process` | `HowItWork.jsx` | Entry point / onboarding |
+| `/resource` | `Resource.jsx` | Blog / resources |
 
 ### 3-Step Progress Indicator
 All 3 core pages (Upload → Template → Analyze) share a consistent step indicator:
