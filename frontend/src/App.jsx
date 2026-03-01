@@ -11,6 +11,7 @@ import Resource from './app/resource/Resource'
 import Account from './app/account/account'
 import PrivateRoute from './components/PrivateRoute'
 import CvAnalyst from './app/analyst/page'
+import ForOrganizations from './app/organize/page'
 
 // 🔥 IMPORT THE CONTEXT PROVIDER
 import { FileProvider } from './context/FileContext'
@@ -35,6 +36,7 @@ function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path='/process' element={<HowItWork />} />
             <Route path='/resource' element={<Resource />} />
+            <Route path='/organize' element={<ForOrganizations />} />
 
             {/* 🔒 Trang bảo vệ — phải đăng nhập mới vào được */}
             <Route path='/upload' element={

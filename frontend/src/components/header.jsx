@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X, User, ChevronDown, LogIn, UserPlus, LogOut, Settings, Loader2 } from "lucide-react";
-import { authService } from "../services/authService";
+// Đảm bảo bạn đã có authService, mình comment tạm phần import nếu bạn đang test UI
+import { authService } from "../services/authService"; 
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileUserSubmenuOpen, setIsMobileUserSubmenuOpen] = useState(false);
+  const [isMobileOrgSubmenuOpen, setIsMobileOrgSubmenuOpen] = useState(false); // Thêm state cho mobile dropdown
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
 
@@ -25,11 +27,19 @@ function Header() {
     navigate('/');
   };
 
+  // Cập nhật cấu trúc navLinks có chứa dropdown
   const navLinks = [
     { title: "Blog", path: "/resource" },
     { title: "Career Center", path: "#" },
     { title: "Pricing", path: "#" },
-    { title: "For Organizations", path: "#" },
+    { 
+      title: "For Organizations", 
+      dropdown: [
+        { title: "For Recruitment", path: "/organize?tab=recruitment" },
+        { title: "Higher Education", path: "/organize?tab=higher-education" },
+        { title: "Career Coaches", path: "/organize?tab=career-coaches" },
+      ]
+    },
   ];
 
   return (
@@ -67,11 +77,34 @@ function Header() {
             {/* --- Desktop Nav --- */}
             <nav className="hidden md:flex items-center gap-6">
               {navLinks.map((link) => (
-                <Link key={link.title} to={link.path}
-                  className="text-sm font-medium text-gray-600 hover:text-black transition"
-                >
-                  {link.title}
-                </Link>
+                link.dropdown ? (
+                  // Dropdown cho Desktop
+                  <div key={link.title} className="relative group">
+                    <button className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-black transition py-2">
+                      {link.title} <ChevronDown className="w-4 h-4" />
+                    </button>
+                    {/* Menu xổ xuống */}
+                    <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden transform origin-top group-hover:scale-100 scale-95">
+                      <div className="py-2">
+                        {link.dropdown.map(subItem => (
+                          <Link 
+                            key={subItem.title} 
+                            to={subItem.path} 
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-cyan-50 hover:text-cyan-600 transition"
+                          >
+                            {subItem.title}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Link key={link.title} to={link.path}
+                    className="text-sm font-medium text-gray-600 hover:text-black transition"
+                  >
+                    {link.title}
+                  </Link>
+                )
               ))}
             </nav>
 
@@ -167,16 +200,49 @@ function Header() {
             >
               <nav className="flex flex-col p-4">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.title} to={link.path}
-                    className="py-2 px-3 rounded hover:bg-gray-100 transition text-black text-sm"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {link.title}
-                  </Link>
+                  link.dropdown ? (
+                    <div key={link.title}>
+                      <button
+                        onClick={() => setIsMobileOrgSubmenuOpen(!isMobileOrgSubmenuOpen)}
+                        className="w-full flex items-center justify-between py-2 px-3 rounded hover:bg-gray-100 transition text-black text-sm font-medium"
+                      >
+                        {link.title}
+                        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isMobileOrgSubmenuOpen ? "rotate-180" : ""}`} />
+                      </button>
+                      <AnimatePresence>
+                        {isMobileOrgSubmenuOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden bg-gray-50 rounded-lg mt-1 ml-2 border-l-2 border-cyan-100"
+                          >
+                            {link.dropdown.map(subItem => (
+                               <Link
+                                 key={subItem.title} 
+                                 to={subItem.path}
+                                 onClick={() => setIsMobileMenuOpen(false)}
+                                 className="block py-2.5 px-4 text-sm text-gray-600 hover:text-cyan-600 hover:bg-cyan-50/50 transition"
+                               >
+                                 {subItem.title}
+                               </Link>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <Link
+                      key={link.title} to={link.path}
+                      className="py-2 px-3 rounded hover:bg-gray-100 transition text-black text-sm font-medium"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {link.title}
+                    </Link>
+                  )
                 ))}
 
-                <div>
+                <div className="mt-2 pt-2 border-t border-gray-100">
                   <button
                     onClick={() => setIsMobileUserSubmenuOpen(!isMobileUserSubmenuOpen)}
                     className="w-full flex items-center justify-between py-2 px-3 rounded hover:bg-gray-100 transition text-black text-sm font-medium"
@@ -243,7 +309,7 @@ function Header() {
                   >
                     Get Started
                   </motion.button>
-                </Link>
+             </Link>
               </nav>
             </motion.div>
           )}
