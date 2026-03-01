@@ -29,30 +29,54 @@ export default function CVUpload() {
 
   const resetUpload = () => { setFile(null); setError(null); setSuccess(false); setUploadProgress(0) }
 
+  // ✅ Đã cập nhật logic làm chậm ảo (Labor Illusion) ở đây
   const handleUpload = async () => {
     if (!file) return
     setIsUploading(true); setError(null)
+    
+    // Thanh bar tăng dần đều mỗi 150ms để tạo cảm giác hệ thống đang phân tích
     const progressInterval = setInterval(() => {
-      setUploadProgress(prev => prev < 80 ? prev + 10 : prev)
-    }, 200)
+      setUploadProgress(prev => prev < 90 ? prev + 5 : prev)
+    }, 150)
+
     try {
       const token = authService.getToken()
       const formData = new FormData()
       formData.append('file', file)
       formData.append('templateId', String(selectedTemplateId || 1))
-      const res = await fetch('http://localhost:3001/api/cv/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      })
-      clearInterval(progressInterval); setUploadProgress(100)
+
+      // Tạo một Promise đếm ngược 1.2 giây
+      const minimumWaitTime = new Promise(resolve => setTimeout(resolve, 1200));
+
+      // Chạy API và đếm thời gian song song
+      const [res] = await Promise.all([
+        fetch('http://localhost:3001/api/cv/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        }),
+        minimumWaitTime
+      ]);
+
+      clearInterval(progressInterval); 
+      setUploadProgress(100)
+      
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Upload failed')
-      setUploadedFile(file); setSuccess(true)
+      
+      // Delay nhẹ để người dùng kịp thấy thanh progress đạt 100% trước khi chuyển trạng thái
+      setTimeout(() => {
+        setUploadedFile(file); 
+        setSuccess(true);
+      }, 300);
+
     } catch (err) {
-      clearInterval(progressInterval); setError(err.message); setUploadProgress(0)
+      clearInterval(progressInterval); 
+      setError(err.message); 
+      setUploadProgress(0);
     } finally {
-      setIsUploading(false)
+      // Đợi hiệu ứng UI mượt mà rồi mới tắt trạng thái uploading
+      setTimeout(() => setIsUploading(false), 500);
     }
   }
 

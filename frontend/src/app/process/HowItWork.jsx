@@ -2,18 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react"; // Giữ lại icon này cho các nút
 
 // --- Component Chính ---
 export default function HowItWorks() {
-  // Dữ liệu cho các bước
-  // const steps = [
-  //   { id: 1, name: "Start" },
-  //   { id: 2, name: "Customize" },
-  //   { id: 3, name: "Finish" },
-  // ];
-  // const currentStep = 1; // Đặt bước hiện tại là 1
-
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center justify-center p-6 relative">
       {/* --- Nội dung chính --- */}
@@ -78,7 +69,7 @@ export default function HowItWorks() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-purple-500 hover:bg-purple-600 text-white font-semibold px-10 py-3 rounded-lg text-lg transition-colors shadow-md"
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-10 py-3 rounded-lg text-lg transition-colors shadow-md"
             >
               No
             </motion.button>

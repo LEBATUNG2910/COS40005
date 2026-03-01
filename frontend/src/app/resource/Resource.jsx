@@ -140,7 +140,7 @@ const Resource = () => {
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 capitalize ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'bg-cyan-500 text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
