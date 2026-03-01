@@ -52,9 +52,17 @@ export default function ResumeTemplateSelection() {
     }
   }
 
+  const steps = [
+    { id: 1, name: 'Upload' },
+    { id: 2, name: 'Template' },
+    { id: 3, name: 'Analyze' },
+  ]
+  const currentStep = 2
+
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-16 h-16 border-4 border-cyan-200 border-t-cyan-500 rounded-full mx-auto mb-6" />
           <motion.p animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-gray-600 text-lg font-medium">Loading templates...</motion.p>
@@ -64,29 +72,33 @@ export default function ResumeTemplateSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: hideHeader ? -80 : 0, opacity: hideHeader ? 0 : 1 }} className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <div className="min-h-screen bg-white pb-24">
+      <motion.div initial={{ y: 0, opacity: 1 }} animate={{ y: hideHeader ? -80 : 0, opacity: hideHeader ? 0 : 1 }} className="sticky top-0 z-50 bg-white/80 backdrop-blur-md ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <motion.button whileHover={{ x: -4 }} onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-cyan-600 transition-colors font-medium">
+            <motion.button whileHover={{ x: -4 }} onClick={() => navigate('/upload')} className="flex items-center gap-2 text-gray-600 hover:text-cyan-600 transition-colors font-medium">
               <ArrowLeft className="h-5 w-5" /> <span>Back</span>
             </motion.button>
             
             {/* 🔥 UPDATED NAV SECTION */}
-            <nav className="hidden sm:flex items-center space-x-4">
-              {[1, 2, 3].map((step) => (
-                <div key={step} className="flex items-center gap-2">
-                  <motion.div
-                    // Logic: Step 2 is the current active step in this file
-                    animate={{ 
-                        scale: step === 2 ? 1.1 : 1, 
-                        backgroundColor: step === 2 ? "#10B981" : "#D1D5DB" 
-                    }}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                  >
-                    {step}
-                  </motion.div>
-                  {step < 3 && <div className="w-16 h-0.5 bg-gray-300" />}
+            <nav className="flex items-center justify-center space-x-4">
+              {steps.map((step) => (
+                <div key={step.id} className="flex items-center gap-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <motion.div
+                      animate={{
+                        scale: step.id === currentStep ? 1.1 : 1,
+                        backgroundColor: step.id <= currentStep ? '#10B981' : '#D1D5DB'
+                      }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                    >
+                      {step.id < currentStep ? <Check className="w-4 h-4" /> : step.id}
+                    </motion.div>
+                    <span className={`text-xs font-medium ${step.id === currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
+                      {step.name}
+                    </span>
+                  </div>
+                  {step.id < steps.length && <div className="w-16 h-0.5 bg-gray-200 mb-4" />}
                 </div>
               ))}
             </nav>
@@ -97,7 +109,7 @@ export default function ResumeTemplateSelection() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-white">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Choose your resume template</h1>
           <p className="text-xl text-gray-500 max-w-2xl mx-auto">Our templates are professionally designed to pass Applicant Tracking Systems (ATS).</p>

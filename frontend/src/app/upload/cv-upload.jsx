@@ -20,75 +20,42 @@ export default function CVUpload() {
   const navigate = useNavigate()
   const { setUploadedFile, selectedTemplateId } = useFileStore()
 
-  // ── Validate & chọn file ─────────────────────────────
   const handleFileSelect = (selectedFile) => {
     const ext = '.' + selectedFile.name.split('.').pop().toLowerCase()
-    if (ext !== '.pdf') {
-      setError('Only PDF files are allowed')
-      return
-    }
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB')
-      return
-    }
-    setError(null)
-    setSuccess(false)
-    setUploadProgress(0)
-    setFile(selectedFile)
+    if (ext !== '.pdf') { setError('Only PDF files are allowed'); return }
+    if (selectedFile.size > 10 * 1024 * 1024) { setError('File size must be less than 10MB'); return }
+    setError(null); setSuccess(false); setUploadProgress(0); setFile(selectedFile)
   }
 
-  const resetUpload = () => {
-    setFile(null)
-    setError(null)
-    setSuccess(false)
-    setUploadProgress(0)
-  }
+  const resetUpload = () => { setFile(null); setError(null); setSuccess(false); setUploadProgress(0) }
 
-  // ── Gọi API backend thật ─────────────────────────────
   const handleUpload = async () => {
     if (!file) return
-    setIsUploading(true)
-    setError(null)
-
-    // Giả lập progress bar
+    setIsUploading(true); setError(null)
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => prev < 80 ? prev + 10 : prev)
     }, 200)
-
     try {
       const token = authService.getToken()
       const formData = new FormData()
       formData.append('file', file)
       formData.append('templateId', String(selectedTemplateId || 1))
-
       const res = await fetch('http://localhost:3001/api/cv/upload', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // KHÔNG set Content-Type — để browser tự set multipart/form-data với boundary
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       })
-
-      clearInterval(progressInterval)
-      setUploadProgress(100)
-
+      clearInterval(progressInterval); setUploadProgress(100)
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Upload failed')
-
-      setUploadedFile(file)
-      setSuccess(true)
-      console.log('✅ Upload success:', data)
+      setUploadedFile(file); setSuccess(true)
     } catch (err) {
-      clearInterval(progressInterval)
-      setError(err.message)
-      setUploadProgress(0)
+      clearInterval(progressInterval); setError(err.message); setUploadProgress(0)
     } finally {
       setIsUploading(false)
     }
   }
 
-  // ── Drag & Drop handlers ─────────────────────────────
   const handleDragOver = useCallback((e) => { e.preventDefault(); setIsDragOver(true) }, [])
   const handleDragLeave = useCallback((e) => { e.preventDefault(); setIsDragOver(false) }, [])
   const handleDrop = useCallback((e) => {
@@ -108,7 +75,11 @@ export default function CVUpload() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const steps = [{ id: 1 }, { id: 2 }, { id: 3 }]
+  const steps = [
+    { id: 1, name: 'Upload' },
+    { id: 2, name: 'Template' },
+    { id: 3, name: 'Analyze' },
+  ]
   const currentStep = 1
 
   return (
@@ -125,19 +96,25 @@ export default function CVUpload() {
           <nav className="flex items-center justify-center space-x-4">
             {steps.map((step) => (
               <div key={step.id} className="flex items-center gap-2">
-                <motion.div
-                  animate={{
-                    scale: step.id === currentStep ? 1.1 : 1,
-                    backgroundColor: step.id === currentStep ? "#10B981" : "#D1D5DB"
-                  }}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
-                >
-                  {step.id}
-                </motion.div>
-                {step.id < steps.length && <div className="w-16 h-0.5 bg-gray-300" />}
+                <div className="flex flex-col items-center gap-1">
+                  <motion.div
+                    animate={{
+                      scale: step.id === currentStep ? 1.1 : 1,
+                      backgroundColor: step.id <= currentStep ? '#10B981' : '#D1D5DB'
+                    }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  >
+                    {step.id < currentStep ? <Check className="w-4 h-4" /> : step.id}
+                  </motion.div>
+                  <span className={`text-xs font-medium ${step.id === currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    {step.name}
+                  </span>
+                </div>
+                {step.id < steps.length && <div className="w-16 h-0.5 bg-gray-200 mb-4" />}
               </div>
             ))}
           </nav>
+
           <div />
         </div>
       </div>
@@ -160,27 +137,15 @@ export default function CVUpload() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-
-              {/* Drop Zone */}
               <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={triggerFileInput}
+                onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} onClick={triggerFileInput}
                 className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
                   isDragOver ? 'border-cyan-400 bg-cyan-50'
                   : file     ? 'border-cyan-400 bg-cyan-50'
                              : 'border-gray-300 hover:border-cyan-400 hover:bg-gray-50'
                 }`}
               >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                />
-
+                <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleFileInputChange} className="hidden" />
                 {!file ? (
                   <div className="space-y-4">
                     <div className="mx-auto w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center">
@@ -201,18 +166,13 @@ export default function CVUpload() {
                       <p className="text-lg font-medium text-gray-900">{file.name}</p>
                       <p className="text-gray-500 mt-1">{formatFileSize(file.size)}</p>
                     </div>
-                    <Button
-                      variant="ghost" size="sm"
-                      onClick={(e) => { e.stopPropagation(); resetUpload() }}
-                      className="text-gray-500 hover:text-red-500"
-                    >
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); resetUpload() }} className="text-gray-500 hover:text-red-500">
                       <X className="w-4 h-4 mr-1" /> Remove
                     </Button>
                   </div>
                 )}
               </div>
 
-              {/* Error */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -220,17 +180,13 @@ export default function CVUpload() {
                 </div>
               )}
 
-              {/* Success */}
               {success && (
                 <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 flex items-center gap-3">
                   <Check className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <p className="text-cyan-700 text-sm font-medium">
-                    CV uploaded successfully! Text extracted and ready to analyze.
-                  </p>
+                  <p className="text-cyan-700 text-sm font-medium">CV uploaded successfully! Text extracted and ready to analyze.</p>
                 </div>
               )}
 
-              {/* Progress Bar */}
               {isUploading && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -248,40 +204,21 @@ export default function CVUpload() {
                 </div>
               )}
 
-              {/* Action Buttons */}
               <div className="flex gap-4 justify-center">
                 {file && !success && (
-                  <Button
-                    onClick={handleUpload}
-                    disabled={isUploading}
-                    className="min-w-[140px] bg-cyan-500 hover:bg-cyan-600 text-white disabled:bg-cyan-300 disabled:cursor-not-allowed"
-                  >
-                    {isUploading
-                      ? 'Uploading...'
-                      : <><Upload className="w-4 h-4 mr-2" />Upload CV</>
-                    }
+                  <Button onClick={handleUpload} disabled={isUploading} className="min-w-[140px] bg-cyan-500 hover:bg-cyan-600 text-white disabled:bg-cyan-300 disabled:cursor-not-allowed">
+                    {isUploading ? 'Uploading...' : <><Upload className="w-4 h-4 mr-2" />Upload CV</>}
                   </Button>
                 )}
-
                 {success && (
                   <>
-                    <Button
-                      onClick={resetUpload}
-                      variant="outline"
-                      className="border-cyan-500 text-cyan-500 hover:bg-cyan-50"
-                    >
-                      Upload Another
-                    </Button>
-                    <Button
-                      className="min-w-[160px] bg-cyan-500 hover:bg-cyan-600 text-white"
-                      onClick={() => navigate('/selection')}
-                    >
+                    <Button onClick={resetUpload} variant="outline" className="border-cyan-500 text-cyan-500 hover:bg-cyan-50">Upload Another</Button>
+                    <Button className="min-w-[160px] bg-cyan-500 hover:bg-cyan-600 text-white" onClick={() => navigate('/selection')}>
                       <Check className="w-4 h-4 mr-2" />Choose Template
                     </Button>
                   </>
                 )}
               </div>
-
             </div>
           </CardContent>
         </Card>

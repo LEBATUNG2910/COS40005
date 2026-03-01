@@ -147,7 +147,7 @@ export class CvService {
 
     // ✅ FIX: avgdl là hằng số thực tế (~400 tokens cho CV trung bình)
     // thay vì dùng độ dài chính document đó (gây normalize sai)
-    const avgdl = 400;
+    const avgdl = 600;
 
     let score = 0;
     const uniqueJdTerms = [...new Set(jdTokens)];
@@ -184,7 +184,8 @@ export class CvService {
       'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'terraform', 'ansible', 'jenkins', 'github actions',
       'git', 'linux', 'rest api', 'microservices', 'agile', 'scrum',
       'machine learning', 'deep learning', 'tensorflow', 'pytorch', 'pandas', 'numpy',
-      'figma', 'jira', 'postman', 'jest', 'cypress',
+      'figma', 'jira', 'postman', 'jest', 'cypress', 'swagger', 'fullstack', 'full-stack', 'restful', 'api documentation',
+  'oop', 'solid', 'design pattern', 'microservices', 'rabbitmq', 'kafka', 'redis', 'graphql', 'apollo', 'serverless', 'lambda', 'cloud functions', 'ci/cd', 'continuous integration', 'continuous deployment',
     ];
     const lowerText = text.toLowerCase();
     return skillKeywords.filter(skill => lowerText.includes(skill));
@@ -243,7 +244,7 @@ Rules:
 - Strengths and weaknesses must reference specific things in their CV`;
 
     try {
-      // ✅ FIX: Đổi từ gemini-1.5-flash (deprecated) sang gemini-2.0-flash
+      // ✅ FIX: Đổi từ gemini-2.5-flash (deprecated) 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
