@@ -252,8 +252,8 @@ JWT-based auth with two token durations:
 
 | Mode | Token Expiry | Storage |
 |---|---|---|
-| Normal login | `JWT_EXPIRES_IN` (e.g. `7d`) | `sessionStorage` |
-| Remember Me | `JWT_REMEMBER_EXPIRES_IN` (e.g. `30d`) | `localStorage` |
+| Normal login | `JWT_EXPIRES_IN` (e.g. `100y`) | `sessionStorage` |
+| Remember Me | `JWT_REMEMBER_EXPIRES_IN` (e.g. `100y`) | `localStorage` |
 
 **`authService` (frontend):**
 ```js
