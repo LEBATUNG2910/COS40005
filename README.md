@@ -404,8 +404,8 @@ Create a `.env` file in the `backend/` directory:
 ```dotenv
 PORT=3001
 JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=7d
-JWT_REMEMBER_EXPIRES_IN=30d
+JWT_EXPIRES_IN=100y
+JWT_REMEMBER_EXPIRES_IN=100y
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
