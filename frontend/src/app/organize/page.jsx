@@ -71,7 +71,7 @@ function RecruitmentContent() {
             For Recruitment & Consulting Companies
           </span>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight">
-            Deliver professional resumes fast, <span className="text-cyan-500">at scale.</span>
+            Deliver professional resumes fast, <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">at scale.</span>
           </h1>
           <p className="text-lg text-gray-600">
             Tired of inconsistent, messy resumes and slow manual formatting? <br /><br />
@@ -277,7 +277,7 @@ function HigherEducationContent() {
         <div className="flex-1 space-y-6">
           <h1 className="text-4xl lg:text-6xl font-bold leading-tight text-gray-900">
             Help More <br /> Students <br />
-            <span className="text-cyan-500">Get Hired, Fast</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">Get Hired, Fast</span>
           </h1>
           <p className="text-lg font-medium text-gray-800">
             A modern student experience with visibility your Career Center has never had.
@@ -652,7 +652,7 @@ function CareerCoachesContent() {
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
             Cut your resume <br />
             creation time in half, <br />
-            <span className="text-cyan-600">deliver delightful ATS friendly resumes.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">deliver delightful ATS friendly resumes.</span>
           </h1>
           <p className="text-lg text-gray-600 leading-relaxed">
             Stop fighting with Word formatting. HireWise empowers you to import client resumes, apply stunning professional templates instantly, and free up your time to help more clients.

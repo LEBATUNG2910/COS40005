@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Crown, Check, Zap, AlertCircle, Loader2, Eye, EyeOff, X } from "lucide-react";
+import { 
+  ArrowLeft, Check, AlertCircle, Loader2, Eye, EyeOff, X, 
+  User, Mail, Phone, Globe, Shield, Bell, LogOut, Trash2, Camera, Save 
+} from "lucide-react";
 import { authService } from "../../services/authService";
 
 function Account() {
@@ -30,9 +33,6 @@ function Account() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
-
-  // ── Billing ───────────────────────────────────────────────
-  const [billingCycle, setBillingCycle] = useState("yearly");
 
   // ── Fetch user khi mount ──────────────────────────────────
   useEffect(() => {
@@ -95,7 +95,6 @@ function Account() {
   const handleChangePassword = async () => {
     setPasswordError(null);
 
-    // Validate phía frontend trước
     if (passwordForm.newPassword.length < 8) {
       setPasswordError('New password must be at least 8 characters');
       return;
@@ -123,7 +122,6 @@ function Account() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to change password');
 
-      // Thành công
       setPasswordSuccess(true);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
       setTimeout(() => {
@@ -147,344 +145,332 @@ function Account() {
   // ── Loading / Error screens ───────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-gray-500">
-          <Loader2 className="w-10 h-10 animate-spin text-cyan-500" />
-          <p className="text-sm">Loading your profile...</p>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4 text-slate-500">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-cyan-100 rounded-full"></div>
+            <div className="w-16 h-16 border-4 border-cyan-500 rounded-full border-t-transparent animate-spin absolute top-0 left-0"></div>
+          </div>
+          <p className="text-sm font-medium tracking-wide uppercase text-cyan-600">Loading Profile...</p>
+        </motion.div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow p-8 text-center max-w-sm">
-          <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-          <p className="text-gray-700 font-medium">Could not load profile</p>
-          <p className="text-sm text-gray-500 mt-1">{error}</p>
-          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm hover:bg-cyan-600 transition">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-sm w-full border border-slate-100">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">Connection Error</h3>
+          <p className="text-sm text-slate-500 mb-6">{error}</p>
+          <button onClick={() => window.location.reload()} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-medium hover:bg-cyan-600 transition shadow-md shadow-cyan-500/20">
             Try Again
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-slate-50 font-sans relative pb-20">
+      {/* ── Background Header ── */}
+      <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-br from-cyan-400 to-cyan-600 overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-[-20%] left-[-10%] w-72 h-72 bg-black/10 rounded-full blur-3xl"></div>
+      </div>
 
-          {/* Left Sidebar */}
-          <div className="lg:col-span-1">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-lg shadow-sm p-6">
-              <a href="/" className="flex items-center gap-2 text-gray-600 hover:text-black transition mb-6">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </a>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-12">
+        {/* ── Top Navigation ── */}
+        <div className="flex items-center justify-between mb-8 text-white">
+          <a href="/" className="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-full transition backdrop-blur-sm">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="font-medium text-sm">Dashboard</span>
+          </a>
+          <div className="w-24"></div> {/* Spacer for center alignment */}
+        </div>
 
-              {/* Avatar + tên */}
-              <div className="flex items-center gap-3 mb-6 p-3 bg-cyan-50 rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+        {/* ── Main Content Card ── */}
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }}
+          className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row border border-slate-100"
+        >
+          {/* Left Column: Profile Snapshot */}
+          <div className="md:w-1/3 bg-slate-50/50 p-8 border-r border-slate-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="relative mb-6 group cursor-pointer">
+                <div className="w-32 h-32 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600 font-bold text-5xl border-4 border-white shadow-lg overflow-hidden relative z-10">
                   {fullName?.charAt(0)?.toUpperCase() || '?'}
                 </div>
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 z-20">
+                  <Camera className="text-white w-8 h-8" />
+                </div>
+              </div>
+              
+              <h2 className="text-xl font-bold text-slate-800 mb-1">{fullName}</h2>
+              <p className="text-slate-500 text-sm mb-6 flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span> Active Status
+              </p>
+            </div>
+
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <div className="bg-cyan-50 p-2 rounded-lg text-cyan-500"><Mail className="w-4 h-4" /></div>
                 <div className="overflow-hidden">
-                  <p className="font-semibold text-gray-900 truncate">{fullName}</p>
-                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  <p className="text-xs text-slate-400 font-medium uppercase">Email</p>
+                  <p className="text-sm font-medium text-slate-700 truncate">{user?.email}</p>
                 </div>
               </div>
 
-              <nav className="space-y-2">
-                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-50 text-cyan-600 font-medium">
-                  <div className="w-3 h-3 rounded-full border-2 border-cyan-600 ml-1"></div>
-                  Your Profile
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition">
-                  <div className="w-3 h-3 rounded border-2 border-gray-400 ml-1"></div>
-                  Billing
-                </button>
-              </nav>
-            </motion.div>
+              {user?.phoneNumber && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                  <div className="bg-cyan-50 p-2 rounded-lg text-cyan-500"><Phone className="w-4 h-4" /></div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-medium uppercase">Phone</p>
+                    <p className="text-sm font-medium text-slate-700">{user.phoneNumber}</p>
+                  </div>
+                </div>
+              )}
+
+              {user?.gender && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                  <div className="bg-cyan-50 p-2 rounded-lg text-cyan-500"><User className="w-4 h-4" /></div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-medium uppercase">Gender</p>
+                    <p className="text-sm font-medium text-slate-700 capitalize">{user.gender}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 flex flex-col xl:flex-row gap-6">
+          {/* Right Column: Settings Form */}
+          <div className="md:w-2/3 p-8 lg:p-12">
+            <div className="max-w-xl">
+              <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <User className="w-5 h-5 text-cyan-500" /> Personal Information
+              </h3>
 
-            {/* Profile Section */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 bg-white rounded-lg shadow-sm p-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Profile</h1>
-
-              {/* Full Name */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your full name</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition"
-                />
-              </div>
-
-              {/* Email (readonly) */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <p className="text-gray-900 mb-1">{user?.email}</p>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Change Email Address</button>
-              </div>
-
-              {/* Phone (readonly) */}
-              {user?.phoneNumber && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                  <p className="text-gray-900">{user.phoneNumber}</p>
-                </div>
-              )}
-
-              {/* Gender (readonly) */}
-              {user?.gender && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                  <p className="text-gray-900 capitalize">{user.gender}</p>
-                </div>
-              )}
-
-              {/* Password */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <p className="text-gray-900 mb-1">••••••••••••••••</p>
-                {/* ✅ Mở modal đổi password */}
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  Change Password
-                </button>
-              </div>
-
-              {/* Language ✅ có thể chỉnh sửa */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition"
-                >
-                  <option>English</option>
-                  <option>Spanish</option>
-                  <option>French</option>
-                  <option>German</option>
-                  <option>Vietnamese</option>
-                </select>
-              </div>
-
-              {/* Newsletter */}
-              <div className="mb-6">
-                <label className="flex items-start gap-3 cursor-pointer">
+              <div className="grid grid-cols-1 gap-6 mb-10">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Display Name</label>
                   <input
-                    type="checkbox"
-                    checked={newsletter}
-                    onChange={(e) => setNewsletter(e.target.checked)}
-                    className="mt-1 w-5 h-5 text-cyan-500 border-gray-300 rounded focus:ring-cyan-500"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="text-black w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all duration-200"
+                    placeholder="Enter your full name"
                   />
-                  <span className="text-gray-700">Get inspiring resume examples and advice with our newsletter</span>
-                </label>
+                </div>
+
+                {/* Language */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Preferred Language</label>
+                  <div className="relative">
+                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="text-black w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:bg-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all duration-200"
+                    >
+                      <option>English</option>
+                      <option>Spanish</option>
+                      <option>French</option>
+                      <option>German</option>
+                      <option>Vietnamese</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              {/* ✅ Save error */}
-              {saveError && (
-                <p className="text-red-500 text-sm bg-red-50 p-2 rounded-lg mb-4">{saveError}</p>
-              )}
+              <div className="w-full h-px bg-slate-100 mb-10"></div>
 
-              {/* ✅ Save Changes button */}
-              <div className="mb-6">
+              <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-cyan-500" /> Security & Preferences
+              </h3>
+
+              <div className="space-y-6 mb-10">
+                {/* Password Setting */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Password</p>
+                    <p className="text-xs text-slate-500 mt-1">Last changed: Never</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:text-cyan-600 hover:border-cyan-300 transition shadow-sm"
+                  >
+                    Update
+                  </button>
+                </div>
+
+                {/* Newsletter Toggle */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <div className="flex gap-3">
+                    <div className="mt-1"><Bell className="w-5 h-5 text-slate-400" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">Email Notifications</p>
+                      <p className="text-xs text-slate-500 mt-1 max-w-[250px]">Get inspiring resume examples and advice with our newsletter.</p>
+                    </div>
+                  </div>
+                  {/* Custom Toggle Switch */}
+                  <button
+                    type="button"
+                    className={`${newsletter ? 'bg-cyan-500' : 'bg-slate-200'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                    onClick={() => setNewsletter(!newsletter)}
+                  >
+                    <span className={`${newsletter ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex flex-col items-end">
+                {saveError && (
+                  <p className="text-red-500 text-sm mb-3 font-medium flex items-center gap-1"><AlertCircle className="w-4 h-4"/> {saveError}</p>
+                )}
                 <button
                   onClick={handleSaveProfile}
                   disabled={saveLoading}
-                  className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition flex items-center gap-2"
+                  className="w-full sm:w-auto px-8 py-3 bg-cyan-500 hover:bg-cyan-600 active:scale-95 disabled:bg-cyan-300 disabled:active:scale-100 text-white rounded-xl font-semibold transition-all shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2"
                 >
                   {saveLoading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</>
                   ) : saveSuccess ? (
-                    <><Check className="w-4 h-4" /> Saved!</>
-                  ) : 'Save Changes'}
+                    <><Check className="w-5 h-5" /> Saved Successfully</>
+                  ) : (
+                    <><Save className="w-5 h-5" /> Save Changes</>
+                  )}
                 </button>
               </div>
 
-              <div className="pt-6 border-t border-gray-200">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Account</h3>
-                <button
-                  onClick={() => { authService.logout(); window.location.href = '/auth'; }}
-                  className="text-orange-500 hover:text-orange-600 text-sm font-medium mr-4"
-                >
-                  Sign Out
-                </button>
-                <button className="text-red-500 hover:text-red-600 text-sm font-medium">Delete Account</button>
-              </div>
-            </motion.div>
+              <div className="w-full h-px bg-slate-100 my-10"></div>
 
-            {/* Pro Upgrade Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex-1 bg-white rounded-lg shadow-sm border-2 border-cyan-500 p-6 flex flex-col">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Get more with Pro</h2>
-                  <p className="text-sm text-gray-500 mt-1">Unlock your full potential</p>
-                </div>
-                <div className="bg-cyan-100 p-2 rounded-full">
-                  <Crown className="w-6 h-6 text-cyan-600" />
+              {/* Danger Zone */}
+              <div>
+                <h3 className="text-sm font-bold text-red-500 mb-4 uppercase tracking-wider">Danger Zone</h3>
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    onClick={() => { authService.logout(); window.location.href = '/auth'; }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-semibold transition border border-slate-200"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                  <button className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-semibold transition border border-red-100">
+                    <Trash2 className="w-4 h-4" /> Delete Account
+                  </button>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm font-semibold text-gray-700">Free Plan Limit Reached</span>
-                </div>
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs text-gray-600 mb-1"><span>Resumes</span><span>1 / 1</span></div>
-                  <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-orange-500 h-2 rounded-full w-full"></div></div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-gray-600 mb-1"><span>Cover Letters</span><span>0 / 1</span></div>
-                  <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-gray-300 h-2 rounded-full w-0"></div></div>
-                </div>
-              </div>
-
-              <div className="bg-gray-100 p-1 rounded-lg flex mb-6">
-                <button onClick={() => setBillingCycle('monthly')} className={`flex-1 py-2 text-sm font-medium rounded-md transition ${billingCycle === 'monthly' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}>Monthly</button>
-                <button onClick={() => setBillingCycle('yearly')} className={`flex-1 py-2 text-sm font-medium rounded-md transition ${billingCycle === 'yearly' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}>
-                  Yearly <span className="text-xs text-green-600 font-bold ml-1">-20%</span>
-                </button>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-3xl font-bold text-gray-900">
-                  {billingCycle === 'yearly' ? '$3.23' : '$5.00'}
-                  <span className="text-sm font-normal text-gray-500"> / month</span>
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{billingCycle === 'yearly' ? 'Billed $38.76 yearly' : 'Billed monthly'}</p>
-              </div>
-
-              <ul className="space-y-4 mb-8 flex-grow">
-                {['Unlimited resumes & cover letters', 'Access to premium templates', 'AI-powered content suggestions', 'Remove branding from PDF'].map(f => (
-                  <li key={f} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 text-sm">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg transition font-medium flex items-center justify-center gap-2">
-                <Zap className="w-4 h-4" /> Upgrade to Pro
-              </button>
-            </motion.div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* ✅ Change Password Modal */}
+      {/* ── Change Password Modal ── */}
       <AnimatePresence>
         {showPasswordModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={closePasswordModal}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
-
-            {/* Modal */}
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-8"
+              className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 overflow-hidden"
             >
-              {/* Header */}
+              {/* Decorative top bar */}
+              <div className="absolute top-0 left-0 w-full h-2 bg-cyan-500"></div>
+
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Change Password</h2>
-                <button onClick={closePasswordModal} className="p-2 hover:bg-gray-100 rounded-full transition">
-                  <X size={20} className="text-gray-500" />
+                <h2 className="text-2xl font-bold text-slate-800">New Password</h2>
+                <button onClick={closePasswordModal} className="p-2 hover:bg-slate-100 rounded-full transition text-slate-400 hover:text-slate-600">
+                  <X size={20} />
                 </button>
               </div>
 
-              {/* Success state */}
               {passwordSuccess ? (
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check className="w-8 h-8 text-green-500" />
+                <div className="text-center py-8">
+                  <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <Check className="w-10 h-10 text-green-500" />
                   </div>
-                  <p className="text-gray-800 font-semibold">Password changed successfully!</p>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">Success!</h3>
+                  <p className="text-slate-500">Your password has been updated securely.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Current Password */}
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Current Password</label>
                     <div className="relative">
                       <input
                         type={showCurrentPw ? 'text' : 'password'}
                         value={passwordForm.currentPassword}
                         onChange={(e) => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
-                        placeholder="Enter current password"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none pr-10"
+                        className="text-black w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-cyan-500 outline-none pr-12 transition"
+                        placeholder="••••••••"
                       />
-                      <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
 
-                  {/* New Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">New Password</label>
                     <div className="relative">
                       <input
                         type={showNewPw ? 'text' : 'password'}
                         value={passwordForm.newPassword}
                         onChange={(e) => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
+                        className="text-black w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-cyan-500 outline-none pr-12 transition"
                         placeholder="Min. 8 characters"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none pr-10"
                       />
-                      <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Confirm New Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm New Password</label>
                     <div className="relative">
                       <input
                         type={showConfirmPw ? 'text' : 'password'}
                         value={passwordForm.confirmNewPassword}
                         onChange={(e) => setPasswordForm(p => ({ ...p, confirmNewPassword: e.target.value }))}
+                        className="text-black w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-cyan-500 outline-none pr-12 transition"
                         placeholder="Re-enter new password"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none pr-10"
                       />
-                      <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {showConfirmPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Error */}
                   {passwordError && (
-                    <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{passwordError}</p>
+                    <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-xl text-sm font-medium">
+                      <AlertCircle size={16} /> {passwordError}
+                    </div>
                   )}
 
-                  {/* Buttons */}
-                  <div className="flex gap-3 pt-2">
-                    <button onClick={closePasswordModal} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                  <div className="flex gap-3 pt-4">
+                    <button onClick={closePasswordModal} className="flex-1 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition font-semibold">
                       Cancel
                     </button>
                     <button
                       onClick={handleChangePassword}
                       disabled={passwordLoading || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmNewPassword}
-                      className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-300 disabled:cursor-not-allowed text-white rounded-lg transition font-medium flex items-center justify-center gap-2"
+                      className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-300 disabled:cursor-not-allowed text-white rounded-xl transition font-semibold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30"
                     >
-                      {passwordLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Change Password'}
+                      {passwordLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Updating...</> : 'Update Password'}
                     </button>
                   </div>
                 </div>

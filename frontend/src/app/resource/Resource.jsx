@@ -125,7 +125,7 @@ const Resource = () => {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">React Career Hub</h1>
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600 mb-4">React Career Hub</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Latest discussions, job tips, and library updates directly from the React community.
           </p>
