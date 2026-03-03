@@ -9,6 +9,7 @@ import {
   Play, Clock, CheckCircle2, UploadCloud 
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import images36 from '../../assets/images36.png';
 
 export default function ForOrganizations() {
   const [searchParams] = useSearchParams();
@@ -86,27 +87,34 @@ function RecruitmentContent() {
             </button>
           </div>
         </div>
-        <div className="flex-1 relative">
-          <div className="w-full aspect-square bg-gradient-to-tr from-cyan-50 to-white rounded-2xl border border-gray-100 shadow-2xl flex items-center justify-center p-8 relative overflow-hidden">
-             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-             <div className="w-3/4 h-5/6 bg-white rounded-lg shadow-md border border-gray-200 p-4 relative z-10">
-                <div className="w-1/2 h-4 bg-gray-200 rounded mb-4"></div>
-                <div className="w-full h-2 bg-gray-100 rounded mb-2"></div>
-                <div className="w-5/6 h-2 bg-gray-100 rounded mb-8"></div>
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-cyan-100 rounded-full"></div>
-                  <div className="flex-1">
-                     <div className="w-full h-2 bg-gray-100 rounded mb-2"></div>
-                     <div className="w-full h-2 bg-gray-100 rounded mb-2"></div>
-                     <div className="w-3/4 h-2 bg-gray-100 rounded"></div>
-                  </div>
-                </div>
-             </div>
-             <div className="absolute top-12 right-12 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full z-20 flex items-center gap-1 shadow-sm">
-                <CheckCircle className="w-3 h-3" /> Accepted
-             </div>
+        <div className="flex-1 flex justify-center lg:justify-end items-center">
+  <div className="relative w-full max-w-[500px] group">
+    {/* Lớp nền trang trí nhẹ phía sau để tạo chiều sâu mà không chiếm diện tích */}
+    <div className="absolute -inset-4 bg-gradient-to-tr from-cyan-100 to-blue-50 rounded-3xl blur-2xl opacity-30 group-hover:opacity-50 transition duration-500"></div>
+    
+    {/* Container chứa ảnh chính */}
+    <div className="relative overflow-hidden rounded-2xl border border-gray-100 shadow-xl bg-white">
+      <img 
+        src={images36} 
+        alt="HireWise ATS-friendly Resume" 
+        className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+      />
+    </div>
+
+    {/* Badge nhỏ nổi lên (Tùy chọn nếu bạn muốn tạo điểm nhấn) */}
+    <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg border border-gray-50 hidden md:block animate-bounce-slow">
+       <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+             <CheckCircle className="w-6 h-6 text-green-600" />
           </div>
-        </div>
+          <div>
+             <p className="text-xs text-gray-500 font-medium">ATS Check</p>
+             <p className="text-sm font-bold text-gray-900">100% Optimized</p>
+          </div>
+       </div>
+    </div>
+  </div>
+</div>
       </section>
 
       {/* 2. AI-powered resume automation */}
