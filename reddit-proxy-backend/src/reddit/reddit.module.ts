@@ -1,18 +1,21 @@
-// src/reddit/reddit.module.ts
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule, ConfigService } from '@nestjs/config'; 
 import { RedditController } from './reddit.controller';
 import { RedditService } from './reddit.service';
 
 @Module({
   imports: [
-    HttpModule.register({
-      baseURL: 'https://www.reddit.com',
-      headers: {
-        // Header bắt buộc Reddit yêu cầu
-        'User-Agent': 'MyNestApp/1.0 (by /u/your_reddit_username)',
-        'Accept': 'application/json',
-      },
+    HttpModule.registerAsync({
+      imports: [ConfigModule], 
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({ 
+        baseURL: 'https://www.reddit.com',
+        headers: {
+          'User-Agent': config.get<string>('REDDIT_USER_AGENT'), 
+          'Accept': 'application/json',
+        },
+      }),
     }),
   ],
   controllers: [RedditController],

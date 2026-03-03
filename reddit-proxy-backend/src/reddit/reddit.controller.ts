@@ -17,7 +17,7 @@ export class RedditController {
   @Get('post')
   async getPostDetails(@Query('permalink') permalink: string) {
     if (!permalink) {
-      throw new BadRequestException('Thiếu permalink');
+      throw new BadRequestException('Missing permalink');
     }
     return this.redditService.getPostDetails(permalink);
   }
