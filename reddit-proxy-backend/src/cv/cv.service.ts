@@ -142,10 +142,6 @@ export class CvService {
 
     const tf = new Map<string, number>();
     cvTokens.forEach(t => tf.set(t, (tf.get(t) || 0) + 1));
-
-    // FIX 1: dùng đúng độ dài CV hiện tại làm avgdl
-    // vì chỉ có 1 document — normalize length penalty không có ý nghĩa
-    // → đặt b=0 để tắt length normalization hoàn toàn
     const avgdl = cvTokens.length || 1;
 
     let score = 0;
@@ -154,8 +150,6 @@ export class CvService {
     uniqueJdTerms.forEach(term => {
       const f = tf.get(term) || 0;
       if (f > 0) {
-        // FIX 2: b=0 → tắt length penalty (cvTokens.length/avgdl = 1 luôn)
-        // công thức rút gọn: bm25 = f*(k1+1) / (f+k1)
         const bm25 = (f * (k1 + 1)) / (f + k1 * (1 - b + b * (cvTokens.length / avgdl)));
         score += bm25;
       }
@@ -171,13 +165,18 @@ export class CvService {
 
     const maxPossible = uniqueJdTerms.length * (k1 + 1);
     const bm25Score = maxPossible === 0 ? 0 : Math.min(score / maxPossible, 1);
+    
+    const depthScore = jdSkills.length > 0
+      ? jdSkills.reduce((acc, skill) => {
+          const escapedSkill = skill.replace(/[-[\]{}()*+?.,\^$|#\s]/g, '\$&');
+          const regex = new RegExp(escapedSkill, 'gi');
+          const count = (cvText.match(regex) || []).length;
+          return acc + Math.min(count / 3, 1);
+        }, 0) / jdSkills.length
+      : 0;
 
-    // FIX 3: tăng trọng số skill match lên 50%
-    // skill match đo đúng hơn BM25 trong trường hợp 1 document
-    const combined = bm25Score * 0.5 + skillMatchRatio * 0.5;
+    const combined = bm25Score * 0.30 + skillMatchRatio * 0.50 + depthScore * 0.20;
 
-    // FIX 4: bonus khi skill match cao — tránh bị kéo xuống bởi BM25 thấp
-    // Nếu 80%+ skills match → boost thêm tối đa 10 điểm
     const bonus = skillMatchRatio >= 0.8 ? (skillMatchRatio - 0.8) * 0.5 : 0;
 
     return Math.min(combined + bonus, 1);
