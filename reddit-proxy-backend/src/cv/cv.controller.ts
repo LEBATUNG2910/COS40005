@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Patch,
   Get,
   Body,
   UploadedFile,
@@ -82,6 +83,19 @@ export class CvController {
     });
 
     return new StreamableFile(fileStream);
+  }
+
+  // PATCH /api/cv/update-text
+  @Patch('update-text')
+  @UseGuards(JwtAuthGuard)
+  async updateCVText(
+    @Request() req,
+    @Body('extractedText') extractedText: string,
+  ) {
+    if (!extractedText?.trim())
+      throw new BadRequestException('Text content is required');
+    this.cvService.updateCVText(req.user.userId, extractedText);
+    return { message: 'CV text updated successfully' };
   }
 
   // POST /api/cv/analyze

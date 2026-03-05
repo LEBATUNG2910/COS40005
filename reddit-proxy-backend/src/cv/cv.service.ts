@@ -95,11 +95,17 @@ export class CvService {
     return this.cvStore.get(userId);
   }
 
+  updateCVText(userId: number, extractedText: string): void {
+    const cv = this.cvStore.get(userId);
+    if (!cv) throw new NotFoundException('No CV found. Please upload your CV first.');
+    this.cvStore.set(userId, { ...cv, extractedText });
+  }
+
   async analyzeCV(userId: number, jobDescription: string): Promise<any> {
     const cv = this.cvStore.get(userId);
     if (!cv) throw new NotFoundException('No CV found. Please upload your CV first.');
 
-    const matchScore = this.calculateBM25Score(cv.extractedText, jobDescription);
+    const scoreBreakdown = this.calculateBM25Score(cv.extractedText, jobDescription);
     const jdSkills = this.extractSkills(jobDescription);
     const cvSkills = this.extractSkills(cv.extractedText);
     const missingSkills = jdSkills.filter(s => !cvSkills.includes(s));
@@ -112,7 +118,12 @@ export class CvService {
       templateId: cv.templateId,
       uploadedAt: cv.uploadedAt,
       preview: cv.extractedText.substring(0, 400).trim(),
-      matchScore: Math.min(Math.round(matchScore * 100), 99),
+      matchScore: Math.min(Math.round(scoreBreakdown.total * 100), 99),
+      scoreBreakdown: {
+        bm25:       Math.round(scoreBreakdown.bm25 * 100),
+        skillMatch: Math.round(scoreBreakdown.skillMatch * 100),
+        depth:      Math.round(scoreBreakdown.depth * 100),
+      },
       cvSkills,
       jdSkills,
       missingSkills,
@@ -120,7 +131,7 @@ export class CvService {
     };
   }
 
-  private calculateBM25Score(cvText: string, jdText: string): number {
+  private calculateBM25Score(cvText: string, jdText: string): { total: number; bm25: number; skillMatch: number; depth: number } {
     const k1 = 1.5, b = 0.75;
     const tokenize = (text: string) =>
       text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(t => t.length > 2);
@@ -165,21 +176,24 @@ export class CvService {
 
     const maxPossible = uniqueJdTerms.length * (k1 + 1);
     const bm25Score = maxPossible === 0 ? 0 : Math.min(score / maxPossible, 1);
-    
+
+    // Depth score: đo tần suất xuất hiện của từng skill (dùng indexOf, tránh lỗi c++/c#)
+    const cvLower = cvText.toLowerCase();
     const depthScore = jdSkills.length > 0
       ? jdSkills.reduce((acc, skill) => {
-          const escapedSkill = skill.replace(/[-[\]{}()*+?.,\^$|#\s]/g, '\$&');
-          const regex = new RegExp(escapedSkill, 'gi');
-          const count = (cvText.match(regex) || []).length;
+          const s = skill.toLowerCase();
+          let count = 0, pos = cvLower.indexOf(s);
+          while (pos !== -1) { count++; pos = cvLower.indexOf(s, pos + 1); }
           return acc + Math.min(count / 3, 1);
         }, 0) / jdSkills.length
       : 0;
 
+    // Trọng số: BM25 30% | skill match 50% | depth 20%
     const combined = bm25Score * 0.30 + skillMatchRatio * 0.50 + depthScore * 0.20;
-
     const bonus = skillMatchRatio >= 0.8 ? (skillMatchRatio - 0.8) * 0.5 : 0;
+    const total = Math.min(combined + bonus, 1);
 
-    return Math.min(combined + bonus, 1);
+    return { total, bm25: bm25Score, skillMatch: skillMatchRatio, depth: depthScore };
   }
 
   private extractSkills(text: string): string[] {
@@ -192,10 +206,10 @@ export class CvService {
       'git', 'linux', 'rest api', 'microservices', 'agile', 'scrum',
       'machine learning', 'deep learning', 'tensorflow', 'pytorch', 'pandas', 'numpy',
       'figma', 'jira', 'postman', 'jest', 'cypress', 'swagger', 'fullstack', 'full-stack', 'restful', 'api documentation',
-  'oop', 'solid', 'design pattern', 'microservices', 'rabbitmq', 'kafka', 'redis', 'graphql', 'apollo', 'serverless', 'lambda', 'cloud functions', 'ci/cd', 'continuous integration', 'continuous deployment',
+  'oop', 'solid', 'design pattern', 'rabbitmq', 'kafka', 'apollo', 'serverless', 'lambda', 'cloud functions', 'ci/cd', 'continuous integration', 'continuous deployment',
     ];
     const lowerText = text.toLowerCase();
-    return skillKeywords.filter(skill => lowerText.includes(skill));
+    return [...new Set(skillKeywords.filter(skill => lowerText.includes(skill)))];
   }
 
   private async callGeminiAI(cvText: string, jdText: string, missingSkills: string[]): Promise<any> {
@@ -250,30 +264,44 @@ Rules:
 - Be specific about the candidate's actual CV content, not generic advice
 - Strengths and weaknesses must reference specific things in their CV`;
 
-    try {
-      // ✅ FIX: Đổi từ gemini-2.5-flash (deprecated) 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 3000,
-            },
-          }),
+    // Retry tối đa 3 lần khi 503 overload, mỗi lần cách 2s
+    const fetchGemini = async (attemptsLeft: number): Promise<string | null> => {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.3, maxOutputTokens: 3000 },
+            }),
+          }
+        );
+        const data = await response.json();
+        console.log('Gemini raw response:', JSON.stringify(data).substring(0, 500));
+
+        if (data?.error?.code === 503 && attemptsLeft > 1) {
+          console.warn(`Gemini 503 — retrying in 2s (${attemptsLeft - 1} attempts left)`);
+          await new Promise(r => setTimeout(r, 2000));
+          return fetchGemini(attemptsLeft - 1);
         }
-      );
 
-      const data = await response.json();
-      console.log('Gemini raw response:', JSON.stringify(data).substring(0, 500));
+        return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      } catch (e) {
+        if (attemptsLeft > 1) {
+          await new Promise(r => setTimeout(r, 2000));
+          return fetchGemini(attemptsLeft - 1);
+        }
+        return null;
+      }
+    };
 
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    try {
+      const rawText = await fetchGemini(3);
       if (!rawText) {
-        console.error('Gemini returned no text. Full response:', JSON.stringify(data));
-        throw new Error('Gemini returned empty response');
+        console.warn('Gemini unavailable after retries — using fallback');
+        throw new Error('Gemini unavailable');
       }
 
       let cleaned = rawText

@@ -1,11 +1,12 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Briefcase, Brain, BookOpen, CheckCircle,
   AlertTriangle, TrendingUp, ExternalLink, ChevronDown,
-  Loader2, FileText, Target, Eye, Sparkles
+  Loader2, FileText, Target, Eye, Sparkles,
+  PenLine, X, Plus, RefreshCw, TrendingDown, RotateCcw
 } from 'lucide-react'
 import { authService } from '../../services/authService'
 
@@ -50,6 +51,72 @@ function ScoreRing({ score }) {
         <p className="text-sm font-bold text-gray-800">{emoji} {label}</p>
         <p className="text-xs text-gray-400 mt-0.5 font-mono">BM25 Algorithm</p>
       </div>
+    </div>
+  )
+}
+
+
+/* ─── Score Breakdown Bars ───────────────────────────────────── */
+function ScoreBreakdown({ breakdown }) {
+  const bars = [
+    {
+      label: 'Text Match',
+      hint: 'How much CV text overlaps with the JD (BM25)',
+      value: breakdown.bm25,
+      color: '#0891b2',       // cyan-600
+      bg: '#ecfeff',
+      border: '#a5f3fc',
+    },
+    {
+      label: 'Skill Match',
+      hint: 'Percentage of JD skills found in your CV',
+      value: breakdown.skillMatch,
+      color: '#10b981',       // emerald-500
+      bg: '#f0fdf4',
+      border: '#a7f3d0',
+    },
+    {
+      label: 'Depth Score',
+      hint: 'How frequently each skill is mentioned (shows experience)',
+      value: breakdown.depth,
+      color: '#8b5cf6',       // violet-500
+      bg: '#f5f3ff',
+      border: '#ddd6fe',
+    },
+  ]
+
+  return (
+    <div className="space-y-3">
+      {bars.map((bar, i) => (
+        <motion.div
+          key={bar.label}
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8 + i * 0.12 }}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-gray-700">{bar.label}</span>
+              <div className="group relative">
+                <span className="text-gray-300 cursor-default text-xs">ⓘ</span>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-44 bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
+                  {bar.hint}
+                </div>
+              </div>
+            </div>
+            <span className="text-xs font-bold tabular-nums" style={{ color: bar.color }}>{bar.value}%</span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: bar.border }}>
+            <motion.div
+              className="h-full rounded-full"
+              style={{ backgroundColor: bar.color }}
+              initial={{ width: 0 }}
+              animate={{ width: `${bar.value}%` }}
+              transition={{ duration: 1.2, delay: 0.9 + i * 0.12, ease: 'easeOut' }}
+            />
+          </div>
+        </motion.div>
+      ))}
     </div>
   )
 }
@@ -138,10 +205,168 @@ function SkillCard({ suggestion, index }) {
   )
 }
 
+
+/* ─── Score Delta Badge (before/after) ──────────────────────── */
+function ScoreDelta({ before, after }) {
+  const delta = after - before
+  if (delta === 0) return null
+  const positive = delta > 0
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: -4 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${
+        positive
+          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+          : 'bg-red-50 text-red-500 border-red-200'
+      }`}
+    >
+      {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {positive ? '+' : ''}{delta} from last analysis
+    </motion.div>
+  )
+}
+
+/* ─── CV Editor Drawer ───────────────────────────────────────── */
+const SECTION_LABELS = {
+  summary: 'Summary', experience: 'Experience', skills: 'Skills',
+  education: 'Education', projects: 'Projects', certifications: 'Certifications',
+}
+const PLACEHOLDERS = {
+  summary:        'Experienced software engineer with 5+ years building scalable web applications...',
+  experience:     'Senior Developer | Company | 2021 – Present\n• Key achievement 1\n• Key achievement 2\n\nJunior Developer | Startup | 2019 – 2021\n• ...',
+  skills:         'JavaScript, TypeScript, React, Node.js, PostgreSQL, Docker, AWS...',
+  education:      'B.Sc Computer Science | University of Tech | 2016 – 2020 | GPA 3.8',
+  projects:       'Project Name — React, NestJS\nDescription of what you built and the impact',
+  certifications: 'AWS Solutions Architect | Amazon | 2023',
+}
+
+function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
+  const token = authService.getToken()
+  const sectionKeys = ['summary', 'experience', 'skills', 'education', 'projects', 'certifications']
+  const [values, setValues] = useState({
+    summary: '', experience: '', skills: '', education: '', projects: '', certifications: ''
+  })
+  const [activeTab, setActiveTab] = useState('summary')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const buildText = () =>
+    sectionKeys.filter(k => values[k].trim())
+      .map(k => `${SECTION_LABELS[k].toUpperCase()}\n${values[k]}`).join('\n\n')
+
+  const addMissingSkill = (skill) => {
+    setValues(v => ({ ...v, skills: v.skills ? `${v.skills}, ${skill}` : skill }))
+    setActiveTab('skills')
+  }
+
+  const handleSave = async () => {
+    const text = buildText()
+    if (text.trim().length < 20) { alert('Please fill in at least one section'); return }
+    setSaving(true)
+    try {
+      const res = await fetch('http://localhost:3001/api/cv/update-text', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ extractedText: text }),
+      })
+      if (!res.ok) throw new Error('Failed to save')
+      setSaved(true)
+      setTimeout(() => { setSaved(false); onClose(); onSaveAndReanalyze() }, 600)
+    } catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
+      <motion.div
+        initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+        className="fixed right-0 top-0 h-screen w-full max-w-lg bg-white border-l border-gray-200 z-50 flex flex-col shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-cyan-50 border border-cyan-200 flex items-center justify-center">
+              <PenLine className="w-3.5 h-3.5 text-cyan-500" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Edit CV Content</h2>
+              <p className="text-xs text-gray-400">Save to update & re-analyze automatically</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-400 hover:text-gray-700">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Missing skills quick-add */}
+        {missingSkills.length > 0 && (
+          <div className="px-5 py-3 border-b border-gray-100 bg-orange-50 flex-shrink-0">
+            <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <AlertTriangle className="w-3 h-3" /> Missing Skills — click to add
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {missingSkills.map(skill => (
+                <button key={skill} onClick={() => addMissingSkill(skill)}
+                  className="text-xs bg-white border border-orange-200 text-orange-600 hover:bg-orange-100 px-2.5 py-1 rounded-full capitalize transition flex items-center gap-1">
+                  <Plus className="w-2.5 h-2.5" /> {skill}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Section tabs */}
+        <div className="flex flex-wrap gap-1 px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
+          {sectionKeys.map(key => (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                activeTab === key ? 'bg-cyan-500 text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+              }`}>
+              {SECTION_LABELS[key]}
+              {values[key].trim() && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />}
+            </button>
+          ))}
+        </div>
+
+        {/* Textarea */}
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{SECTION_LABELS[activeTab]}</label>
+          <textarea key={activeTab} value={values[activeTab]}
+            onChange={e => setValues(v => ({ ...v, [activeTab]: e.target.value }))}
+            placeholder={PLACEHOLDERS[activeTab]}
+            className="w-full h-72 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none resize-none text-sm text-gray-800 placeholder-gray-400 transition-colors leading-relaxed"
+          />
+          <p className="text-xs text-gray-400 font-mono mt-1.5">{values[activeTab].length} chars</p>
+          <div className="mt-4 bg-cyan-50 border border-cyan-100 rounded-xl p-3.5">
+            <p className="text-xs text-cyan-700 leading-relaxed">
+              <span className="font-bold">Tip:</span> Use exact keywords from the job description in Experience and Skills to improve your score.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
+          <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 transition font-medium">Cancel</button>
+          <button onClick={handleSave} disabled={saving}
+            className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all text-sm">
+            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+              : saved ? <><CheckCircle className="w-4 h-4" /> Saved!</>
+              : <><RefreshCw className="w-4 h-4" /> Save & Re-analyze</>}
+          </button>
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
 /* ─── Main Component ─────────────────────────────────────────── */
 export default function CvAnalyst() {
   const navigate = useNavigate()
-  const [jobDescription, setJobDescription] = useState('')
+  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem('analyst_last_jd') || '')
   const [cvInfo, setCvInfo] = useState(null)
   const [result, setResult] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
@@ -150,6 +375,8 @@ export default function CvAnalyst() {
   const [pdfUrl, setPdfUrl] = useState(null)
   const [showPdf, setShowPdf] = useState(false)
   const token = authService.getToken()
+  const [showEditor, setShowEditor] = useState(false)
+  const [prevScore, setPrevScore] = useState(null)   // lưu score trước khi re-analyze
 
   const steps = [
     { id: 1, name: 'Upload' },
@@ -194,9 +421,9 @@ export default function CvAnalyst() {
   }, [cvInfo])
 
   /* analyze */
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async () => {
     if (!jobDescription.trim()) { setError('Please paste a job description first'); return }
-    setAnalyzing(true); setError(null); setResult(null)
+    setAnalyzing(true); setError(null)
     try {
       const res = await fetch('http://localhost:3001/api/cv/analyze', {
         method: 'POST',
@@ -205,13 +432,21 @@ export default function CvAnalyst() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Analysis failed')
+      localStorage.setItem('analyst_last_jd', jobDescription)
+      // lưu score cũ trước khi overwrite result
+      setResult(prev => { if (prev) setPrevScore(prev.matchScore); return prev })
       setResult(data)
     } catch (err) {
       setError(err.message)
     } finally {
       setAnalyzing(false)
     }
-  }
+  }, [jobDescription, token])
+
+  /* sau khi editor save → đóng drawer → re-analyze */
+  const handleSaveAndReanalyze = useCallback(() => {
+    setTimeout(() => handleAnalyze(), 350)
+  }, [handleAnalyze])
 
   return (
     <div className="min-h-screen bg-white pb-20" style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}>
@@ -247,8 +482,6 @@ export default function CvAnalyst() {
               </div>
             ))}
           </nav>
-
-          <div />
         </div>
       </div>
 
@@ -292,9 +525,15 @@ export default function CvAnalyst() {
           )}
 
           {cvInfo && (
-            <span className="flex-shrink-0 flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-full">
-              <CheckCircle className="w-3 h-3" /> Ready
-            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button onClick={() => setShowEditor(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-cyan-400 text-gray-500 hover:text-cyan-500 rounded-lg text-xs font-semibold transition">
+                <PenLine className="w-3 h-3" /> Edit
+              </button>
+              <span className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <CheckCircle className="w-3 h-3" /> Ready
+              </span>
+            </div>
           )}
         </motion.div>
 
@@ -438,9 +677,24 @@ export default function CvAnalyst() {
             >
               {/* Score + Skills grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Score ring */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 flex items-center justify-center">
-                  <ScoreRing score={result.matchScore} />
+                {/* Score ring + breakdown + delta */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-center relative">
+                    <ScoreRing score={result.matchScore} />
+                    <button onClick={handleAnalyze} disabled={analyzing}
+                      title="Re-analyze with same JD"
+                      className="absolute top-0 right-0 p-1.5 text-gray-300 hover:text-cyan-500 hover:bg-cyan-50 rounded-lg transition">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {prevScore !== null && prevScore !== result.matchScore && (
+                    <div className="flex justify-center">
+                      <ScoreDelta before={prevScore} after={result.matchScore} />
+                    </div>
+                  )}
+                  {result.scoreBreakdown && (
+                    <ScoreBreakdown breakdown={result.scoreBreakdown} />
+                  )}
                 </div>
 
                 {/* CV Skills */}
@@ -485,6 +739,33 @@ export default function CvAnalyst() {
                   </div>
                 </div>
               </div>
+
+              {/* Low score warning — chỉ hiện khi score < 60 */}
+              {result.matchScore < 60 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <AlertTriangle className="w-4.5 h-4.5 text-orange-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-orange-800 text-sm mb-1">
+                      Low match score — your CV needs improvement for this role
+                    </p>
+                    <p className="text-xs text-orange-600 leading-relaxed mb-3">
+                      {result.missingSkills.length > 0
+                        ? `You're missing ${result.missingSkills.length} key skill${result.missingSkills.length > 1 ? 's' : ''} from this JD. Edit your CV to add them, then re-analyze to see your score improve.`
+                        : 'Your CV text doesn\'t overlap enough with the job description. Try rewriting your experience using keywords from the JD, then re-analyze.'}
+                    </p>
+                    <button onClick={() => setShowEditor(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition">
+                      <PenLine className="w-3.5 h-3.5" /> Edit CV to improve score
+                    </button>
+                  </div>
+                </motion.div>
+              )}
 
               {/* AI Overall Feedback */}
               {result.aiAnalysis?.overallFeedback && (
@@ -577,24 +858,59 @@ export default function CvAnalyst() {
                 </motion.div>
               )}
 
-              {/* CTA Banner */}
+              {/* CTA Banner — dynamic theo score */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
                 className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center"
               >
-                <p className="text-xs text-cyan-500 font-semibold tracking-widest uppercase mb-2">Next Step</p>
-                <h3 className="text-xl font-bold text-gray-900 mb-1">Build your optimised resume</h3>
-                <p className="text-sm text-gray-400 mb-5">Using Template #{result.templateId} tailored to this role.</p>
-                <button className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all active:scale-95 text-sm">
-                  Build Resume →
-                </button>
+                {result.matchScore >= 70 ? (
+                  <>
+                    <p className="text-xs text-emerald-500 font-semibold tracking-widest uppercase mb-2">🎯 Great Match</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">Ready to apply!</h3>
+                    <p className="text-sm text-gray-400 mb-5">Your CV matches this role well. You can still refine it further.</p>
+                    <div className="flex items-center justify-center gap-3">
+                      <button onClick={() => setShowEditor(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:border-cyan-400 text-gray-700 hover:text-cyan-500 font-semibold rounded-xl transition-all text-sm">
+                        <PenLine className="w-4 h-4" /> Fine-tune CV
+                      </button>
+                      <button className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all active:scale-95 text-sm">
+                        Build Resume →
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs text-orange-500 font-semibold tracking-widest uppercase mb-2">⚡ Needs Improvement</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">Improve your score first</h3>
+                    <p className="text-sm text-gray-400 mb-5">
+                      {result.missingSkills.length > 0
+                        ? `Add ${result.missingSkills.slice(0, 3).join(', ')}${result.missingSkills.length > 3 ? ' and more' : ''} to your CV to boost your match.`
+                        : 'Rewrite your experience using more keywords from the job description.'}
+                    </p>
+                    <button onClick={() => setShowEditor(true)}
+                      className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all active:scale-95 text-sm">
+                      <PenLine className="w-4 h-4" /> Edit CV & Re-analyze
+                    </button>
+                  </>
+                )}
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* CV Editor Drawer */}
+      <AnimatePresence>
+        {showEditor && (
+          <CVEditorDrawer
+            onClose={() => setShowEditor(false)}
+            onSaveAndReanalyze={handleSaveAndReanalyze}
+            missingSkills={result?.missingSkills || []}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
