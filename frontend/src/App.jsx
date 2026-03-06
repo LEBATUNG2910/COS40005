@@ -14,24 +14,19 @@ import CvAnalyst from "./app/analyst/page";
 import ForOrganizations from "./app/organize/page";
 import PricingPage from "./app/pricing/page";
 import CareerCenterPage from "./app/career-center/page";
-
-// 🔥 IMPORT THE CONTEXT PROVIDER
 import { FileProvider } from "./context/FileContext";
 
 function App() {
   const location = useLocation();
-  const hideLayout = location.pathname === "/auth";
+  const hideLayout = location.pathname === "/auth" || location.pathname === "/account";
 
   return (
-    // 🔥 WRAP EVERYTHING WITH FILEPROVIDER
     <FileProvider>
       <div className="min-h-screen flex flex-col">
-        {/* Only render Header if hideLayout is false */}
         {!hideLayout && <Header />}
 
         <main className="flex-grow">
           <Routes>
-            {/* ✅ Trang công khai — ai cũng vào được */}
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/auth" element={<AuthPage />} />
@@ -41,7 +36,6 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/career-center" element={<CareerCenterPage />} />
 
-            {/* 🔒 Trang bảo vệ — phải đăng nhập mới vào được */}
             <Route
               path="/upload"
               element={
@@ -77,7 +71,6 @@ function App() {
           </Routes>
         </main>
 
-        {/* Only render Footer if hideLayout is false */}
         {!hideLayout && <Footer />}
       </div>
     </FileProvider>

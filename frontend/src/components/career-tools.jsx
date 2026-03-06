@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Minus } from "lucide-react"; // Đã đổi sang Plus và Minus cơ bản
+import { Plus, Minus } from "lucide-react";
 import { Link } from "react-router-dom"; 
 
-// --- Dữ liệu FAQ ---
 const faqData = [
   {
     question: "Why use HIREWISE for your job application?",
@@ -159,43 +158,40 @@ const faqData = [
   },
 ];
 
-// --- Component Accordion Item ---
 const AccordionItem = ({ question, answer, isOpen, onClick }) => {
   return (
-    <div className="border-b border-gray-200">
+    <div className="border-b border-gray-100">
       <button
         onClick={onClick}
-        // Sửa flex và thêm items-start để icon luôn ở dòng đầu tiên nếu câu hỏi dài xuống dòng
-        className="flex items-start gap-4 w-full py-5 text-left group"
+        className="flex items-start gap-4 w-full py-4 text-left group"
       >
-        {/* Chuyển Icon sang bên trái, thêm mt-1 để canh giữa với text */}
         <div className={`mt-1 transition-transform duration-300 flex-shrink-0 ${isOpen ? "rotate-180" : "rotate-0"}`}>
           {isOpen ? (
-            <Minus className="w-5 h-5 text-cyan-600" strokeWidth={2.5} />
+            <Minus className="w-4 h-4 text-cyan-600" strokeWidth={2.5} />
           ) : (
-            <Plus className="w-5 h-5 text-gray-400 group-hover:text-cyan-600" strokeWidth={2.5} />
+            <Plus className="w-4 h-4 text-gray-400 group-hover:text-cyan-600" strokeWidth={2.5} />
           )}
         </div>
         
         <span
-          className={`text-lg font-medium transition-colors ${
-            isOpen ? "text-cyan-600" : "text-gray-900 group-hover:text-cyan-600"
+          className={`text-base font-medium transition-colors ${
+            isOpen ? "text-cyan-600" : "text-gray-800 group-hover:text-cyan-600"
           }`}
         >
           {question}
         </span>
       </button>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
+            key="content"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            {/* Thêm pl-9 để lùi phần trả lời vào trong, thẳng hàng với câu hỏi */}
-            <div className="pb-5 pl-9 pr-4 text-gray-600 leading-relaxed">
+            <div className="pb-5 pl-8 pr-4 text-sm text-gray-500 leading-relaxed">
               {answer}
             </div>
           </motion.div>
@@ -205,9 +201,8 @@ const AccordionItem = ({ question, answer, isOpen, onClick }) => {
   );
 };
 
-// --- Component FAQ Chính ---
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState(0); 
+  const [openIndex, setOpenIndex] = useState(null); 
 
   const handleItemClick = (index) => {
     setOpenIndex(openIndex === index ? null : index); 
@@ -223,9 +218,10 @@ export default function FAQ() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Frequently asked questions about HIREWISE
           </h2>
+          <p className="text-gray-500 text-sm">Find answers to common questions about our platform.</p>
         </motion.div>
 
         <motion.div
@@ -233,6 +229,7 @@ export default function FAQ() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          className="max-w-2xl mx-auto"
         >
           {faqData.map((item, index) => (
             <AccordionItem

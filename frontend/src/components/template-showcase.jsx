@@ -67,7 +67,7 @@ function TemplateShowcase() {
           viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}
           className="text-center mb-8 sm:mb-12"
         >
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+          <h2 className="text-3xl font-bold text-gray-900 leading-tight">
             Pick a template and build your resume in minutes!
           </h2>
         </motion.div>

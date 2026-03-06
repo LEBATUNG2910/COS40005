@@ -40,7 +40,7 @@ function AISection() {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    <h2 className="text-3xl font-bold text-white mb-4">
                         Fully equipped for the age of AI
                     </h2>
                     <p className="text-xl text-gray-300">

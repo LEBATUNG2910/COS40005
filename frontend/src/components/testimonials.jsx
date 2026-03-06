@@ -59,7 +59,7 @@ export default function Testimonials() {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
                         Trusted by executives & senior professionals
                     </h2>
                     <p className="text-xl text-gray-600">
