@@ -10,43 +10,9 @@ import {
 } from 'lucide-react'
 import { authService } from '../../services/authService'
 
-/* ─── Shared Step Nav ────────────────────────────────────────── */
-function StepNav({ currentStep }) {
-  const steps = [
-    { id: 1, name: 'Upload' },
-    { id: 2, name: 'Template' },
-    { id: 3, name: 'Analyze' },
-  ]
-  return (
-    <nav className="flex items-center justify-center gap-1 sm:gap-2">
-      {steps.map((step) => (
-        <div key={step.id} className="flex items-center gap-1 sm:gap-2">
-          <div className="flex flex-col items-center gap-1">
-            <motion.div
-              animate={{
-                scale: step.id === currentStep ? 1.1 : 1,
-                backgroundColor: step.id <= currentStep ? '#10B981' : '#D1D5DB'
-              }}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm"
-            >
-              {step.id < currentStep ? <CheckCircle className="w-3.5 h-3.5" /> : step.id}
-            </motion.div>
-            <span className={`text-xs font-medium hidden sm:block ${step.id === currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
-              {step.name}
-            </span>
-          </div>
-          {step.id < steps.length && (
-            <div className="w-8 sm:w-16 h-0.5 bg-gray-200 mb-0 sm:mb-4" />
-          )}
-        </div>
-      ))}
-    </nav>
-  )
-}
-
 /* ─── Score Ring ─────────────────────────────────────────────── */
 function ScoreRing({ score }) {
-  const radius = 52
+  const radius = 56
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
   const color = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444'
@@ -55,12 +21,12 @@ function ScoreRing({ score }) {
   const emoji = score >= 70 ? '🎯' : score >= 40 ? '⚡' : '⚠️'
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative w-32 h-32 flex items-center justify-center">
-        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r={radius} fill="none" stroke={trackColor} strokeWidth="10" />
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative w-36 h-36 flex items-center justify-center">
+        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 128 128">
+          <circle cx="64" cy="64" r={radius} fill="none" stroke={trackColor} strokeWidth="10" />
           <motion.circle
-            cx="60" cy="60" r={radius} fill="none" stroke={color}
+            cx="64" cy="64" r={radius} fill="none" stroke={color}
             strokeWidth="10" strokeLinecap="round"
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
@@ -70,7 +36,7 @@ function ScoreRing({ score }) {
         </svg>
         <div className="text-center z-10">
           <motion.p
-            className="text-3xl sm:text-4xl font-black leading-none"
+            className="text-4xl font-black leading-none"
             style={{ color }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -89,23 +55,51 @@ function ScoreRing({ score }) {
   )
 }
 
+
 /* ─── Score Breakdown Bars ───────────────────────────────────── */
 function ScoreBreakdown({ breakdown }) {
   const bars = [
-    { label: 'Text Match',  hint: 'CV text overlap with JD (BM25)',               value: breakdown.bm25,       color: '#0891b2', border: '#a5f3fc' },
-    { label: 'Skill Match', hint: 'Percentage of JD skills found in your CV',     value: breakdown.skillMatch, color: '#10b981', border: '#a7f3d0' },
-    { label: 'Depth Score', hint: 'Skill mention frequency — shows experience',   value: breakdown.depth,      color: '#8b5cf6', border: '#ddd6fe' },
+    {
+      label: 'Text Match',
+      hint: 'How much CV text overlaps with the JD (BM25)',
+      value: breakdown.bm25,
+      color: '#0891b2',       // cyan-600
+      bg: '#ecfeff',
+      border: '#a5f3fc',
+    },
+    {
+      label: 'Skill Match',
+      hint: 'Percentage of JD skills found in your CV',
+      value: breakdown.skillMatch,
+      color: '#10b981',       // emerald-500
+      bg: '#f0fdf4',
+      border: '#a7f3d0',
+    },
+    {
+      label: 'Depth Score',
+      hint: 'How frequently each skill is mentioned (shows experience)',
+      value: breakdown.depth,
+      color: '#8b5cf6',       // violet-500
+      bg: '#f5f3ff',
+      border: '#ddd6fe',
+    },
   ]
+
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {bars.map((bar, i) => (
-        <motion.div key={bar.label} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 + i * 0.12 }}>
+        <motion.div
+          key={bar.label}
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8 + i * 0.12 }}
+        >
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold text-gray-700">{bar.label}</span>
               <div className="group relative">
                 <span className="text-gray-300 cursor-default text-xs">ⓘ</span>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-40 bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-44 bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
                   {bar.hint}
                 </div>
               </div>
@@ -113,9 +107,13 @@ function ScoreBreakdown({ breakdown }) {
             <span className="text-xs font-bold tabular-nums" style={{ color: bar.color }}>{bar.value}%</span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: bar.border }}>
-            <motion.div className="h-full rounded-full" style={{ backgroundColor: bar.color }}
-              initial={{ width: 0 }} animate={{ width: `${bar.value}%` }}
-              transition={{ duration: 1.2, delay: 0.9 + i * 0.12, ease: 'easeOut' }} />
+            <motion.div
+              className="h-full rounded-full"
+              style={{ backgroundColor: bar.color }}
+              initial={{ width: 0 }}
+              animate={{ width: `${bar.value}%` }}
+              transition={{ duration: 1.2, delay: 0.9 + i * 0.12, ease: 'easeOut' }}
+            />
           </div>
         </motion.div>
       ))}
@@ -123,40 +121,28 @@ function ScoreBreakdown({ breakdown }) {
   )
 }
 
-/* ─── Score Delta Badge ──────────────────────────────────────── */
-function ScoreDelta({ before, after }) {
-  const delta = after - before
-  if (delta === 0) return null
-  const positive = delta > 0
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-        positive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200'
-      }`}
-    >
-      {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-      {positive ? '+' : ''}{delta} from last
-    </motion.div>
-  )
-}
-
 /* ─── Resource Card ──────────────────────────────────────────── */
 function ResourceCard({ resource }) {
   const styles = {
-    'Roadmap.sh':    'bg-pink-50 text-pink-600 border-pink-200',
-    'FreeCodeCamp':  'bg-emerald-50 text-emerald-600 border-emerald-200',
-    'Udemy':         'bg-violet-50 text-violet-600 border-violet-200',
-    'YouTube':       'bg-red-50 text-red-600 border-red-200',
+    'Roadmap.sh': 'bg-pink-50 text-pink-600 border-pink-200',
+    'FreeCodeCamp': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    'Udemy': 'bg-violet-50 text-violet-600 border-violet-200',
+    'YouTube': 'bg-red-50 text-red-600 border-red-200'
   }
   const style = styles[resource.platform] || 'bg-gray-100 text-gray-600 border-gray-200'
+
   return (
-    <a href={resource.url} target="_blank" rel="noreferrer"
+    <a
+      href={resource.url} target="_blank" rel="noreferrer"
       className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl hover:border-cyan-400 hover:bg-cyan-50 transition-all group"
     >
-      <div className="flex items-center gap-2 overflow-hidden min-w-0">
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-md border flex-shrink-0 ${style}`}>{resource.platform}</span>
-        <span className="text-xs sm:text-sm text-gray-700 group-hover:text-gray-900 truncate transition-colors">{resource.name}</span>
+      <div className="flex items-center gap-3 overflow-hidden">
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-md border flex-shrink-0 ${style}`}>
+          {resource.platform}
+        </span>
+        <span className="text-sm text-gray-700 group-hover:text-gray-900 truncate transition-colors">
+          {resource.name}
+        </span>
         {resource.type === 'free' && (
           <span className="text-xs text-emerald-600 font-bold flex-shrink-0 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
         )}
@@ -169,28 +155,41 @@ function ResourceCard({ resource }) {
 /* ─── Skill Card ──────────────────────────────────────────────── */
 function SkillCard({ suggestion, index }) {
   const [open, setOpen] = useState(false)
+
   return (
-    <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.07 }}
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.07 }}
       className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:border-orange-300 transition-colors shadow-sm"
     >
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+      >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0">
             <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
           </div>
           <div>
             <p className="font-semibold text-gray-800 capitalize text-sm">{suggestion.skill}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{suggestion.resources?.length || 0} resources</p>
+            <p className="text-xs text-gray-400 mt-0.5">{suggestion.resources?.length || 0} resources available</p>
           </div>
         </div>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown className="w-4 h-4 text-gray-400" />
         </motion.div>
       </button>
+
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden"
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
               <p className="text-sm text-gray-600 leading-relaxed">{suggestion.reason}</p>
@@ -206,10 +205,32 @@ function SkillCard({ suggestion, index }) {
   )
 }
 
+
+/* ─── Score Delta Badge (before/after) ──────────────────────── */
+function ScoreDelta({ before, after }) {
+  const delta = after - before
+  if (delta === 0) return null
+  const positive = delta > 0
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: -4 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${
+        positive
+          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+          : 'bg-red-50 text-red-500 border-red-200'
+      }`}
+    >
+      {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {positive ? '+' : ''}{delta} from last analysis
+    </motion.div>
+  )
+}
+
 /* ─── CV Editor Drawer ───────────────────────────────────────── */
 const SECTION_LABELS = {
   summary: 'Summary', experience: 'Experience', skills: 'Skills',
-  education: 'Education', projects: 'Projects', certifications: 'Certs',
+  education: 'Education', projects: 'Projects', certifications: 'Certifications',
 }
 const PLACEHOLDERS = {
   summary:        'Experienced software engineer with 5+ years building scalable web applications...',
@@ -223,7 +244,9 @@ const PLACEHOLDERS = {
 function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
   const token = authService.getToken()
   const sectionKeys = ['summary', 'experience', 'skills', 'education', 'projects', 'certifications']
-  const [values, setValues] = useState({ summary: '', experience: '', skills: '', education: '', projects: '', certifications: '' })
+  const [values, setValues] = useState({
+    summary: '', experience: '', skills: '', education: '', projects: '', certifications: ''
+  })
   const [activeTab, setActiveTab] = useState('summary')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -257,21 +280,21 @@ function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
   return (
     <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={onClose} />
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
       <motion.div
         initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-        className="fixed right-0 top-0 h-screen w-full sm:max-w-lg bg-white border-l border-gray-200 z-50 flex flex-col shadow-2xl"
+        className="fixed right-0 top-0 h-screen w-full max-w-lg bg-white border-l border-gray-200 z-50 flex flex-col shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-cyan-50 border border-cyan-200 flex items-center justify-center">
               <PenLine className="w-3.5 h-3.5 text-cyan-500" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-gray-900">Edit CV Content</h2>
-              <p className="text-xs text-gray-400">Save to update & re-analyze</p>
+              <p className="text-xs text-gray-400">Save to update & re-analyze automatically</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-400 hover:text-gray-700">
@@ -281,11 +304,11 @@ function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
 
         {/* Missing skills quick-add */}
         {missingSkills.length > 0 && (
-          <div className="px-4 sm:px-5 py-3 border-b border-gray-100 bg-orange-50 flex-shrink-0">
+          <div className="px-5 py-3 border-b border-gray-100 bg-orange-50 flex-shrink-0">
             <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <AlertTriangle className="w-3 h-3" /> Missing — click to add
+              <AlertTriangle className="w-3 h-3" /> Missing Skills — click to add
             </p>
-            <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+            <div className="flex flex-wrap gap-1.5">
               {missingSkills.map(skill => (
                 <button key={skill} onClick={() => addMissingSkill(skill)}
                   className="text-xs bg-white border border-orange-200 text-orange-600 hover:bg-orange-100 px-2.5 py-1 rounded-full capitalize transition flex items-center gap-1">
@@ -296,11 +319,11 @@ function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
           </div>
         )}
 
-        {/* Section tabs — scrollable on mobile */}
-        <div className="flex gap-1 px-4 sm:px-4 py-2.5 border-b border-gray-100 flex-shrink-0 overflow-x-auto scrollbar-none">
+        {/* Section tabs */}
+        <div className="flex flex-wrap gap-1 px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
           {sectionKeys.map(key => (
             <button key={key} onClick={() => setActiveTab(key)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 flex-shrink-0 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                 activeTab === key ? 'bg-cyan-500 text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
               }`}>
               {SECTION_LABELS[key]}
@@ -310,31 +333,29 @@ function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
         </div>
 
         {/* Textarea */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-            {SECTION_LABELS[activeTab]}
-          </label>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{SECTION_LABELS[activeTab]}</label>
           <textarea key={activeTab} value={values[activeTab]}
             onChange={e => setValues(v => ({ ...v, [activeTab]: e.target.value }))}
             placeholder={PLACEHOLDERS[activeTab]}
-            className="w-full h-56 sm:h-72 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none resize-none text-sm text-gray-800 placeholder-gray-400 transition-colors leading-relaxed"
+            className="w-full h-72 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none resize-none text-sm text-gray-800 placeholder-gray-400 transition-colors leading-relaxed"
           />
           <p className="text-xs text-gray-400 font-mono mt-1.5">{values[activeTab].length} chars</p>
-          <div className="mt-3 bg-cyan-50 border border-cyan-100 rounded-xl p-3">
+          <div className="mt-4 bg-cyan-50 border border-cyan-100 rounded-xl p-3.5">
             <p className="text-xs text-cyan-700 leading-relaxed">
-              <span className="font-bold">Tip:</span> Use exact keywords from the JD in Experience and Skills sections.
+              <span className="font-bold">Tip:</span> Use exact keywords from the job description in Experience and Skills to improve your score.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-4 sm:px-5 py-4 border-t border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
+        <div className="px-5 py-4 border-t border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
           <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 transition font-medium">Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all text-sm">
-            {saving   ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-            : saved   ? <><CheckCircle className="w-4 h-4" /> Saved!</>
-            :           <><RefreshCw className="w-4 h-4" /> Save & Re-analyze</>}
+            className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all text-sm">
+            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+              : saved ? <><CheckCircle className="w-4 h-4" /> Saved!</>
+              : <><RefreshCw className="w-4 h-4" /> Save & Re-analyze</>}
           </button>
         </div>
       </motion.div>
@@ -346,38 +367,74 @@ function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
 export default function CvAnalyst() {
   const navigate = useNavigate()
   const [jobDescription, setJobDescription] = useState(() => localStorage.getItem('analyst_last_jd') || '')
-  const [cvInfo, setCvInfo]       = useState(null)
-  const [result, setResult]       = useState(null)
+  const [cvInfo, setCvInfo] = useState(null)
+  const [result, setResult] = useState(() => {
+    try {
+      const saved = localStorage.getItem('analyst_last_result')
+      return saved ? JSON.parse(saved) : null
+    } catch { return null }
+  })
   const [analyzing, setAnalyzing] = useState(false)
-  const [error, setError]         = useState(null)
+  const [error, setError] = useState(null)
   const [loadingCV, setLoadingCV] = useState(true)
-  const [pdfUrl, setPdfUrl]       = useState(null)
-  const [showPdf, setShowPdf]     = useState(false)
-  const [showEditor, setShowEditor] = useState(false)
-  const [prevScore, setPrevScore] = useState(null)
+  const [pdfUrl, setPdfUrl] = useState(null)
+  const [showPdf, setShowPdf] = useState(false)
   const token = authService.getToken()
+  const [showEditor, setShowEditor] = useState(false)
+  const [prevScore, setPrevScore] = useState(null)   // lưu score trước khi re-analyze
+
+  const steps = [
+    { id: 1, name: 'Upload' },
+    { id: 2, name: 'Template' },
+    { id: 3, name: 'Analyze' },
+  ]
+  const currentStep = 3
 
   /* fetch CV metadata */
   useEffect(() => {
     const fetchCVInfo = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/cv/me', { headers: { Authorization: `Bearer ${token}` } })
+        const res = await fetch('http://localhost:3001/api/cv/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         const data = await res.json()
-        if (res.ok && data.hasCV !== false) setCvInfo(data)
-      } catch (err) { console.error(err) }
-      finally { setLoadingCV(false) }
+        if (res.ok && data.hasCV !== false) {
+          // Nếu CV mới hơn result đang lưu → xóa result cũ
+          const savedResult = localStorage.getItem('analyst_last_result')
+          if (savedResult) {
+            try {
+              const parsed = JSON.parse(savedResult)
+              const savedAt = new Date(parsed.uploadedAt).getTime()
+              const cvUploadedAt = new Date(data.uploadedAt).getTime()
+              if (cvUploadedAt > savedAt) {
+                localStorage.removeItem('analyst_last_result')
+                setResult(null)
+              }
+            } catch {}
+          }
+          setCvInfo(data)
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoadingCV(false)
+      }
     }
     fetchCVInfo()
   }, [])
 
-  /* fetch PDF blob */
+  /* fetch PDF blob for preview */
   useEffect(() => {
     if (!cvInfo) return
     const loadPdf = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/cv/preview', { headers: { Authorization: `Bearer ${token}` } })
+        const res = await fetch('http://localhost:3001/api/cv/preview', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         if (res.ok) setPdfUrl(URL.createObjectURL(await res.blob()))
-      } catch (err) { console.error(err) }
+      } catch (err) {
+        console.error(err)
+      }
     }
     loadPdf()
     return () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl) }
@@ -396,12 +453,21 @@ export default function CvAnalyst() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Analysis failed')
       localStorage.setItem('analyst_last_jd', jobDescription)
+      // Lưu result vào localStorage — nhưng bỏ qua nếu là điểm thử nghiệm
+      if (!data.isTemporary) {
+        try { localStorage.setItem('analyst_last_result', JSON.stringify(data)) } catch {}
+      }
+      // lưu score cũ trước khi overwrite result
       setResult(prev => { if (prev) setPrevScore(prev.matchScore); return prev })
       setResult(data)
-    } catch (err) { setError(err.message) }
-    finally { setAnalyzing(false) }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setAnalyzing(false)
+    }
   }, [jobDescription, token])
 
+  /* sau khi editor save → đóng drawer → re-analyze */
   const handleSaveAndReanalyze = useCallback(() => {
     setTimeout(() => handleAnalyze(), 350)
   }, [handleAnalyze])
@@ -409,44 +475,59 @@ export default function CvAnalyst() {
   return (
     <div className="min-h-screen bg-white pb-20" style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}>
 
-      {/* ── Header ── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 mb-6 sm:mb-8">
-  <div className="grid grid-cols-3 items-center">
-    <div className="flex justify-start">
-      <button 
-        onClick={() => navigate('/selection')}
-        className="flex items-center gap-1.5 text-gray-600 hover:text-black transition-colors font-semibold text-sm sm:text-base"
-      >
-        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> 
-        Back
-      </button>
-    </div>
+      {/* ── Header / Step Indicator ── */}
+      <div className="max-w-5xl mx-auto px-6 pt-8 mb-8">
+        <div className="grid grid-cols-3 items-center">
+          <button
+            onClick={() => navigate('/selection')}
+            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors w-fit font-semibold"
+          >
+            <ArrowLeft className="w-5 h-5" /> Back
+          </button>
 
-    <div className="flex justify-center">
-      <StepNav currentStep={3} />
-    </div>
+          <nav className="flex items-center justify-center space-x-4">
+            {steps.map((step) => (
+              <div key={step.id} className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-1">
+                  <motion.div
+                    animate={{
+                      scale: step.id === currentStep ? 1.1 : 1,
+                      backgroundColor: step.id <= currentStep ? '#10B981' : '#D1D5DB'
+                    }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  >
+                    {step.id < currentStep ? <CheckCircle className="w-4 h-4" /> : step.id}
+                  </motion.div>
+                  <span className={`text-xs font-medium ${step.id === currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    {step.name}
+                  </span>
+                </div>
+                {step.id < steps.length && <div className="w-16 h-0.5 bg-gray-200 mb-4" />}
+              </div>
+            ))}
+          </nav>
+        </div>
+      </div>
 
-    <div className="hidden sm:block" />
-  </div>
-</div>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-4 sm:space-y-5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-5">
 
         {/* ── CV Banner ── */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl border p-4 sm:p-5 flex items-center gap-3 sm:gap-4 ${
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-2xl border p-5 flex items-center gap-4 ${
             cvInfo ? 'bg-white border-gray-200 shadow-sm' : 'bg-red-50 border-red-200'
           }`}
         >
-          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
             cvInfo ? 'bg-cyan-50 border border-cyan-200' : 'bg-red-100 border border-red-200'
           }`}>
-            <FileText className={`w-4 h-4 sm:w-5 sm:h-5 ${cvInfo ? 'text-cyan-500' : 'text-red-500'}`} />
+            <FileText className={`w-5 h-5 ${cvInfo ? 'text-cyan-500' : 'text-red-500'}`} />
           </div>
 
           {loadingCV ? (
             <div className="flex items-center gap-2 text-gray-400 text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading CV info...
             </div>
           ) : cvInfo ? (
             <div className="flex-1 min-w-0">
@@ -455,7 +536,7 @@ export default function CvAnalyst() {
                 Template #{cvInfo.templateId} · {new Date(cvInfo.uploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
               {cvInfo.preview && (
-                <p className="text-xs text-gray-400 mt-1 line-clamp-1 font-mono hidden sm:block">{cvInfo.preview}…</p>
+                <p className="text-xs text-gray-400 mt-1.5 line-clamp-1 font-mono">{cvInfo.preview}…</p>
               )}
             </div>
           ) : (
@@ -468,12 +549,12 @@ export default function CvAnalyst() {
           )}
 
           {cvInfo && (
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button onClick={() => setShowEditor(true)}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-cyan-400 text-gray-500 hover:text-cyan-500 rounded-lg text-xs font-semibold transition">
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-cyan-400 text-gray-500 hover:text-cyan-500 rounded-lg text-xs font-semibold transition">
                 <PenLine className="w-3 h-3" /> Edit
               </button>
-              <span className="flex items-center gap-1 sm:gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full">
+              <span className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-full">
                 <CheckCircle className="w-3 h-3" /> Ready
               </span>
             </div>
@@ -482,16 +563,20 @@ export default function CvAnalyst() {
 
         {/* ── PDF Preview ── */}
         {pdfUrl && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
             className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
           >
-            <button onClick={() => setShowPdf(!showPdf)}
-              className="w-full flex items-center justify-between px-4 sm:px-5 py-4 hover:bg-gray-50 transition-colors"
+            <button
+              onClick={() => setShowPdf(!showPdf)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2.5">
                 <Eye className="w-4 h-4 text-cyan-500" />
-                <span className="font-semibold text-gray-800 text-sm">Preview CV</span>
-                {!showPdf && <span className="text-xs text-gray-400 hidden sm:inline">click to expand</span>}
+                <span className="font-semibold text-gray-800 text-sm">Preview Uploaded CV</span>
+                {!showPdf && <span className="text-xs text-gray-400">click to expand</span>}
               </div>
               <motion.div animate={{ rotate: showPdf ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -499,11 +584,14 @@ export default function CvAnalyst() {
             </button>
             <AnimatePresence>
               {showPdf && (
-                <motion.div initial={{ height: 0 }} animate={{ height: 480 }} exit={{ height: 0 }}
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: 640 }}
+                  exit={{ height: 0 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   className="overflow-hidden border-t border-gray-100"
                 >
-                  <iframe src={pdfUrl} title="CV Preview" className="w-full h-[480px] border-0" />
+                  <iframe src={pdfUrl} title="CV Preview" className="w-full h-[640px] border-0" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -511,35 +599,45 @@ export default function CvAnalyst() {
         )}
 
         {/* ── JD Input ── */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6"
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"
         >
           <div className="flex items-center gap-2.5 mb-1">
             <Briefcase className="w-4 h-4 text-cyan-500" />
             <h2 className="text-base font-bold text-gray-900">Job Description</h2>
           </div>
-          <p className="text-xs text-gray-400 mb-4 ml-6">Paste the full JD — matched against your CV using BM25 + Gemini AI</p>
+          <p className="text-xs text-gray-400 mb-4 ml-6">Paste the full JD — we'll match it against your CV using BM25 + Gemini AI</p>
 
           <textarea
-            value={jobDescription} onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="Paste the full job description here..."
-            className="w-full h-36 sm:h-44 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none resize-none text-sm text-gray-800 placeholder-gray-400 transition-colors"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the full job description here...&#10;&#10;e.g. We are looking for a Senior React Developer with 3+ years experience in TypeScript, Node.js, PostgreSQL..."
+            className="w-full h-44 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none resize-none text-sm text-gray-800 placeholder-gray-400 transition-colors"
           />
 
           <div className="flex items-center justify-between mt-3">
             <p className="text-xs text-gray-400 font-mono">{jobDescription.length} chars</p>
-            <button onClick={handleAnalyze} disabled={analyzing || !jobDescription.trim() || !cvInfo}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all active:scale-95 text-sm"
+            <button
+              onClick={handleAnalyze}
+              disabled={analyzing || !jobDescription.trim() || !cvInfo}
+              className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all active:scale-95 text-sm"
             >
               {analyzing
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing…</>
-                : <><Sparkles className="w-4 h-4" /> Analyze with AI</>}
+                : <><Sparkles className="w-4 h-4" /> Analyze with AI</>
+              }
             </button>
           </div>
 
           {error && (
-            <motion.p initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="text-red-600 text-sm mt-3 bg-red-50 border border-red-200 p-3 rounded-xl">
+            <motion.p
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-red-600 text-sm mt-3 bg-red-50 border border-red-200 p-3 rounded-xl"
+            >
               {error}
             </motion.p>
           )}
@@ -548,9 +646,11 @@ export default function CvAnalyst() {
         {/* ── Analyzing Loader ── */}
         <AnimatePresence>
           {analyzing && (
-            <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 sm:p-12 text-center"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center"
             >
               <div className="relative w-14 h-14 mx-auto mb-5">
                 <div className="absolute inset-0 rounded-full border-2 border-cyan-300 animate-ping" />
@@ -559,21 +659,31 @@ export default function CvAnalyst() {
                 </div>
               </div>
               <p className="text-lg font-bold text-gray-900">Analyzing your CV…</p>
-              <p className="text-sm text-gray-500 mt-2 max-w-xs sm:max-w-sm mx-auto">
-                Calculating BM25 match score and generating recommendations.
+              <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
+                Extracting skills, calculating BM25 match score, and generating personalized recommendations.
               </p>
-              <div className="max-w-xs sm:max-w-sm mx-auto mt-6">
+
+              {/* Progress bar */}
+              <div className="max-w-sm mx-auto mt-6">
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <motion.div className="bg-cyan-500 h-2 rounded-full"
-                    initial={{ width: '0%' }} animate={{ width: '90%' }}
-                    transition={{ duration: 4, ease: 'easeOut' }} />
+                  <motion.div
+                    className="bg-cyan-500 h-2 rounded-full"
+                    initial={{ width: '0%' }}
+                    animate={{ width: '90%' }}
+                    transition={{ duration: 4, ease: 'easeOut' }}
+                  />
                 </div>
                 <div className="flex flex-wrap justify-center gap-2 mt-4">
-                  {['Parsing PDF', 'BM25 matching', 'Calling Gemini'].map((s, i) => (
-                    <motion.span key={s} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                  {['Parsing PDF', 'BM25 matching', 'Calling Gemini'].map((step, i) => (
+                    <motion.span
+                      key={step}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.6 }}
                       className="text-xs bg-cyan-50 text-cyan-600 border border-cyan-200 px-3 py-1.5 rounded-full font-medium"
-                    >{s}</motion.span>
+                    >
+                      {step}
+                    </motion.span>
                   ))}
                 </div>
               </div>
@@ -584,50 +694,48 @@ export default function CvAnalyst() {
         {/* ── Results ── */}
         <AnimatePresence>
           {result && (
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 sm:space-y-5">
-
-              {/* Score + Skills — stacked on mobile, 3-col on md+ */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-5"
+            >
+              {/* Score + Skills grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                {/* Score card */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 flex flex-col gap-4">
-                  {/* On mobile: score ring + delta side by side */}
-                  <div className="flex items-center gap-4 md:flex-col md:items-center md:gap-3">
-                    <div className="relative flex-shrink-0">
-                      <ScoreRing score={result.matchScore} />
-                      <button onClick={handleAnalyze} disabled={analyzing} title="Re-analyze"
-                        className="absolute -top-1 -right-1 p-1.5 text-gray-300 hover:text-cyan-500 hover:bg-cyan-50 rounded-lg transition bg-white border border-gray-100">
-                        <RotateCcw className="w-3 h-3" />
-                      </button>
-                    </div>
-                    {/* simulated badge + delta */}
-                    <div className="flex flex-col gap-2 md:items-center">
-                      {result.isTemporary && (
-                        <span className="inline-flex items-center gap-1 bg-violet-100 border border-violet-300 text-violet-600 text-xs font-bold px-2.5 py-1 rounded-full">
-                          🧪 Simulated
-                        </span>
-                      )}
-                      {prevScore !== null && prevScore !== result.matchScore && (
-                        <ScoreDelta before={prevScore} after={result.matchScore} />
-                      )}
-                    </div>
+                {/* Score ring + breakdown + delta */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-center relative">
+                    <ScoreRing score={result.matchScore} />
+                    <button onClick={handleAnalyze} disabled={analyzing}
+                      title="Re-analyze with same JD"
+                      className="absolute top-0 right-0 p-1.5 text-gray-300 hover:text-cyan-500 hover:bg-cyan-50 rounded-lg transition">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  {result.scoreBreakdown && <ScoreBreakdown breakdown={result.scoreBreakdown} />}
+                  {prevScore !== null && prevScore !== result.matchScore && (
+                    <div className="flex justify-center">
+                      <ScoreDelta before={prevScore} after={result.matchScore} />
+                    </div>
+                  )}
+                  {result.scoreBreakdown && (
+                    <ScoreBreakdown breakdown={result.scoreBreakdown} />
+                  )}
                 </div>
 
                 {/* CV Skills */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-4">
                     <Target className="w-4 h-4 text-emerald-500" />
-                    <h3 className="font-bold text-gray-900 text-sm">Skills in CV</h3>
+                    <h3 className="font-bold text-gray-900 text-sm">Skills in Your CV</h3>
                     <span className="ml-auto text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                       {result.cvSkills.length}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-36 sm:max-h-none overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5">
                     {result.cvSkills.length > 0
                       ? result.cvSkills.map(s => (
-                          <span key={s} className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 rounded-full font-medium capitalize">{s}</span>
+                          <span key={s} className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 rounded-full font-medium capitalize">
+                            {s}
+                          </span>
                         ))
                       : <p className="text-xs text-gray-400">No matching skills detected</p>
                     }
@@ -635,18 +743,20 @@ export default function CvAnalyst() {
                 </div>
 
                 {/* Missing Skills */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-4">
                     <AlertTriangle className="w-4 h-4 text-orange-500" />
                     <h3 className="font-bold text-gray-900 text-sm">Missing Skills</h3>
                     <span className="ml-auto text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
                       {result.missingSkills.length}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-36 sm:max-h-none overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5">
                     {result.missingSkills.length > 0
                       ? result.missingSkills.map(s => (
-                          <span key={s} className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2.5 py-1 rounded-full font-medium capitalize">{s}</span>
+                          <span key={s} className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2.5 py-1 rounded-full font-medium capitalize">
+                            {s}
+                          </span>
                         ))
                       : <p className="text-xs text-emerald-600 font-semibold">✅ No missing skills!</p>
                     }
@@ -654,20 +764,24 @@ export default function CvAnalyst() {
                 </div>
               </div>
 
-              {/* Low score warning */}
+              {/* Low score warning — chỉ hiện khi score < 60 */}
               {result.matchScore < 60 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-orange-50 border border-orange-200 rounded-2xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4"
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4"
                 >
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <AlertTriangle className="w-4.5 h-4.5 text-orange-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-orange-800 text-sm mb-1">Low match — your CV needs improvement</p>
+                    <p className="font-bold text-orange-800 text-sm mb-1">
+                      Low match score — your CV needs improvement for this role
+                    </p>
                     <p className="text-xs text-orange-600 leading-relaxed mb-3">
                       {result.missingSkills.length > 0
-                        ? `Missing ${result.missingSkills.length} key skill${result.missingSkills.length > 1 ? 's' : ''}. Add them to boost your score.`
-                        : "Rewrite your experience using more keywords from the JD."}
+                        ? `You're missing ${result.missingSkills.length} key skill${result.missingSkills.length > 1 ? 's' : ''} from this JD. Edit your CV to add them, then re-analyze to see your score improve.`
+                        : 'Your CV text doesn\'t overlap enough with the job description. Try rewriting your experience using keywords from the JD, then re-analyze.'}
                     </p>
                     <button onClick={() => setShowEditor(true)}
                       className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition">
@@ -677,10 +791,13 @@ export default function CvAnalyst() {
                 </motion.div>
               )}
 
-              {/* AI Assessment */}
+              {/* AI Overall Feedback */}
               {result.aiAnalysis?.overallFeedback && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                  className="bg-cyan-50 border border-cyan-200 rounded-2xl p-4 sm:p-6"
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-cyan-50 border border-cyan-200 rounded-2xl p-6"
                 >
                   <div className="flex items-center gap-2.5 mb-3">
                     <div className="w-7 h-7 rounded-lg bg-white border border-cyan-200 flex items-center justify-center">
@@ -695,31 +812,38 @@ export default function CvAnalyst() {
 
               {/* Strengths & Weaknesses */}
               {result.aiAnalysis && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
-                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <motion.div
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5"
                   >
-                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 mb-4">
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
                       <h3 className="font-bold text-gray-900 text-sm">Strengths</h3>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {result.aiAnalysis.strengths?.map((s, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />{s}
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                          {s}
                         </li>
                       ))}
                     </ul>
                   </motion.div>
 
-                  <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
-                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5"
+                  <motion.div
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5"
                   >
-                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 mb-4">
                       <AlertTriangle className="w-4 h-4 text-orange-500" />
                       <h3 className="font-bold text-gray-900 text-sm">Areas to Improve</h3>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {result.aiAnalysis.weaknesses?.map((w, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
                           <div className="w-3.5 h-3.5 rounded-full border border-orange-400 flex items-center justify-center mt-0.5 flex-shrink-0">
@@ -735,10 +859,13 @@ export default function CvAnalyst() {
 
               {/* Learning Roadmap */}
               {result.aiAnalysis?.suggestions?.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                  className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6"
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"
                 >
-                  <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
+                  <div className="flex items-center gap-2.5 mb-5">
                     <div className="w-7 h-7 rounded-lg bg-violet-50 border border-violet-200 flex items-center justify-center">
                       <BookOpen className="w-3.5 h-3.5 text-violet-500" />
                     </div>
@@ -748,26 +875,31 @@ export default function CvAnalyst() {
                     </span>
                   </div>
                   <div className="space-y-2.5">
-                    {result.aiAnalysis.suggestions.map((s, i) => <SkillCard key={i} suggestion={s} index={i} />)}
+                    {result.aiAnalysis.suggestions.map((s, i) => (
+                      <SkillCard key={i} suggestion={s} index={i} />
+                    ))}
                   </div>
                 </motion.div>
               )}
 
-              {/* CTA Banner */}
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-                className="bg-gray-50 border border-gray-200 rounded-2xl p-6 sm:p-8 text-center"
+              {/* CTA Banner — dynamic theo score */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center"
               >
                 {result.matchScore >= 70 ? (
                   <>
                     <p className="text-xs text-emerald-500 font-semibold tracking-widest uppercase mb-2">🎯 Great Match</p>
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Ready to apply!</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">Ready to apply!</h3>
                     <p className="text-sm text-gray-400 mb-5">Your CV matches this role well. You can still refine it further.</p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <div className="flex items-center justify-center gap-3">
                       <button onClick={() => setShowEditor(true)}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:border-cyan-400 text-gray-700 hover:text-cyan-500 font-semibold rounded-xl transition-all text-sm">
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:border-cyan-400 text-gray-700 hover:text-cyan-500 font-semibold rounded-xl transition-all text-sm">
                         <PenLine className="w-4 h-4" /> Fine-tune CV
                       </button>
-                      <button className="w-full sm:w-auto px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all active:scale-95 text-sm">
+                      <button onClick={() => navigate('/resume')}  className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all active:scale-95 text-sm">
                         Build Resume →
                       </button>
                     </div>
@@ -775,11 +907,11 @@ export default function CvAnalyst() {
                 ) : (
                   <>
                     <p className="text-xs text-orange-500 font-semibold tracking-widest uppercase mb-2">⚡ Needs Improvement</p>
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Improve your score first</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">Improve your score first</h3>
                     <p className="text-sm text-gray-400 mb-5">
                       {result.missingSkills.length > 0
-                        ? `Add ${result.missingSkills.slice(0, 3).join(', ')}${result.missingSkills.length > 3 ? ' and more' : ''} to boost your match.`
-                        : 'Rewrite using more keywords from the job description.'}
+                        ? `Add ${result.missingSkills.slice(0, 3).join(', ')}${result.missingSkills.length > 3 ? ' and more' : ''} to your CV to boost your match.`
+                        : 'Rewrite your experience using more keywords from the job description.'}
                     </p>
                     <button onClick={() => setShowEditor(true)}
                       className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all active:scale-95 text-sm">
@@ -788,7 +920,6 @@ export default function CvAnalyst() {
                   </>
                 )}
               </motion.div>
-
             </motion.div>
           )}
         </AnimatePresence>

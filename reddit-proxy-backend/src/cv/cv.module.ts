@@ -26,5 +26,6 @@ import { CvService } from './cv.service';
   ],
   controllers: [CvController],
   providers: [CvService],
+  exports: [ CvService ], // export để ResumeModule dùng lấy CV gốc khi cần re-parse
 })
 export class CvModule {}
