@@ -96,7 +96,7 @@ export default function SocialProof() {
                         viewport={{ once: true, margin: "-100px" }}
                     >
                         {/* Updated text colors */}
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                        <h2 className="text-3xl font-bold text-white mb-6">
                             Chosen by{" "}
                             <span className="text-cyan-400">10 million</span>{" "}
                             job applicants around the world

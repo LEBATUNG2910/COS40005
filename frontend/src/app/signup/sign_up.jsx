@@ -210,28 +210,27 @@ export default function SignUp() {
           </div>
 
           {/* Gender */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Gender
-            </label>
-            <div className="flex gap-6">
-              {["male", "female", "other"].map((gender) => (
-                <label key={gender} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={gender}
-                    checked={formData.gender === gender}
-                    onChange={handleChange}
-                    className="w-4 h-4 bg-white accent-cyan-500 cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-700 capitalize">
-                    {gender}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+<div>
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    Gender
+  </label>
+  <div className="flex gap-2">
+    {["male", "female", "other"].map((gender) => (
+      <button
+        key={gender}
+        type="button"
+        onClick={() => handleChange({ target: { name: "gender", value: gender } })}
+        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all capitalize ${
+          formData.gender === gender
+            ? "bg-cyan-500 text-white border-cyan-500"
+            : "bg-white text-gray-500 border-gray-200 hover:border-cyan-300 hover:text-cyan-500"
+        }`}
+      >
+        {gender}
+      </button>
+    ))}
+  </div>
+</div>
 
           {/* Checkboxes */}
           <div className="space-y-3">
@@ -260,7 +259,7 @@ export default function SignUp() {
                 className="w-4 h-4 bg-white accent-cyan-500 cursor-pointer"
               />
               <span className="text-xs text-gray-600">
-                Receive promotional information and news from Lang Chats
+                Receive promotional information and news from HIREWISE
               </span>
             </label>
           </div>

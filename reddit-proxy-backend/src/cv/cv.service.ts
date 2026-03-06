@@ -15,6 +15,7 @@ interface CvRecord {
 @Injectable()
 export class CvService {
   private cvStore = new Map<number, CvRecord>();
+  private tempTextStore = new Map<number, string>(); // text tạm, không ghi đè CV gốc
 
   async extractTextFromPDF(filePath: string): Promise<{ text: string; pageCount: number }> {
     const possiblePaths = [
@@ -95,35 +96,41 @@ export class CvService {
     return this.cvStore.get(userId);
   }
 
+  // Lưu tạm — không ghi đè CV gốc. Auto xóa sau khi analyzeCV dùng xong
   updateCVText(userId: number, extractedText: string): void {
-    const cv = this.cvStore.get(userId);
-    if (!cv) throw new NotFoundException('No CV found. Please upload your CV first.');
-    this.cvStore.set(userId, { ...cv, extractedText });
+    if (!this.cvStore.has(userId)) throw new NotFoundException('No CV found. Please upload your CV first.');
+    this.tempTextStore.set(userId, extractedText);
   }
 
   async analyzeCV(userId: number, jobDescription: string): Promise<any> {
     const cv = this.cvStore.get(userId);
     if (!cv) throw new NotFoundException('No CV found. Please upload your CV first.');
 
-    const scoreBreakdown = this.calculateBM25Score(cv.extractedText, jobDescription);
+    // Dùng text tạm nếu user vừa edit, rồi xóa ngay (1 lần dùng)
+    const isTemporary = this.tempTextStore.has(userId);
+    const textToAnalyze = this.tempTextStore.get(userId) ?? cv.extractedText;
+    if (isTemporary) this.tempTextStore.delete(userId);
+
+    const scoreBreakdown = this.calculateBM25Score(textToAnalyze, jobDescription);
     const jdSkills = this.extractSkills(jobDescription);
-    const cvSkills = this.extractSkills(cv.extractedText);
+    const cvSkills = this.extractSkills(textToAnalyze);
     const missingSkills = jdSkills.filter(s => !cvSkills.includes(s));
 
-    const aiAnalysis = await this.callGeminiAI(cv.extractedText, jobDescription, missingSkills);
+    const aiAnalysis = await this.callGeminiAI(textToAnalyze, jobDescription, missingSkills);
 
     return {
       fileName: cv.fileName,
       pageCount: cv.pageCount,
       templateId: cv.templateId,
       uploadedAt: cv.uploadedAt,
-      preview: cv.extractedText.substring(0, 400).trim(),
+      preview: textToAnalyze.substring(0, 400).trim(),
       matchScore: Math.min(Math.round(scoreBreakdown.total * 100), 99),
       scoreBreakdown: {
         bm25:       Math.round(scoreBreakdown.bm25 * 100),
         skillMatch: Math.round(scoreBreakdown.skillMatch * 100),
         depth:      Math.round(scoreBreakdown.depth * 100),
       },
+      isTemporary,
       cvSkills,
       jdSkills,
       missingSkills,
@@ -217,7 +224,9 @@ export class CvService {
       ? missingSkills.join(', ')
       : 'No keyword-based missing skills detected, but analyze the CV depth and suggest improvements anyway';
 
-    const prompt = `You are an expert career coach and senior technical recruiter with 15+ years experience.
+    // Salt ngẫu nhiên mỗi request → phá Gemini response cache
+    const analysisId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const prompt = `[Request ID: ${analysisId}] You are an expert career coach and senior technical recruiter with 15+ years experience.
 
 CV TEXT (first 3000 chars):
 ${cvText.substring(0, 3000)}
@@ -264,7 +273,6 @@ Rules:
 - Be specific about the candidate's actual CV content, not generic advice
 - Strengths and weaknesses must reference specific things in their CV`;
 
-    // Retry tối đa 3 lần khi 503 overload, mỗi lần cách 2s
     const fetchGemini = async (attemptsLeft: number): Promise<string | null> => {
       try {
         const response = await fetch(
@@ -274,7 +282,7 @@ Rules:
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.3, maxOutputTokens: 3000 },
+              generationConfig: { temperature: 0.85, topP: 0.95, topK: 40, maxOutputTokens: 3000 },
             }),
           }
         );

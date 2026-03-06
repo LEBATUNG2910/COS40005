@@ -33,7 +33,7 @@ function ATSSection() {
                         transition={{ duration: 0.8 }}
                         className="order-2 md:order-1"
                     >
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                        <h2 className="text-3xl font-bold text-white mb-6 leading-tight">
                             Resumes optimized for{" "}
                             <span className="text-cyan-400 block sm:inline">
                                 Applicant Tracking Systems (ATS)
