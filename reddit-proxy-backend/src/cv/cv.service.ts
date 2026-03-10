@@ -2,11 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import * as fs from 'fs';
 import { execSync } from 'child_process';
 
+type ExtractionMethod = 'pdftotext' | 'pdf-parse' | 'gemini-vision';
+
 interface CvRecord {
   userId: number;
   fileName: string;
   filePath: string;
   extractedText: string;
+  extractionMethod: ExtractionMethod;
   templateId: number;
   uploadedAt: Date;
   pageCount: number;
@@ -17,7 +20,7 @@ export class CvService {
   private cvStore = new Map<number, CvRecord>();
   private tempTextStore = new Map<number, string>(); // text tạm, không ghi đè CV gốc
 
-  async extractTextFromPDF(filePath: string): Promise<{ text: string; pageCount: number }> {
+  async extractTextFromPDF(filePath: string): Promise<{ text: string; pageCount: number; method: ExtractionMethod }> {
     const possiblePaths = [
       '/opt/homebrew/bin/pdftotext',
       '/usr/local/bin/pdftotext',
@@ -51,7 +54,7 @@ export class CvService {
         } catch { pageCount = 1; }
 
         if (text.trim().length > 30) {
-          return { text: text.trim(), pageCount };
+          return { text: text.trim(), pageCount, method: 'pdftotext' as ExtractionMethod };
         }
       } catch (e) {
         console.error('pdftotext failed:', e);
@@ -64,25 +67,31 @@ export class CvService {
       const pdfParse = pdfParseLib.default ?? pdfParseLib;
       const buffer = fs.readFileSync(filePath);
       const data = await pdfParse(buffer);
-      return { text: data.text, pageCount: data.numpages };
+      if (data.text && data.text.trim().length > 30) {
+        return { text: data.text, pageCount: data.numpages, method: 'pdf-parse' as ExtractionMethod };
+      }
     } catch {
-      throw new BadRequestException('Cannot extract PDF. Run: brew install poppler');
+      console.warn('pdf-parse failed, trying Gemini Vision...');
     }
+
+    // ── Gemini Vision fallback — đọc được mọi loại CV kể cả scan/Canva ──
+    const visionText = await this.extractWithGeminiVision(filePath);
+    if (visionText && visionText.length > 30) {
+      return { text: visionText, pageCount: 1, method: 'gemini-vision' as ExtractionMethod };
+    }
+
+    throw new BadRequestException('Cannot extract CV content. The file may be corrupted or empty.');
   }
 
   async saveCV(userId: number, file: Express.Multer.File, templateId: number): Promise<CvRecord> {
-    const { text, pageCount } = await this.extractTextFromPDF(file.path);
-
-    if (!text || text.trim().length < 30) {
-      fs.unlinkSync(file.path);
-      throw new BadRequestException('Could not extract text. Ensure PDF is not image-only.');
-    }
+    const { text, pageCount, method } = await this.extractTextFromPDF(file.path);
 
     const record: CvRecord = {
       userId,
       fileName: file.originalname,
       filePath: file.path,
       extractedText: text,
+      extractionMethod: method,
       templateId,
       uploadedAt: new Date(),
       pageCount,
@@ -123,6 +132,7 @@ export class CvService {
       pageCount: cv.pageCount,
       templateId: cv.templateId,
       uploadedAt: cv.uploadedAt,
+      extractionMethod: cv.extractionMethod,
       preview: textToAnalyze.substring(0, 400).trim(),
       matchScore: Math.min(Math.round(scoreBreakdown.total * 100), 99),
       scoreBreakdown: {
@@ -346,6 +356,56 @@ Rules:
         suggestions: this.buildFallbackSuggestions(missingSkills),
         overallFeedback: 'Basic keyword analysis completed. Please retry the analysis for detailed AI-powered insights from Gemini.',
       };
+    }
+  }
+
+  /* ── Gemini Vision: đọc PDF như mắt người ─────────────────────
+     Xử lý được: CV scan, Canva, 2 cột, có ảnh, design phức tạp   */
+  private async extractWithGeminiVision(filePath: string): Promise<string | null> {
+    try {
+      const buffer = fs.readFileSync(filePath);
+      const base64 = buffer.toString('base64');
+      const mimeType = 'application/pdf';
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                {
+                  inlineData: { mimeType, data: base64 }
+                },
+                {
+                  text: `Extract ALL text content from this CV/resume document.
+Return the raw text preserving the logical reading order (name, contact, summary, experience, education, skills, etc.).
+Include ALL text you can see — do not skip any sections.
+Do NOT add any commentary, formatting, or explanation — just the extracted text.`
+                }
+              ]
+            }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 4000 },
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data?.error) {
+        console.error('Gemini Vision error:', data.error.message);
+        return null;
+      }
+
+      const extracted = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      if (extracted) {
+        console.log(`✅ Gemini Vision extracted ${extracted.length} chars from CV`);
+      }
+      return extracted;
+    } catch (err) {
+      console.error('Gemini Vision extraction failed:', err);
+      return null;
     }
   }
 
