@@ -18,6 +18,9 @@
 - [Getting Started](#-getting-started)
 - [Environment Variables](#-environment-variables)
 - [API Reference](#-api-reference)
+- Resume Builder — Backend
+- Database — MongoDB
+- Resume Builder — Frontend
 
 ---
 
@@ -468,6 +471,216 @@ POST   /api/cv/analyze         # body: { jobDescription: string }
 ## 📄 License
 
 MIT License — feel free to use, modify, and distribute.
+
+Resume Builder — Backend
+Overview
+The Resume Builder backend parses a user's uploaded CV into structured JSON using Gemini AI, allows editing, and exports to PDF via Puppeteer. All data is stored in-memory per user session.
+File Structure
+src/resume/
+├── resume.controller.ts        # REST endpoints
+├── resume.service.ts           # Parse, store, retrieve logic
+├── resume.module.ts            # Module registration
+├── resume-export.controller.ts # PDF export endpoint
+└── resume-export.service.ts    # Puppeteer HTML → PDF
+API Endpoints
+All endpoints require Authorization: Bearer <token> header.
+MethodEndpointDescriptionPOST/api/resume/parseParse uploaded CV → structured ResumeData JSONPOST/api/resume/reparseDelete cached parse, re-parse from original CVGET/api/resume/dataGet current resume data (parsed or user-edited)PUT/api/resume/dataSave user editsPOST/api/resume/exportExport current resume to PDF (Puppeteer)
+ResumeData Interface
+typescript{
+  personalInfo: {
+    name, email, phone, location,
+    linkedin, github, website
+  },
+  summary: string,
+  experience: [{
+    title, company, location,
+    startDate, endDate,
+    bullets: string[]
+  }],
+  education: [{
+    degree, school, location,
+    startDate, endDate, gpa
+  }],
+  skills: string[],
+  projects: [{
+    name,
+    tech: string[],
+    description,
+    url
+  }],
+  certifications: string[],
+  languages: string[]
+}
+Parse Flow
+POST /api/resume/parse
+  ├── Check if CV uploaded (cvStore)
+  ├── Check cache (resumeStore) → return immediately if hit
+  ├── Call Gemini gemini-1.5-flash with CV text
+  ├── Parse JSON response → merge with EMPTY_RESUME
+  └── Cache result in resumeStore
+Gemini parse uses temperature: 0.1 for deterministic extraction. Each request includes a random [Request ID] salt to prevent Gemini response caching.
+Export Flow
+POST /api/resume/export  { templateId: 1–12 }
+  ├── Fetch current resume data
+  ├── Build HTML string (3 layout styles)
+  ├── Launch Puppeteer (uses local Chrome)
+  ├── page.setContent(html)
+  ├── page.pdf({ format: 'A4' })
+  └── Stream PDF as attachment download
+Template layouts:
+templateIdLayoutStyle1–4ClassicCentered header, serif font (EB Garamond)5–8ModernDark header, skill tags, two-column bottom9–12Two-columnDark sidebar with skills, light main content
+Setup
+bashnpm install puppeteer-core
+Add to .env:
+GEMINI_API_KEY=your_key_here
+Puppeteer uses the system Chrome installation — no download needed:
+/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+Retry Logic
+Both resume.service.ts and cv.service.ts include retry on Gemini errors:
+
+503 → retry after 2s (up to 3 attempts)
+429 RPM → parse retry delay from error message (e.g. "retry in 52.7s") → wait exact duration → retry
+
+
+Database — MongoDB
+Overview
+MongoDB database HireWiseDB with 16 collections, schema validation, indexes, and seed data. Initialized via hirewise_mongo_init.js.
+Setup
+Step 1 — Start MongoDB (Docker):
+bashdocker run -d \
+  --name hirewise-mongo \
+  -p 27017:27017 \
+  -v hirewise-data:/data/db \
+  mongo:7
+Step 2 — Run migration (one time only):
+bashdocker exec -i hirewise-mongo mongosh < hirewise_mongo_init.js
+
+⚠️ The script drops all existing collections before recreating. Do not run on production data.
+
+Step 3 — Install Mongoose:
+bashnpm install @nestjs/mongoose mongoose @nestjs/config
+Step 4 — Add to .env:
+MONGODB_URI=mongodb://localhost:27017/HireWiseDB
+Step 5 — Import DatabaseModule in app.module.ts (already done in the provided app.module.ts).
+File Structure
+src/database/
+├── database.module.ts          # MongooseModule.forRootAsync + all schemas
+└── schemas/
+    ├── user.schema.ts          # users collection
+    ├── refresh-token.schema.ts # refreshTokens collection
+    ├── cv-upload.schema.ts     # cvUploads collection
+    ├── cv-analysis.schema.ts   # cvAnalyses, cvAnalysisSkills,
+    │                           # aiInsights, aiSuggestions, learningResources
+    ├── template-skill.schema.ts # resumeTemplates, skills
+    ├── subscription.schema.ts  # pricingPlans, planFeatures,
+    │                           # userSubscriptions, teamMembers
+    └── misc.schema.ts          # redditCache (TTL), auditLogs
+Collections
+CollectionDescriptionSeed datausersUser accounts—refreshTokensJWT sessions + Remember Me—cvUploadsUploaded CV files + extracted text—cvAnalysesCV vs JD analysis results—cvAnalysisSkillsSkills extracted per analysis (CV/JD/MISSING)—aiInsightsGemini strengths/weaknesses per analysis—aiSuggestionsSkill improvement suggestions—learningResourcesLearning links per suggestion—resumeTemplatesAvailable resume templates12 templatesskillsSkills catalog77 skillspricingPlansStarter / Pro / Team plans3 plansplanFeaturesFeature list per plan12 featuresuserSubscriptionsUser plan subscriptions—teamMembersTeam plan members—redditCacheReddit API proxy cache (5-min TTL)—auditLogsUser activity log—
+Collection Relationships
+users
+  ├── refreshTokens     (userId)
+  ├── cvUploads         (userId)
+  │     └── cvAnalyses  (cvUploadId)
+  │           ├── cvAnalysisSkills  (analysisId)
+  │           ├── aiInsights        (analysisId)
+  │           └── aiSuggestions     (analysisId)
+  │                 └── learningResources (suggestionId)
+  └── userSubscriptions (userId → pricingPlans)
+        └── teamMembers (subscriptionId)
+Using Schemas in Services
+typescript// In your module
+import { DatabaseModule } from '../database/database.module';
+
+@Module({
+  imports: [DatabaseModule],
+})
+export class CvModule {}
+typescript// In your service
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CvUpload, CvUploadDocument } from '../database/schemas/cv-upload.schema';
+
+@Injectable()
+export class CvService {
+  constructor(
+    @InjectModel(CvUpload.name)
+    private cvUploadModel: Model<CvUploadDocument>,
+  ) {}
+
+  async getLatest(userId: string) {
+    return this.cvUploadModel.findOne({ userId, isLatest: true });
+  }
+}
+Common / Shared Utilities
+src/common/
+├── index.ts                          # Barrel exports
+├── guards/
+│   └── jwt-auth.guard.ts             # JwtAuthGuard — use with @UseGuards()
+├── decorators/
+│   └── current-user.decorator.ts     # @CurrentUser() — extract user from JWT
+└── filters/
+    └── all-exceptions.filter.ts      # Global error handler — consistent JSON errors
+Usage example:
+typescriptimport { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
+
+@Get('profile')
+@UseGuards(JwtAuthGuard)
+getProfile(@CurrentUser() user: JwtPayload) {
+  return user; // { userId, email }
+}
+The AllExceptionsFilter is registered globally in app.module.ts and returns consistent error responses:
+json{
+  "statusCode": 404,
+  "message": "No CV found",
+  "path": "/api/resume/parse",
+  "timestamp": "2026-03-10T..."
+}
+
+Resume Builder — Frontend
+Overview
+Single-page builder at route /builder. Two-column layout: form editor on the left, live preview on the right. Auto-saves edits to the backend after 1.2s debounce.
+File
+src/app/builder/page.jsx
+Route
+/builder
+Navigated to from the CV Analyst page via the "Build Resume →" CTA button.
+Features
+FeatureDescriptionAuto-parseOn first load, calls POST /api/resume/parse to extract CV into form fields8 section editorsPersonal Info, Summary, Experience, Education, Skills, Projects, Certifications, LanguagesSection quick-jumpPill buttons to scroll to each sectionLive previewReal-time resume preview, scaled to 85%, updates as you typeAuto-saveDebounced 1.2s — calls PUT /api/resume/data silently after each editReset from CVRe-parses original CV via POST /api/resume/reparseExport PDFCalls POST /api/resume/export, downloads resume-<timestamp>.pdfMobile togglePreview hidden by default on mobile, toggle with Eye buttonError handlingGraceful degradation — shows editable form even if Gemini parse fails
+Load Flow
+Mount
+  ├── GET /api/resume/data
+  │     ├── hasData: true  → populate form (cached from previous session)
+  │     └── hasData: false → POST /api/resume/parse → populate form
+  └── Render editor + live preview
+Components
+ComponentDescriptionFieldReusable text input / textarea with consistent stylingSectionCardCollapsible card wrapper with animated expand/collapsePersonalInfoEditor2-column grid for contact fieldsExperienceEditorAdd/remove positions, dynamic bullet pointsEducationEditorAdd/remove education entriesSkillsEditorTag-style input, press Enter to add, click × to removeProjectsEditorAdd/remove projects with tech stack comma inputListEditorReusable for Certifications and LanguagesResumePreviewLive HTML preview matching PDF export layout
+Data Management
+javascript// _id attached to array items for React key tracking
+const attachIds = (d) => ({
+  ...d,
+  experience: d.experience.map(x => ({ _id: uid(), ...x })),
+  education:  d.education.map(x => ({ _id: uid(), ...x })),
+  projects:   d.projects.map(x => ({ _id: uid(), ...x })),
+})
+
+// _id stripped before sending to API
+const stripIds = (d) => ({
+  ...d,
+  experience: d.experience.map(({ _id, ...rest }) => rest),
+  // ...
+})
+Styling
+Consistent with the rest of the HireWise design system:
+Font:     'DM Sans', 'Inter', sans-serif
+Accent:   cyan-500 / cyan-600
+Cards:    rounded-2xl border border-gray-200 shadow-sm
+Buttons:  bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl
+Export:   bg-gray-900 hover:bg-black text-white
+Dependencies
+bashnpm install framer-motion lucide-react
+Requires authService.getToken() from src/services/authService to attach JWT to all API calls.
 
 ---
 
