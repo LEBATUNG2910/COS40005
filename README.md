@@ -1,6 +1,6 @@
 # 🧑‍💼 HireWise — AI-Powered Resume Builder
 
-> A full-stack, production-ready **Resume Builder Web Application** built with **React + Vite** on the frontend and **NestJS** on the backend. Features AI-powered CV analysis using **Google Gemini**, smart job-matching with the **BM25 algorithm**, JWT-based authentication, PDF extraction, and a polished UI with animations.
+> A full-stack, production-ready **Resume Builder Web Application** built with **React + Vite** on the frontend and **NestJS** on the backend. Features AI-powered CV analysis using **Google Gemini**, smart job-matching with the **BM25 algorithm**, JWT-based authentication, PDF extraction, a live resume editor, and PDF export via Puppeteer.
 
 ---
 
@@ -11,6 +11,9 @@
 - [Architecture](#-architecture)
 - [Frontend](#-frontend)
 - [Backend](#-backend)
+- [Resume Builder — Backend](#-resume-builder--backend)
+- [Database — MongoDB](#-database--mongodb)
+- [Resume Builder — Frontend](#-resume-builder--frontend)
 - [AI & Matching Engine](#-ai--matching-engine)
 - [Authentication](#-authentication)
 - [Tech Stack](#-tech-stack)
@@ -27,7 +30,8 @@
 
 **Core user flow:**
 ```
-Register / Login → Upload CV (PDF) → Choose Template → Paste Job Description → Get AI Analysis + Match Score
+Register / Login → Upload CV (PDF) → Choose Template → Paste Job Description
+  → Get AI Analysis + Match Score → Build & Edit Resume → Export PDF
 ```
 
 ---
@@ -54,13 +58,13 @@ A fully responsive, scroll-animated marketing page:
 ### 📊 CV Analyst (`/analyst`)
 The core feature of the app — paste a Job Description, get a full AI analysis:
 
-- **BM25 Match Score** (0–99) — measures textual overlap between CV and JD using the BM25 ranking algorithm, combined with a skill-match ratio (50/50 weighting + bonus for high skill coverage)
-- **Skills in Your CV** — extracted from a curated list of 60+ tech keywords
+- **BM25 Match Score** (0–99) — measures textual overlap between CV and JD using BM25, combined with skill-match ratio (30/50/20 weighting + bonus for high skill coverage)
+- **Skills in Your CV** — extracted from a curated list of 77 tech keywords
 - **Missing Skills** — skills mentioned in JD but absent from CV
 - **AI Assessment** (Gemini) — personalized 2–3 sentence overall feedback
-- **Strengths** — 3 specific strengths identified by AI from the actual CV content
+- **Strengths** — 3 specific strengths identified from the actual CV content
 - **Areas to Improve** — 2 specific weaknesses with actionable advice
-- **Learning Roadmap** — 3 skill suggestions, each with 3 curated learning resources (Roadmap.sh, FreeCodeCamp, Udemy/YouTube)
+- **Learning Roadmap** — 3 skill suggestions, each with 3 curated resources (Roadmap.sh, FreeCodeCamp, Udemy/YouTube)
 
 ---
 
@@ -68,8 +72,7 @@ The core feature of the app — paste a Job Description, get a full AI analysis:
 Drag-and-drop CV upload interface:
 
 - Accepts **PDF only** (max 10MB)
-- Backend extracts full text using `pdftotext` (poppler) with fallback to `pdf-parse`
-- Displays upload progress bar
+- Backend extracts text via a 3-layer strategy (see [PDF Extraction Strategy](#pdf-extraction-strategy))
 - Extracted text stored server-side, linked to authenticated user
 - Supports re-upload to replace existing CV
 
@@ -80,43 +83,56 @@ Browse and select from **12 professionally designed** resume templates:
 
 - Animated grid with hover effects (`framer-motion`)
 - Templates: Double Column, Ivy League, Elegant, Contemporary, Polished, Modern, Creative, Timeline, Stylish, Single Column, Elegant with Logos, Double Column with Logos
-- Selected template ID saved to Context and passed to the backend on upload
-- Selection confirmed via a floating "Continue" button
+- Selected template ID saved to Context and passed to backend on upload
+
+---
+
+### 🏗️ Resume Builder (`/builder`)
+Full resume editor with live preview and PDF export:
+
+- **Auto-parse** — Gemini extracts CV into 8 structured form sections on first load
+- **Live preview** — real-time preview scaled at 85%, matches final PDF output
+- **Auto-save** — debounced 1.2s after each edit, saves silently to backend
+- **Export PDF** — Puppeteer renders HTML → downloads `resume-<timestamp>.pdf`
+- **Reset from CV** — re-parses original uploaded CV at any time
+- **Mobile toggle** — preview hidden by default on small screens
 
 ---
 
 ### 👤 Account Page (`/account`)
-Profile management with sidebar navigation (inspired by Enhancv):
+Profile management with sidebar navigation:
 
-- **Your Profile tab** — edit full name, language preference, newsletter opt-in
-- **Email display** — read-only with "Change Email Address" link
-- **Password change** — modal with current/new/confirm fields, show/hide toggle, backend validation
+- **Profile tab** — edit full name, language preference, newsletter opt-in
+- **Password change** — modal with current/new/confirm fields and show/hide toggle
 - **Account actions** — Sign Out of All Devices, Delete Account
 - **Billing tab** — Pro upgrade card with monthly/yearly toggle and feature list
-- All changes persisted to backend via `PATCH /api/auth/profile`
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    FRONTEND (React)                   │
-│  Landing → Auth → Upload → Template → Analyst → Account │
-└──────────────────────┬──────────────────────────────┘
-                       │ REST API (fetch)
-                       │ Authorization: Bearer <JWT>
-┌──────────────────────▼──────────────────────────────┐
-│                   BACKEND (NestJS)                    │
-│                                                       │
-│  AuthModule  ──→  JWT Sign/Verify  ──→  UsersService  │
-│  CvModule    ──→  PDF Extract      ──→  CvStore (Map) │
-│              ──→  BM25 Engine      ──→  Score         │
-│              ──→  Gemini API       ──→  AI Analysis   │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React + Vite)                     │
+│  Landing → Auth → Upload → Template → Analyst → Builder → Account │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ REST API (fetch)
+                          │ Authorization: Bearer <JWT>
+┌─────────────────────────▼────────────────────────────────────┐
+│                    BACKEND (NestJS :3001)                      │
+│                                                                │
+│  AuthModule    ──→  JWT Sign/Verify   ──→  UsersService        │
+│  CvModule      ──→  PDF Extract       ──→  CvStore (Map)       │
+│                ──→  BM25 Engine       ──→  Score               │
+│                ──→  Gemini Vision     ──→  CV Text (all types) │
+│                ──→  Gemini AI         ──→  Analysis JSON       │
+│  ResumeModule  ──→  Gemini Parse      ──→  ResumeStore (Map)   │
+│                ──→  Puppeteer         ──→  PDF Export          │
+│  DatabaseModule──→  MongoDB           ──→  HireWiseDB          │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-> **Note:** CV data is currently stored **in-memory** (`Map<userId, CvRecord>`). Data resets on server restart. A database (PostgreSQL/MongoDB) integration is planned for production.
+> **Note:** CV and resume data are currently **in-memory** (`Map<userId, Record>`). MongoDB schemas are fully implemented and ready — migration to persistent storage is the next step.
 
 ---
 
@@ -126,27 +142,22 @@ Profile management with sidebar navigation (inspired by Enhancv):
 
 | Route | Component | Description |
 |---|---|---|
-| `/` | `home.jsx` | Landing page with all sections |
+| `/` | `home.jsx` | Landing page |
 | `/auth` | `sign_in.jsx` / `sign_up.jsx` | Login and Register |
 | `/upload` | `cv-upload.jsx` | CV upload (Step 1) |
 | `/selection` | `ResumeTemplateSelection.jsx` | Template picker (Step 2) |
 | `/analyst` | `page.jsx` | CV analysis dashboard (Step 3) |
+| `/builder` | `builder/page.jsx` | Resume editor + PDF export |
 | `/account` | `account.jsx` | User profile & settings |
-| `/process` | `HowItWork.jsx` | Entry point / onboarding |
+| `/process` | `HowItWork.jsx` | Onboarding entry point |
 | `/resource` | `Resource.jsx` | Blog / resources |
-
-### 3-Step Progress Indicator
-All 3 core pages (Upload → Template → Analyze) share a consistent step indicator:
-- Emerald green circles, checkmark for completed steps
-- Step label below each circle
-- Consistent white background layout across all steps
 
 ### State Management
 Global state via **React Context API** (`FileContext`):
 ```js
 {
-  uploadedFile: File | null,       // the uploaded PDF file object
-  selectedTemplateId: number | null // chosen template ID
+  uploadedFile: File | null,
+  selectedTemplateId: number | null
 }
 ```
 
@@ -161,7 +172,7 @@ Built with **NestJS**, running on port `3001`.
 #### `AuthModule`
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/auth/register` | POST | Create new account (fullName, email, phone, password, gender) |
+| `/api/auth/register` | POST | Create account (fullName, email, phone, password, gender) |
 | `/api/auth/login` | POST | Login with email/phone + password, supports rememberMe |
 | `/api/auth/me` | GET | Get current user info (JWT required) |
 | `/api/auth/profile` | PATCH | Update fullName and language |
@@ -176,127 +187,312 @@ Built with **NestJS**, running on port `3001`.
 | `/api/cv/analyze` | POST | Run BM25 + Gemini analysis against a JD |
 
 ### PDF Extraction Strategy
+
+Three-layer strategy supporting all CV types:
+
 ```
-1. Try pdftotext (poppler) — best quality, preserves layout
-   Paths checked: /opt/homebrew/bin, /usr/local/bin, /usr/bin, PATH
-2. Fallback to pdf-parse (npm) — pure JS, works everywhere
-3. If both fail → throw BadRequestException
+1. pdftotext (poppler)  — best quality, preserves layout
+2. pdf-parse (npm)      — pure JS fallback, works everywhere
+3. Gemini Vision        — sends PDF as base64, reads any CV type
 ```
+
+| CV Type | Method used |
+|---|---|
+| Plain text PDF | pdftotext |
+| 2-column / designed layout | Gemini Vision |
+| Scanned from paper | Gemini Vision |
+| Canva / Figma export | Gemini Vision |
+| CV with avatar photo | Gemini Vision (ignores image) |
+
+Response includes `extractionMethod: 'pdftotext' | 'pdf-parse' | 'gemini-vision'`.
+
+---
+
+## 📝 Resume Builder — Backend
+
+### File Structure
+
+```
+src/resume/
+├── resume.controller.ts
+├── resume.service.ts
+├── resume.module.ts
+├── resume-export.controller.ts
+└── resume-export.service.ts
+```
+
+### API Endpoints
+
+All require `Authorization: Bearer <token>`.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/resume/parse` | Parse CV → ResumeData JSON (cached) |
+| `POST` | `/api/resume/reparse` | Delete cache, re-parse from original CV |
+| `GET` | `/api/resume/data` | Get current data (parsed or edited) |
+| `PUT` | `/api/resume/data` | Save user edits |
+| `POST` | `/api/resume/export` | Export to PDF via Puppeteer |
+
+### ResumeData Interface
+
+```typescript
+{
+  personalInfo: { name, email, phone, location, linkedin, github, website },
+  summary: string,
+  experience: [{ title, company, location, startDate, endDate, bullets: string[] }],
+  education:  [{ degree, school, location, startDate, endDate, gpa }],
+  skills: string[],
+  projects:   [{ name, tech: string[], description, url }],
+  certifications: string[],
+  languages: string[]
+}
+```
+
+### Parse Flow
+
+```
+POST /api/resume/parse
+  ├── Check CV uploaded (cvStore)
+  ├── Check cache (resumeStore) → return immediately if hit
+  ├── Call Gemini gemini-1.5-flash (temperature: 0.1)
+  ├── Parse JSON → merge with EMPTY_RESUME
+  └── Cache in resumeStore
+```
+
+### Export Flow
+
+```
+POST /api/resume/export { templateId: 1–12 }
+  ├── Fetch resume data
+  ├── Build HTML (3 layout styles)
+  ├── Launch Puppeteer with local Chrome
+  ├── page.pdf({ format: 'A4', printBackground: true })
+  └── Stream as attachment download
+```
+
+| templateId | Layout | Style |
+|---|---|---|
+| 1–4 | Classic | Centered header, EB Garamond serif |
+| 5–8 | Modern | Dark header, skill tags, two-column bottom |
+| 9–12 | Two-column | Dark sidebar, light main content |
+
+### Retry Logic
+
+- **503** → retry after 2s (up to 3 attempts)
+- **429 RPM** → parse `"retry in Xs"` from error message → wait exact duration → retry
+
+---
+
+## 🗄️ Database — MongoDB
+
+### Setup
+
+```bash
+# Start MongoDB
+docker run -d --name hirewise-mongo -p 27017:27017 -v hirewise-data:/data/db mongo:7
+
+# Run migration (ONE TIME — drops existing data)
+docker exec -i hirewise-mongo mongosh < hirewise_mongo_init.js
+
+# Install packages
+npm install @nestjs/mongoose mongoose @nestjs/config
+```
+
+Add to `.env`:
+```
+MONGODB_URI=mongodb://localhost:27017/HireWiseDB
+```
+
+### File Structure
+
+```
+src/database/
+├── database.module.ts
+└── schemas/
+    ├── user.schema.ts
+    ├── refresh-token.schema.ts
+    ├── cv-upload.schema.ts
+    ├── cv-analysis.schema.ts        # + cvAnalysisSkills, aiInsights, aiSuggestions, learningResources
+    ├── template-skill.schema.ts     # + skills
+    ├── subscription.schema.ts       # + planFeatures, userSubscriptions, teamMembers
+    └── misc.schema.ts               # redditCache (TTL), auditLogs
+```
+
+### Collections
+
+| Collection | Description | Seed |
+|---|---|---|
+| `users` | User accounts | — |
+| `refreshTokens` | JWT sessions | — |
+| `cvUploads` | CV files + extracted text | — |
+| `cvAnalyses` | Analysis results | — |
+| `cvAnalysisSkills` | Skills per analysis (CV/JD/MISSING) | — |
+| `aiInsights` | Strengths & weaknesses | — |
+| `aiSuggestions` | Skill suggestions | — |
+| `learningResources` | Learning links | — |
+| `resumeTemplates` | Resume templates | 12 |
+| `skills` | Skills catalog | 77 |
+| `pricingPlans` | Starter / Pro / Team | 3 |
+| `planFeatures` | Features per plan | 12 |
+| `userSubscriptions` | User subscriptions | — |
+| `teamMembers` | Team plan members | — |
+| `redditCache` | Reddit proxy cache (5-min TTL) | — |
+| `auditLogs` | Activity log | — |
+
+### Collection Relationships
+
+```
+users
+  ├── refreshTokens      (userId)
+  ├── cvUploads          (userId)
+  │     └── cvAnalyses   (cvUploadId)
+  │           ├── cvAnalysisSkills  (analysisId)
+  │           ├── aiInsights        (analysisId)
+  │           └── aiSuggestions     (analysisId)
+  │                 └── learningResources (suggestionId)
+  └── userSubscriptions  (userId → pricingPlans)
+        └── teamMembers  (subscriptionId)
+```
+
+### Common / Shared Utilities
+
+```
+src/common/
+├── index.ts
+├── guards/jwt-auth.guard.ts              # @UseGuards(JwtAuthGuard)
+├── decorators/current-user.decorator.ts  # @CurrentUser() → JwtPayload
+└── filters/all-exceptions.filter.ts      # Global error handler
+```
+
+`AllExceptionsFilter` returns consistent JSON errors:
+```json
+{
+  "statusCode": 404,
+  "message": "No CV found",
+  "path": "/api/resume/parse",
+  "timestamp": "2026-03-10T09:00:00.000Z"
+}
+```
+
+---
+
+## 📋 Resume Builder — Frontend
+
+### File
+
+```
+src/app/builder/page.jsx   →   route: /builder
+```
+
+Navigated to from Analyst page via **"Build Resume →"** button.
+
+### Load Flow
+
+```
+Mount
+  ├── GET /api/resume/data
+  │     ├── hasData: true  → populate form (cached)
+  │     └── hasData: false → POST /api/resume/parse → populate form
+  └── Render editor + live preview
+```
+
+### Features
+
+| Feature | Description |
+|---|---|
+| Auto-parse | Gemini extracts CV → populates all 8 form sections |
+| Section quick-jump | Cyan pill buttons, smooth scroll |
+| Live preview | Real-time, scaled 85%, matches PDF output |
+| Auto-save | Debounced 1.2s → `PUT /api/resume/data` silently |
+| Reset from CV | `POST /api/resume/reparse` |
+| Export PDF | `POST /api/resume/export` → `resume-<timestamp>.pdf` |
+| Mobile toggle | Eye icon shows/hides preview |
+| Error handling | Editable form even if parse fails |
+
+### Components
+
+| Component | Description |
+|---|---|
+| `Field` | Reusable input / textarea |
+| `SectionCard` | Collapsible card with `framer-motion` animation |
+| `PersonalInfoEditor` | 2-column grid for contact fields |
+| `ExperienceEditor` | Positions with dynamic bullet points |
+| `EducationEditor` | Education entries |
+| `SkillsEditor` | Tag-style — Enter to add, × to remove |
+| `ProjectsEditor` | Projects with comma-separated tech stack |
+| `ListEditor` | Reusable for Certifications and Languages |
+| `ResumePreview` | Live HTML matching PDF export layout |
 
 ---
 
 ## 🤖 AI & Matching Engine
 
-### BM25 Algorithm (`calculateBM25Score`)
-
-A modified BM25 implementation optimized for **single-document matching** (1 CV vs 1 JD):
+### BM25 Scoring
 
 ```
-Parameters: k1 = 1.5, b = 0.75
-avgdl = cvTokens.length  (no cross-document length penalty)
+bm25Score    = Σ BM25(term) / maxPossible        (k1=1.5, b=0.75)
+skillMatch   = matched_skills / total_jd_skills
+depthScore   = avg occurrences per JD skill (capped)
 
-For each unique term in JD:
-  if term exists in CV:
-    bm25(term) = f(t,d) × (k1 + 1) / (f(t,d) + k1 × (1 - b + b × |CV|/avgdl))
-
-bm25Score = Σ bm25(term) / maxPossible
+combined     = bm25Score × 0.30 + skillMatch × 0.50 + depthScore × 0.20
+bonus        = skillMatch ≥ 0.8 ? (skillMatch - 0.8) × 0.5 : 0
+finalScore   = min(combined + bonus, 1) × 100
 ```
 
-**Scoring formula (hybrid):**
-```
-skillMatchRatio = matched_skills / total_jd_skills
+### Gemini Models Used
 
-combined    = bm25Score × 0.5 + skillMatchRatio × 0.5
-bonus       = skillMatchRatio ≥ 0.8 ? (skillMatchRatio - 0.8) × 0.5 : 0
-finalScore  = min(combined + bonus, 1) × 100
-```
+| Purpose | Model | Temp |
+|---|---|---|
+| CV analysis | `gemini-2.5-flash` | 0.85 |
+| Resume parse | `gemini-1.5-flash` | 0.1 |
+| PDF extraction | `gemini-2.5-flash-lite` (Vision) | 0.1 |
 
-This gives a realistic score: a CV with 100% skill match scores **~74+** instead of the previous 58.
+### Gemini Free Tier
 
-### Gemini AI Integration
-
-Model: `gemini-2.5-flash-lite` via REST API
-
-The prompt instructs Gemini to act as a senior technical recruiter and return **strictly valid JSON**:
-
-```json
-{
-  "strengths": ["...", "...", "..."],
-  "weaknesses": ["...", "..."],
-  "suggestions": [
-    {
-      "skill": "Docker",
-      "reason": "...",
-      "resources": [
-        { "name": "...", "url": "https://roadmap.sh/docker", "type": "free", "platform": "Roadmap.sh" },
-        { "name": "...", "url": "https://freecodecamp.org/...", "type": "free", "platform": "FreeCodeCamp" },
-        { "name": "...", "url": "https://udemy.com/...", "type": "paid", "platform": "Udemy" }
-      ]
-    }
-  ],
-  "overallFeedback": "..."
-}
-```
-
-**Robustness features:**
-- Strips markdown code fences (` ```json `) before parsing
-- Extracts JSON by finding first `{` and last `}`
-- Falls back to curated static resources if Gemini fails or returns empty
-- Always guarantees 3 suggestions even when no skills are missing
+| Model | RPM | RPD | RPD reset |
+|---|---|---|---|
+| gemini-2.5-flash | 10 | 500 | 15:00 VN time |
+| gemini-2.5-flash-lite | 15 | 1,500 | 15:00 VN time |
 
 ---
 
 ## 🔐 Authentication
 
-JWT-based auth with two token durations:
+| Mode | Storage |
+|---|---|
+| Normal login | `sessionStorage` |
+| Remember Me | `localStorage` |
 
-| Mode | Token Expiry | Storage |
-|---|---|---|
-| Normal login | `JWT_EXPIRES_IN` (e.g. `100y`) | `sessionStorage` |
-| Remember Me | `JWT_REMEMBER_EXPIRES_IN` (e.g. `100y`) | `localStorage` |
-
-**`authService` (frontend):**
 ```js
-authService.getToken()     // checks localStorage then sessionStorage
+authService.getToken()
 authService.saveToken(token, rememberMe)
-authService.logout()       // clears both storages
+authService.logout()
 ```
-
-**Header behavior:**
-- **Not logged in** → User icon shows Sign In / Sign Up
-- **Logged in** → User icon shows Account / Logout
-- Logout triggers a 900ms loading overlay, then redirects to `/`
 
 ---
 
 ## 🧱 Tech Stack
 
 ### Frontend
-| Technology | Version | Purpose |
-|---|---|---|
-| React | 18+ | UI framework |
-| Vite | 5+ | Build tool & dev server |
-| Tailwind CSS | 3+ | Utility-first styling |
-| Framer Motion | 10+ | Page & scroll animations |
-| Lucide React | 0.3+ | SVG icon library |
-| React Router DOM | 6+ | Client-side routing |
-| Shadcn/UI | latest | Card, Button, Input components |
+| Technology | Purpose |
+|---|---|
+| React 18 + Vite 5 | UI framework + build tool |
+| Tailwind CSS 3 | Styling |
+| Framer Motion | Animations |
+| Lucide React | Icons |
+| React Router DOM 6 | Routing |
+| Shadcn/UI | UI components |
 
 ### Backend
-| Technology | Version | Purpose |
-|---|---|---|
-| NestJS | 10+ | Backend framework |
-| JWT / Passport | — | Authentication |
-| bcryptjs | — | Password hashing |
-| Multer | — | File upload handling |
-| pdf-parse | — | PDF text extraction (fallback) |
-| poppler (pdftotext) | — | PDF text extraction (primary) |
-| ConfigService | — | Environment variable management |
-
-### External APIs
-| Service | Purpose |
+| Technology | Purpose |
 |---|---|
-| Google Gemini API (`gemini-2.5-flash-lite`) | AI CV analysis and suggestions |
+| NestJS 10 | Framework |
+| JWT / Passport | Auth |
+| bcryptjs | Password hashing |
+| Multer | File upload |
+| pdf-parse + poppler | PDF extraction |
+| puppeteer-core | PDF export |
+| Mongoose + MongoDB | Database |
 
 ---
 
@@ -304,60 +500,31 @@ authService.logout()       // clears both storages
 
 ```
 COS40005/
+├── frontend/src/
+│   ├── app/
+│   │   ├── home/           landing page
+│   │   ├── auth/           sign_in.jsx, sign_up.jsx
+│   │   ├── upload/         cv-upload.jsx
+│   │   ├── selection/      ResumeTemplateSelection.jsx
+│   │   ├── analyst/        page.jsx
+│   │   ├── builder/        page.jsx
+│   │   └── account/        account.jsx
+│   ├── components/         header, hero, template-showcase, ...
+│   ├── context/            FileContext.jsx
+│   └── services/           authService.js
 │
-├── frontend/                          # React + Vite app
-│   └── src/
-│       ├── app/
-│       │   ├── home/
-│       │   │   └── home.jsx           # Landing page
-│       │   ├── auth/
-│       │   │   ├── sign_in.jsx        # Login page
-│       │   │   └── sign_up.jsx        # Register page
-│       │   ├── upload/
-│       │   │   └── cv-upload.jsx      # CV upload (Step 1)
-│       │   ├── selection/
-│       │   │   └── ResumeTemplateSelection.jsx  # Template picker (Step 2)
-│       │   ├── analyst/
-│       │   │   └── page.jsx           # CV analysis dashboard (Step 3)
-│       │   └── account/
-│       │       └── account.jsx        # User profile & settings
-│       │
-│       ├── components/
-│       │   ├── ui/                    # Shadcn/UI base components
-│       │   ├── header.jsx             # Global nav with auth-aware dropdown
-│       │   ├── hero.jsx               # Hero section
-│       │   ├── ai-section.jsx         # AI features showcase
-│       │   ├── ats-section.jsx        # ATS optimization section
-│       │   ├── career-tools.jsx       # Career tools overview
-│       │   ├── template-showcase.jsx  # Template carousel
-│       │   ├── testimonials.jsx       # User reviews
-│       │   ├── social-proof.jsx       # Stats & trust signals
-│       │   ├── features.jsx           # Feature grid
-│       │   └── footer.jsx             # Footer
-│       │
-│       ├── context/
-│       │   └── FileContext.jsx        # Global state (file + templateId)
-│       │
-│       ├── services/
-│       │   └── authService.js         # Token management (get/save/logout)
-│       │
-│       ├── assets/                    # Images, template previews (pic9–pic20)
-│       ├── hooks/                     # Custom React hooks
-│       ├── lib/                       # Utility functions
-│       └── App.jsx                    # Route definitions
-│
-└── backend/                           # NestJS app (port 3001)
-    └── src/
-        ├── auth/
-        │   ├── auth.controller.ts     # Auth endpoints
-        │   ├── auth.service.ts        # Business logic, JWT signing
-        │   └── jwt.strategy.ts        # Passport JWT strategy
-        ├── cv/
-        │   ├── cv.controller.ts       # CV endpoints
-        │   └── cv.service.ts          # PDF extraction, BM25, Gemini
-        ├── users/
-        │   └── users.service.ts       # User CRUD
-        └── main.ts                    # Bootstrap, CORS config
+└── reddit-proxy-backend/src/
+    ├── auth/
+    ├── cv/                 cv.controller.ts, cv.service.ts
+    ├── resume/             resume.*.ts, resume-export.*.ts
+    ├── users/
+    ├── reddit/
+    ├── database/
+    │   ├── database.module.ts
+    │   └── schemas/        7 schema files → 16 collections
+    ├── common/             guards, decorators, filters
+    ├── app.module.ts
+    └── main.ts
 ```
 
 ---
@@ -366,31 +533,33 @@ COS40005/
 
 ### Prerequisites
 - Node.js 18+
-- npm or yarn
-- poppler (for best PDF extraction quality)
+- Docker
+- Google Chrome (for Puppeteer)
 
 ```bash
-# macOS
+# Optional — improves PDF extraction quality on macOS
 brew install poppler
-
-# Ubuntu/Debian
-sudo apt-get install poppler-utils
 ```
 
-### Frontend Setup
+### MongoDB
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker run -d --name hirewise-mongo -p 27017:27017 -v hirewise-data:/data/db mongo:7
+docker exec -i hirewise-mongo mongosh < hirewise_mongo_init.js
+```
+
+### Frontend
+
+```bash
+cd frontend && npm install && npm run dev
 # → http://localhost:5173
 ```
 
-### Backend Setup
+### Backend
 
 ```bash
-cd backend
-npm install
+cd reddit-proxy-backend
+npm install puppeteer-core @nestjs/mongoose mongoose @nestjs/config
 npm run start:dev
 # → http://localhost:3001
 ```
@@ -399,24 +568,20 @@ npm run start:dev
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the `backend/` directory:
-
 ```dotenv
 PORT=3001
 JWT_SECRET=your_jwt_secret_here
 JWT_EXPIRES_IN=100y
 JWT_REMEMBER_EXPIRES_IN=100y
 GEMINI_API_KEY=your_gemini_api_key_here
+MONGODB_URI=mongodb://localhost:27017/HireWiseDB
 ```
-
-> Get a free Gemini API key at [https://aistudio.google.com](https://aistudio.google.com)
 
 ---
 
 ## 📡 API Reference
 
 ### Auth
-
 ```http
 POST   /api/auth/register
 POST   /api/auth/login
@@ -426,48 +591,40 @@ PATCH  /api/auth/change-password
 ```
 
 ### CV
-
 ```http
-POST   /api/cv/upload          # multipart/form-data: file, templateId
-GET    /api/cv/me              # returns CV metadata + preview text
-GET    /api/cv/preview         # streams the original PDF
-POST   /api/cv/analyze         # body: { jobDescription: string }
+POST   /api/cv/upload       # multipart/form-data: file, templateId
+GET    /api/cv/me
+GET    /api/cv/preview
+POST   /api/cv/analyze      # body: { jobDescription }
 ```
 
-**Sample analyze response:**
-```json
-{
-  "fileName": "my-cv.pdf",
-  "matchScore": 74,
-  "cvSkills": ["react", "nodejs", "docker", "postgresql"],
-  "jdSkills": ["react", "nodejs", "docker", "postgresql", "kubernetes"],
-  "missingSkills": ["kubernetes"],
-  "aiAnalysis": {
-    "strengths": ["..."],
-    "weaknesses": ["..."],
-    "suggestions": [{ "skill": "...", "reason": "...", "resources": [] }],
-    "overallFeedback": "..."
-  }
-}
+### Resume
+```http
+POST   /api/resume/parse
+POST   /api/resume/reparse
+GET    /api/resume/data
+PUT    /api/resume/data
+POST   /api/resume/export   # body: { templateId: 1–12 }
 ```
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] Persist CV data to PostgreSQL (replace in-memory Map)
-- [ ] Refresh token implementation
-- [ ] Online resume editor (fill template in-browser)
-- [ ] Export resume as PDF from selected template
+- [x] CV upload + PDF text extraction (pdftotext / pdf-parse / Gemini Vision)
+- [x] BM25 + skill match + depth scoring engine
+- [x] Gemini AI analysis (strengths, weaknesses, suggestions, learning resources)
+- [x] JWT authentication (login, register, remember me)
+- [x] Resume Builder — parse → edit → live preview → export PDF (Puppeteer)
+- [x] MongoDB schemas (16 collections, Mongoose, ready for migration)
+- [ ] Migrate cv/resume services from in-memory Map → MongoDB
+- [ ] Refresh token rotation
+- [ ] Forgot password + email verification
+- [ ] Google OAuth login
+- [ ] Stripe payment integration
+- [ ] User dashboard with CV and analysis history
 - [ ] Multi-language support (i18n)
-- [ ] Job board integration (LinkedIn / Indeed scraping)
-- [ ] AI cover letter generator
-
----
-
-## 📄 License
-
-MIT License — feel free to use, modify, and distribute.
+- [ ] Job board integration
 
 ---
 
