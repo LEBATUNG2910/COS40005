@@ -5,8 +5,8 @@ import { ResumeService, ResumeData } from './resume.service';
 export class ResumeExportService {
   constructor(private readonly resumeService: ResumeService) {}
 
-  async exportToPDF(userId: number, templateId: number = 1): Promise<Buffer> {
-    const data = this.resumeService.getResumeData(userId);
+  async exportToPDF(userId: string, templateId: number = 1): Promise<Buffer> {
+    const data = await this.resumeService.getResumeData(userId);
     if (!data) throw new NotFoundException('No resume data found. Please build your resume first.');
 
     const html = this.buildHTML(data, templateId);

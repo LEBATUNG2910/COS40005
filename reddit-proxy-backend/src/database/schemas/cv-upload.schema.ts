@@ -20,6 +20,9 @@ export class CvUpload {
   @Prop({ required: true, maxlength: 500 })
   storedFilePath: string;
 
+  @Prop({ type: String, default: null, maxlength: 500 })
+  cloudinaryPublicId: string | null;
+
   @Prop({ required: true, min: 1, max: 10485760 })
   fileSize: number;
 
@@ -32,7 +35,7 @@ export class CvUpload {
   @Prop({ type: String, default: null })
   extractedText: string | null;
 
-  @Prop({ type: String, default: null, enum: ['pdftotext', 'pdf-parse', null] })
+  @Prop({ type: String, default: null, enum: ['pdftotext', 'pdf-parse', 'gemini-vision', null] })
   extractionMethod: string | null;
 
   @Prop({ default: true })

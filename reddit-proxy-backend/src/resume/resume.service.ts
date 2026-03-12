@@ -1,42 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 import { CvService } from '../cv/cv.service';
+import { ResumeDataModel, ResumeDataDocument } from '../database/schemas/resume-data.schema';
 
 /* ─── Data shapes ────────────────────────────────────────────── */
 export interface PersonalInfo {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedin: string;
-  github: string;
-  website: string;
+  name: string; email: string; phone: string; location: string;
+  linkedin: string; github: string; website: string;
 }
-
 export interface Experience {
-  title: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate: string;       // 'Present' nếu đang làm
-  bullets: string[];
+  title: string; company: string; location: string;
+  startDate: string; endDate: string; bullets: string[];
 }
-
 export interface Education {
-  degree: string;
-  school: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  gpa: string;
+  degree: string; school: string; location: string;
+  startDate: string; endDate: string; gpa: string;
 }
-
 export interface Project {
-  name: string;
-  tech: string[];
-  description: string;
-  url: string;
+  name: string; tech: string[]; description: string; url: string;
 }
-
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -48,59 +32,106 @@ export interface ResumeData {
   languages: string[];
 }
 
-/* ─── Fallback trống để frontend không bị crash ─────────────── */
 const EMPTY_RESUME: ResumeData = {
   personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', github: '', website: '' },
-  summary: '',
-  experience: [],
-  education: [],
-  skills: [],
-  projects: [],
-  certifications: [],
-  languages: [],
+  summary: '', experience: [], education: [], skills: [], projects: [], certifications: [], languages: [],
 };
 
 @Injectable()
 export class ResumeService {
-  // Lưu resume data đã parse/edit theo userId (in-memory)
-  private resumeStore = new Map<number, ResumeData>();
+  constructor(
+    private readonly cvService: CvService,
+    @InjectModel(ResumeDataModel.name) private resumeModel: Model<ResumeDataDocument>,
+  ) {}
 
-  constructor(private readonly cvService: CvService) {}
-
-  /* ── Parse CV text → structured JSON via Gemini ─────────────── */
-  async parseCV(userId: number): Promise<ResumeData> {
-    const cv = this.cvService.getCVByUser(userId);
+  /* ── Parse CV → structured JSON via Gemini ───────────────────── */
+  async parseCV(userId: string): Promise<ResumeData> {
+    const cv = await this.cvService.getCVByUser(userId);
     if (!cv) throw new NotFoundException('No CV uploaded. Please upload your CV first.');
 
-    // Nếu đã parse rồi thì trả về luôn (tránh gọi Gemini 2 lần)
-    const cached = this.resumeStore.get(userId);
-    if (cached) return cached;
+    // Nếu đã có trong MongoDB thì trả về luôn
+    const existing = await this.resumeModel.findOne({ userId });
+    if (existing) return this.docToResumeData(existing);
 
     const parsed = await this.callGeminiParse(cv.extractedText);
-    this.resumeStore.set(userId, parsed);
+    await this.upsertResumeData(userId, parsed);
     return parsed;
   }
 
-  /* ── Lưu resume data đã user chỉnh sửa ─────────────────────── */
-  saveResumeData(userId: number, data: ResumeData): void {
-    this.resumeStore.set(userId, data);
+  /* ── Lưu resume data đã user chỉnh sửa → MongoDB ────────────── */
+  async saveResumeData(userId: string, data: ResumeData): Promise<void> {
+    await this.upsertResumeData(userId, data);
   }
 
-  /* ── Lấy resume data hiện tại ───────────────────────────────── */
-  getResumeData(userId: number): ResumeData | undefined {
-    return this.resumeStore.get(userId);
+  /* ── Lấy resume data hiện tại từ MongoDB ────────────────────── */
+  async getResumeData(userId: string): Promise<ResumeData | null> {
+    const doc = await this.resumeModel.findOne({ userId });
+    if (!doc) return null;
+    return this.docToResumeData(doc);
   }
 
-  /* ── Re-parse (user muốn reset về CV gốc) ───────────────────── */
-  async reparseCV(userId: number): Promise<ResumeData> {
-    this.resumeStore.delete(userId);
+  /* ── Re-parse — xóa data cũ, parse lại từ CV gốc ────────────── */
+  async reparseCV(userId: string): Promise<ResumeData> {
+    await this.resumeModel.deleteOne({ userId });
     return this.parseCV(userId);
   }
 
-  /* ── Gọi Gemini để parse text thành structured JSON ─────────── */
+  /* ── Upsert vào MongoDB ──────────────────────────────────────── */
+  private async upsertResumeData(userId: string, data: ResumeData): Promise<void> {
+    await this.resumeModel.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          userId,
+          // personalInfo flat
+          name:     data.personalInfo?.name     ?? '',
+          email:    data.personalInfo?.email    ?? '',
+          phone:    data.personalInfo?.phone    ?? '',
+          location: data.personalInfo?.location ?? '',
+          linkedin: data.personalInfo?.linkedin ?? '',
+          github:   data.personalInfo?.github   ?? '',
+          website:  data.personalInfo?.website  ?? '',
+          // sections
+          summary:        data.summary        ?? '',
+          experience:     data.experience     ?? [],
+          education:      data.education      ?? [],
+          skills:         data.skills         ?? [],
+          projects:       data.projects       ?? [],
+          certifications: data.certifications ?? [],
+          languages:      data.languages      ?? [],
+          updatedAt: new Date(),
+        },
+        $setOnInsert: { _id: uuidv4(), createdAt: new Date() },
+      },
+      { upsert: true, returnDocument: "after" },
+    );
+  }
+
+  /* ── Convert MongoDB doc → ResumeData interface ──────────────── */
+  private docToResumeData(doc: ResumeDataDocument): ResumeData {
+    return {
+      personalInfo: {
+        name:     doc.name     ?? '',
+        email:    doc.email    ?? '',
+        phone:    doc.phone    ?? '',
+        location: doc.location ?? '',
+        linkedin: doc.linkedin ?? '',
+        github:   doc.github   ?? '',
+        website:  doc.website  ?? '',
+      },
+      summary:        doc.summary        ?? '',
+      experience:     (doc.experience     ?? []) as Experience[],
+      education:      (doc.education      ?? []) as Education[],
+      skills:         doc.skills         ?? [],
+      projects:       (doc.projects       ?? []) as Project[],
+      certifications: doc.certifications ?? [],
+      languages:      doc.languages      ?? [],
+    };
+  }
+
+  /* ── Gọi Gemini để parse CV text → ResumeData JSON ──────────── */
   private async callGeminiParse(cvText: string): Promise<ResumeData> {
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
     const prompt = `[Request ID: ${requestId}] You are an expert CV parser. Extract ALL information from this CV text into structured JSON.
 
 CV TEXT:
@@ -108,58 +139,22 @@ ${cvText.substring(0, 4000)}
 
 Return ONLY valid JSON with this exact structure (no markdown, no backticks):
 {
-  "personalInfo": {
-    "name": "Full Name",
-    "email": "email@example.com",
-    "phone": "+1234567890",
-    "location": "City, Country",
-    "linkedin": "https://linkedin.com/in/username",
-    "github": "https://github.com/username",
-    "website": ""
-  },
-  "summary": "Professional summary paragraph if present, else empty string",
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name",
-      "location": "City, Country",
-      "startDate": "Jan 2022",
-      "endDate": "Present",
-      "bullets": [
-        "Achievement or responsibility 1",
-        "Achievement or responsibility 2"
-      ]
-    }
-  ],
-  "education": [
-    {
-      "degree": "Bachelor of Science in Computer Science",
-      "school": "University Name",
-      "location": "City, Country",
-      "startDate": "2018",
-      "endDate": "2022",
-      "gpa": "3.8"
-    }
-  ],
-  "skills": ["JavaScript", "React", "Node.js"],
-  "projects": [
-    {
-      "name": "Project Name",
-      "tech": ["React", "Node.js"],
-      "description": "What it does and impact",
-      "url": "https://github.com/..."
-    }
-  ],
-  "certifications": ["AWS Solutions Architect 2023"],
-  "languages": ["English (Fluent)", "Vietnamese (Native)"]
+  "personalInfo": { "name": "", "email": "", "phone": "", "location": "", "linkedin": "", "github": "", "website": "" },
+  "summary": "",
+  "experience": [{ "title": "", "company": "", "location": "", "startDate": "", "endDate": "", "bullets": [] }],
+  "education": [{ "degree": "", "school": "", "location": "", "startDate": "", "endDate": "", "gpa": "" }],
+  "skills": [],
+  "projects": [{ "name": "", "tech": [], "description": "", "url": "" }],
+  "certifications": [],
+  "languages": []
 }
 
 Rules:
 - Extract ALL work experience, not just recent ones
-- bullets must be full sentences, not truncated
+- bullets must be full sentences
 - If a field is not found, use empty string "" or empty array []
-- Do NOT invent information not present in the CV
-- Dates should be in format "Mon YYYY" or just "YYYY"`;
+- Do NOT invent information not in the CV
+- Dates format: "Mon YYYY" or "YYYY"`;
 
     const fetchWithRetry = async (attemptsLeft: number): Promise<string | null> => {
       try {
@@ -180,13 +175,17 @@ Rules:
           await new Promise(r => setTimeout(r, 2000));
           return fetchWithRetry(attemptsLeft - 1);
         }
+        if (data?.error?.code === 429 && attemptsLeft > 1) {
+          const match = (data?.error?.message ?? '').match(/retry in ([\d.]+)s/);
+          const waitMs = match ? Math.ceil(parseFloat(match[1])) * 1000 : 60000;
+          console.warn(`Gemini 429 — waiting ${waitMs / 1000}s`);
+          await new Promise(r => setTimeout(r, waitMs));
+          return fetchWithRetry(attemptsLeft - 1);
+        }
 
         return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
       } catch {
-        if (attemptsLeft > 1) {
-          await new Promise(r => setTimeout(r, 2000));
-          return fetchWithRetry(attemptsLeft - 1);
-        }
+        if (attemptsLeft > 1) { await new Promise(r => setTimeout(r, 2000)); return fetchWithRetry(attemptsLeft - 1); }
         return null;
       }
     };
@@ -195,21 +194,11 @@ Rules:
       const rawText = await fetchWithRetry(3);
       if (!rawText) throw new Error('Gemini unavailable');
 
-      // Strip markdown fences nếu có
-      let cleaned = rawText
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim();
-
-      const jsonStart = cleaned.indexOf('{');
-      const jsonEnd = cleaned.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
-      }
+      let cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
+      if (s !== -1 && e !== -1) cleaned = cleaned.substring(s, e + 1);
 
       const parsed = JSON.parse(cleaned) as ResumeData;
-
-      // Merge với EMPTY_RESUME để đảm bảo tất cả fields tồn tại
       return {
         personalInfo: { ...EMPTY_RESUME.personalInfo, ...parsed.personalInfo },
         summary:        parsed.summary        ?? '',
@@ -222,7 +211,6 @@ Rules:
       };
     } catch (err) {
       console.error('Resume parse error:', err);
-      // Trả về empty thay vì throw — frontend vẫn dùng được, user tự điền
       return { ...EMPTY_RESUME };
     }
   }

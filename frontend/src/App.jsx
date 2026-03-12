@@ -16,6 +16,7 @@ import PricingPage from "./app/pricing/page";
 import CareerCenterPage from "./app/career-center/page";
 import { FileProvider } from "./context/FileContext";
 import ResumeBuilder from "./app/resume/page";
+import Dashboard from "./app/dashboard/page";
 
 function App() {
   const location = useLocation();
@@ -74,6 +75,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <ResumeBuilder />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
                 </PrivateRoute>
               }
             />

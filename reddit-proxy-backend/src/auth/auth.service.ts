@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
-import { SignOptions } from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +12,7 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  // ─── ĐĂNG KÝ ─────────────────────────────────────────────
+  // ─── ĐĂNG KÝ ─────────────────────────────────────────────────
   async register(data: {
     fullName: string;
     email: string;
@@ -30,7 +29,7 @@ export class AuthService {
     };
   }
 
-  // ─── ĐĂNG NHẬP ───────────────────────────────────────────
+  // ─── ĐĂNG NHẬP ───────────────────────────────────────────────
   async login(data: {
     emailOrPhone: string;
     password: string;
@@ -42,9 +41,9 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
 
-  const expiresIn: any = data.rememberMe
-  ? (this.configService.get<string>('JWT_REMEMBER_EXPIRES_IN') ?? '30d')
-  : (this.configService.get<string>('JWT_EXPIRES_IN') ?? '7d');
+    const expiresIn: any = data.rememberMe
+      ? (this.configService.get<string>('JWT_REMEMBER_EXPIRES_IN') ?? '30d')
+      : (this.configService.get<string>('JWT_EXPIRES_IN') ?? '7d');
 
     const token = this.generateToken(user.id, user.email, expiresIn);
     return {
@@ -54,17 +53,16 @@ export class AuthService {
     };
   }
 
-  // ─── LẤY THÔNG TIN USER ──────────────────────────────────
-  async getMe(userId: number) {
+  // ─── LẤY THÔNG TIN USER ──────────────────────────────────────
+  async getMe(userId: string) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException('User not found');
-
     const { password, ...result } = user;
     return result;
   }
 
-  // ─── CẬP NHẬT PROFILE ────────────────────────────────────
-  async updateProfile(userId: number, data: { fullName?: string; language?: string }) {
+  // ─── CẬP NHẬT PROFILE ────────────────────────────────────────
+  async updateProfile(userId: string, data: { fullName?: string; language?: string }) {
     const updated = await this.usersService.updateProfile(userId, data);
     const { password, ...result } = updated;
     return {
@@ -73,16 +71,14 @@ export class AuthService {
     };
   }
 
-  // ─── ĐỔI PASSWORD ────────────────────────────────────────
-  async changePassword(userId: number, data: { currentPassword: string; newPassword: string }) {
+  // ─── ĐỔI PASSWORD ────────────────────────────────────────────
+  async changePassword(userId: string, data: { currentPassword: string; newPassword: string }) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException('User not found');
 
-    // Kiểm tra password hiện tại
     const isValid = await bcrypt.compare(data.currentPassword, user.password);
     if (!isValid) throw new BadRequestException('Current password is incorrect');
 
-    // Kiểm tra password mới không trùng password cũ
     const isSame = await bcrypt.compare(data.newPassword, user.password);
     if (isSame) throw new BadRequestException('New password must be different from current password');
 
@@ -90,14 +86,14 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  // ─── TẠO TOKEN ───────────────────────────────────────────
-  private generateToken(userId: number, email: string, expiresIn: any = '7d') {
-  const payload = { sub: userId, email };
-  return {
-    accessToken: this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') as string,
-      expiresIn, // ✅ không còn lỗi type
-    }),
-  };
-}
+  // ─── TẠO TOKEN ───────────────────────────────────────────────
+  private generateToken(userId: string, email: string, expiresIn: any = '100y') {
+    const payload = { sub: userId, email };
+    return {
+      accessToken: this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('JWT_SECRET') as string,
+        expiresIn,
+      }),
+    };
+  }
 }

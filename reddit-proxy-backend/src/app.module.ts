@@ -31,7 +31,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
   providers: [
     AppService,
     // Global exception filter — áp dụng cho toàn app
-    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    // { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {}

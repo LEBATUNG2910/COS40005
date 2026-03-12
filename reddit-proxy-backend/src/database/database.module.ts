@@ -20,6 +20,7 @@ import {
   TeamMember, TeamMemberSchema,
 } from './schemas/subscription.schema';
 import { RedditCache, RedditCacheSchema, AuditLog, AuditLogSchema } from './schemas/misc.schema';
+import { ResumeDataModel, ResumeDataSchema } from './schemas/resume-data.schema';
 
 export const ALL_SCHEMAS = MongooseModule.forFeature([
   { name: User.name,              schema: UserSchema },
@@ -38,6 +39,7 @@ export const ALL_SCHEMAS = MongooseModule.forFeature([
   { name: TeamMember.name,        schema: TeamMemberSchema },
   { name: RedditCache.name,       schema: RedditCacheSchema },
   { name: AuditLog.name,          schema: AuditLogSchema },
+  { name: ResumeDataModel.name,    schema: ResumeDataSchema },
 ]);
 
 @Module({
