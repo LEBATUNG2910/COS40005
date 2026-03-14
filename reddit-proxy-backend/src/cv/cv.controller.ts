@@ -5,12 +5,18 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CvService } from './cv.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { type Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Controller('cv')
 export class CvController {
-  constructor(private readonly cvService: CvService) {}
+  constructor(
+    private readonly cvService: CvService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post('upload')
   @UseGuards(JwtAuthGuard)
@@ -31,12 +37,35 @@ export class CvController {
 
   @Get('preview')
   @UseGuards(JwtAuthGuard)
-  async previewCV(@Request() req, @Res() res: Response) {
+  async previewCV(@Request() req, @Res({ passthrough: false }) res: Response) {
     const cv = await this.cvService.getCVByUser(req.user.userId);
     if (!cv) throw new NotFoundException('No CV uploaded yet');
-    if (!cv.storedFilePath) throw new NotFoundException('CV file not found');
-    // Redirect tới Cloudinary URL — browser tự load PDF
-    return res.redirect(cv.storedFilePath);
+
+    // Serve local file trực tiếp — full PDF với định dạng gốc
+    const localPath = cv.localFilePath;
+    if (localPath && fs.existsSync(localPath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${cv.originalFileName}"`);
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      fs.createReadStream(localPath).pipe(res as any);
+      return;
+    }
+
+    /* ── Cloudinary fallback (uncomment khi upgrade plan) ──────────
+    if (cv.cloudinaryPublicId) {
+      const signedUrl = this.cloudinaryService.generateSignedUrl(cv.cloudinaryPublicId);
+      const cloudinaryRes = await fetch(signedUrl);
+      if (cloudinaryRes.ok) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${cv.originalFileName}"`);
+        const { Readable } = await import('stream');
+        Readable.from(cloudinaryRes.body as any).pipe(res as any);
+        return;
+      }
+    }
+    ── End Cloudinary fallback ── */
+
+    throw new NotFoundException('CV file not found. Please re-upload your CV.');
   }
 
   @Patch('update-text')

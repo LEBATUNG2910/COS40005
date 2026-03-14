@@ -74,8 +74,8 @@ export class CvService {
     // Upload lên Cloudinary
     const uploaded = await this.cloudinaryService.uploadPDF(file.path, userId);
 
-    // Xóa file tạm local sau khi upload thành công
-    this.cloudinaryService.deleteLocalFile(file.path);
+    // KHÔNG xóa file local — dùng để serve preview trực tiếp
+    // this.cloudinaryService.deleteLocalFile(file.path); // uncomment nếu muốn xóa
 
     // Đánh dấu CV cũ không còn là latest
     await this.cvUploadModel.updateMany({ userId, isLatest: true }, { $set: { isLatest: false } });
@@ -86,7 +86,8 @@ export class CvService {
       originalFileName: file.originalname,
       fileSize: uploaded.bytes,
       mimeType: file.mimetype,
-      storedFilePath: uploaded.secureUrl,     // ← Cloudinary URL thay vì local path
+      storedFilePath: uploaded.secureUrl,     // ← Cloudinary URL (backup)
+      localFilePath: file.path,               // ← local path để serve preview
       cloudinaryPublicId: uploaded.publicId,  // ← lưu để xóa sau này
       extractedText: text,
       extractionMethod: method,
@@ -252,7 +253,7 @@ export class CvService {
           suggestionId,
           name: r.name,
           url: r.url,
-          resourceType: r.type ?? 'free',
+          resourceType: ['free','paid'].includes(r.type) ? r.type : 'free',
           platform: ['Roadmap.sh','FreeCodeCamp','Udemy','YouTube'].includes(r.platform) ? r.platform : 'Other',
           sortOrder: j,
         }));

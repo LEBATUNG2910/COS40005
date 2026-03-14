@@ -23,6 +23,9 @@ export class CvUpload {
   @Prop({ type: String, default: null, maxlength: 500 })
   cloudinaryPublicId: string | null;
 
+  @Prop({ type: String, default: null, maxlength: 500 })
+  localFilePath: string | null;
+
   @Prop({ required: true, min: 1, max: 10485760 })
   fileSize: number;
 

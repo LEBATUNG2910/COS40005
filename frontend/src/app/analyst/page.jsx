@@ -423,12 +423,16 @@ export default function CvAnalyst() {
     fetchCVInfo()
   }, [])
 
-  /* fetch PDF blob for preview */
+  /* fetch PDF blob — re-fetch khi CV thay đổi (dựa vào uploadedAt) */
   useEffect(() => {
-    if (!cvInfo) return
+    if (!cvInfo?.uploadedAt) return
+    // Revoke blob URL cũ trước khi fetch mới
+    setPdfUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
     const loadPdf = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/cv/preview', {
+        // Thêm timestamp để bypass browser cache
+        const ts = new Date(cvInfo.uploadedAt).getTime()
+        const res = await fetch(`http://localhost:3001/api/cv/preview?t=${ts}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) setPdfUrl(URL.createObjectURL(await res.blob()))
@@ -437,8 +441,8 @@ export default function CvAnalyst() {
       }
     }
     loadPdf()
-    return () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl) }
-  }, [cvInfo])
+    return () => { setPdfUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null }) }
+  }, [cvInfo?.uploadedAt])
 
   /* analyze */
   const handleAnalyze = useCallback(async () => {
