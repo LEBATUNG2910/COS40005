@@ -254,7 +254,7 @@ All require `Authorization: Bearer <token>`.
 POST /api/resume/parse
   ├── Check CV uploaded (cvStore)
   ├── Check cache (resumeStore) → return immediately if hit
-  ├── Call Gemini gemini-1.5-flash (temperature: 0.1)
+  ├── Call Gemini gemini-2.5-flash-lite (temperature: 0.1)
   ├── Parse JSON → merge with EMPTY_RESUME
   └── Cache in resumeStore
 ```
@@ -443,8 +443,8 @@ finalScore   = min(combined + bonus, 1) × 100
 
 | Purpose | Model | Temp |
 |---|---|---|
-| CV analysis | `gemini-2.5-flash` | 0.85 |
-| Resume parse | `gemini-1.5-flash` | 0.1 |
+| CV analysis | `gemini-2.5-flash-lite` | 0.85 |
+| Resume parse | `gemini-2.5-flash-lite` | 0.1 |
 | PDF extraction | `gemini-2.5-flash-lite` (Vision) | 0.1 |
 
 ### Gemini Free Tier
