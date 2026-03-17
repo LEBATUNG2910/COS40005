@@ -10,6 +10,19 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { User, UserDocument } from '../database/schemas/user.schema';
 
+// ─── Shared return shape ──────────────────────────────────────────────────────
+export interface UserDto {
+  id: unknown;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  gender?: string;
+  language?: string;
+  newsletterOptIn?: boolean;
+  avatarUrl?: string | null;
+  password: string;
+}
+
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
@@ -21,7 +34,7 @@ export class UsersService {
     phoneNumber: string;
     password: string;
     gender: string;
-  }): Promise<any> {
+  }): Promise<UserDto> {
     const existingEmail = await this.userModel.findOne({
       email: data.email.toLowerCase().trim(),
       isDeleted: false,
@@ -67,7 +80,7 @@ export class UsersService {
   }
 
   // ─── TÌM THEO EMAIL HOẶC PHONE ───────────────────────────────
-  async findByEmailOrPhone(emailOrPhone: string): Promise<any | null> {
+  async findByEmailOrPhone(emailOrPhone: string): Promise<UserDto | null> {
     const query = emailOrPhone.includes('@')
       ? { email: emailOrPhone.toLowerCase().trim(), isDeleted: false }
       : { phoneNumber: emailOrPhone.trim(), isDeleted: false };
@@ -89,7 +102,7 @@ export class UsersService {
   }
 
   // ─── TÌM THEO ID ─────────────────────────────────────────────
-  async findById(userId: string): Promise<any | null> {
+  async findById(userId: string): Promise<UserDto | null> {
     const user = await this.userModel.findOne({
       _id: userId,
       isDeleted: false,
@@ -113,8 +126,13 @@ export class UsersService {
   async updateProfile(
     userId: string,
     data: { fullName?: string; language?: string },
-  ): Promise<any> {
-    const update: any = { updatedAt: new Date() };
+  ): Promise<UserDto> {
+    const update: {
+      updatedAt: Date;
+      fullName?: string;
+      language?: string;
+    } = { updatedAt: new Date() };
+
     if (data.fullName) update.fullName = data.fullName.trim();
     if (data.language) update.language = data.language;
 

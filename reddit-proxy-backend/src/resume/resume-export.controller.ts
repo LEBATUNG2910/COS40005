@@ -10,6 +10,11 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ResumeExportService } from './resume-export.service';
 import { type Response } from 'express';
+import { JwtPayload } from '../common/decorators/current-user.decorator';
+
+interface RequestWithUser extends Request {
+  user: JwtPayload;
+}
 
 @Controller('resume')
 export class ResumeExportController {
@@ -19,7 +24,7 @@ export class ResumeExportController {
   @Post('export')
   @UseGuards(JwtAuthGuard)
   async exportPDF(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body('templateId') templateId: number,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {

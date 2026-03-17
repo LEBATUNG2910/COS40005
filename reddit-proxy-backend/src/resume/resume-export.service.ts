@@ -3,6 +3,8 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import * as fs from 'fs';
+import * as puppeteerCore from 'puppeteer-core';
 import { ResumeService, ResumeData } from './resume.service';
 
 @Injectable()
@@ -19,23 +21,17 @@ export class ResumeExportService {
     const html = this.buildHTML(data, templateId);
 
     try {
-      // Dùng puppeteer để render HTML → PDF
-
-      const puppeteer = require('puppeteer-core');
-
-      // Dùng Chrome có sẵn trên Mac — không cần download
       const chromePaths = [
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         '/Applications/Chromium.app/Contents/MacOS/Chromium',
         '/usr/bin/google-chrome',
         '/usr/bin/chromium-browser',
       ];
-      const fs = require('fs');
       const executablePath = chromePaths.find((p) => fs.existsSync(p));
       if (!executablePath)
         throw new Error('Chrome not found. Install Google Chrome.');
 
-      const browser = await puppeteer.launch({
+      const browser = await puppeteerCore.launch({
         executablePath,
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -52,7 +48,7 @@ export class ResumeExportService {
 
       await browser.close();
       return pdf as Buffer;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Puppeteer export error:', err);
       throw new InternalServerErrorException(
         'PDF export failed. Make sure puppeteer is installed: npm install puppeteer',
@@ -235,53 +231,43 @@ export class ResumeExportService {
     ].filter(Boolean);
 
     return `
-<div style="min-height: 297mm;">
-  <!-- Dark header -->
+<div style="min-height: 297mm; font-family: 'DM Sans', sans-serif;">
   <div style="background: #0f172a; color: white; padding: 20mm 20mm 14mm;">
-    <h1 style="font-size: 30pt; font-weight: 700; letter-spacing: -1pt;">${p.name || 'Your Name'}</h1>
-    <div style="display: flex; flex-wrap: wrap; gap: 4pt 16pt; margin-top: 8pt;">
-      ${contactParts.map((c) => `<span style="font-size: 8.5pt; color: #94a3b8;">${c}</span>`).join('')}
-    </div>
+    <h1 style="font-size: 26pt; font-weight: 700; color: white;">${p.name || 'Your Name'}</h1>
+    <p style="margin-top: 6pt; font-size: 8.5pt; color: #94a3b8; letter-spacing: 0.3pt;">
+      ${contactParts.join(' &nbsp;·&nbsp; ')}
+    </p>
   </div>
 
-  <!-- Body -->
-  <div style="padding: 16mm 20mm 20mm;">
-    ${
-      data.summary
-        ? `
-    <div style="background: #f8fafc; border-left: 3pt solid #0891b2; padding: 10pt 14pt; margin-bottom: 16pt; border-radius: 0 6pt 6pt 0;">
-      <p style="line-height: 1.7; color: #374151; font-size: 10pt;">${data.summary}</p>
-    </div>`
-        : ''
-    }
+  <div style="padding: 16mm 20mm;">
+    ${data.summary ? this.section('Summary', `<p style="line-height: 1.7; color: #374151;">${data.summary}</p>`) : ''}
 
     ${
       data.experience.length
         ? this.section(
-            'Work Experience',
+            'Experience',
             data.experience
               .map(
                 (exp) => `
-        <div style="margin-bottom: 14pt; padding-left: 12pt; border-left: 1.5pt solid #e2e8f0;">
-          <div style="display: flex; justify-content: space-between;">
+        <div style="margin-bottom: 12pt;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <div>
-              <span style="font-weight: 600; font-size: 11pt; color: #0f172a;">${exp.title}</span>
-              <span style="color: #0891b2; margin-left: 8pt; font-weight: 500;">${exp.company}</span>
-              ${exp.location ? `<span style="color: #9ca3af; margin-left: 4pt; font-size: 9pt;">· ${exp.location}</span>` : ''}
+              <span style="font-weight: 600; font-size: 11pt;">${exp.title}</span>
+              <span style="color: #6b7280; margin-left: 8pt;">${exp.company}${exp.location ? ` · ${exp.location}` : ''}</span>
             </div>
-            <span style="color: #94a3b8; font-size: 8.5pt; white-space: nowrap;">
+            <span style="color: #9ca3af; font-size: 9pt; white-space: nowrap; margin-left: 8pt;">
               ${exp.startDate}${exp.endDate ? ` – ${exp.endDate}` : ''}
             </span>
           </div>
           ${
             exp.bullets?.filter((b) => b.trim()).length
               ? `
-          <ul style="margin-top: 5pt; padding-left: 14pt; list-style: disc; color: #4b5563;">
+          <ul style="margin-top: 5pt; padding-left: 14pt; list-style: disc; color: #374151;">
             ${exp.bullets
               .filter((b) => b.trim())
               .map(
                 (b) =>
-                  `<li style="margin-bottom: 3pt; line-height: 1.6;">${b}</li>`,
+                  `<li style="margin-bottom: 2pt; line-height: 1.55;">${b}</li>`,
               )
               .join('')}
           </ul>`
@@ -294,7 +280,7 @@ export class ResumeExportService {
         : ''
     }
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16pt; margin-top: 4pt;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16pt;">
       <div>
         ${
           data.education.length
@@ -303,11 +289,11 @@ export class ResumeExportService {
                 data.education
                   .map(
                     (edu) => `
-            <div style="margin-bottom: 10pt;">
-              <p style="font-weight: 600; font-size: 10pt;">${edu.degree}</p>
-              <p style="color: #6b7280; font-size: 9.5pt;">${edu.school}</p>
-              <p style="color: #9ca3af; font-size: 8.5pt;">${edu.startDate}${edu.endDate ? ` – ${edu.endDate}` : ''}${edu.gpa ? ` · GPA ${edu.gpa}` : ''}</p>
-            </div>`,
+              <div style="margin-bottom: 10pt;">
+                <p style="font-weight: 600; font-size: 10pt;">${edu.degree}</p>
+                <p style="color: #6b7280; font-size: 9.5pt;">${edu.school}</p>
+                <p style="color: #9ca3af; font-size: 8.5pt;">${edu.startDate}${edu.endDate ? ` – ${edu.endDate}` : ''}${edu.gpa ? ` · GPA ${edu.gpa}` : ''}</p>
+              </div>`,
                   )
                   .join(''),
               )

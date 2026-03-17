@@ -11,6 +11,11 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtPayload } from '../common/decorators/current-user.decorator';
+
+interface RequestWithUser extends Request {
+  user: JwtPayload;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -48,7 +53,7 @@ export class AuthController {
   // ─── GET /api/auth/me ─────────────────────────────────────
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getMe(@Request() req) {
+  async getMe(@Request() req: RequestWithUser) {
     return this.authService.getMe(req.user.userId);
   }
 
@@ -56,7 +61,7 @@ export class AuthController {
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   async updateProfile(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() body: { fullName?: string; language?: string },
   ) {
     return this.authService.updateProfile(req.user.userId, body);
@@ -66,7 +71,7 @@ export class AuthController {
   @Patch('change-password')
   @UseGuards(JwtAuthGuard)
   async changePassword(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() body: { currentPassword: string; newPassword: string },
   ) {
     return this.authService.changePassword(req.user.userId, body);

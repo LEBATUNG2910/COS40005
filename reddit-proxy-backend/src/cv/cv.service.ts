@@ -23,8 +23,112 @@ import {
   LearningResource,
   LearningResourceDocument,
 } from '../database/schemas/cv-analysis.schema';
+import * as pdfParseLib from 'pdf-parse';
 
 type ExtractionMethod = 'pdftotext' | 'pdf-parse' | 'gemini-vision';
+
+// ─── Type helpers ─────────────────────────────────────────────────────────────
+
+interface ScoreBreakdown {
+  total: number;
+  bm25: number;
+  skillMatch: number;
+  depth: number;
+}
+
+interface LearningResourceItem {
+  name: string;
+  url: string;
+  type: string;
+  platform: string;
+}
+
+interface AiSuggestionItem {
+  skill: string;
+  reason: string;
+  resources: LearningResourceItem[];
+}
+
+interface AiAnalysisResult {
+  strengths?: string[];
+  weaknesses?: string[];
+  suggestions?: AiSuggestionItem[];
+  overallFeedback?: string;
+}
+
+interface GeminiPart {
+  text?: string;
+  inlineData?: { mimeType: string; data: string };
+}
+
+interface GeminiCandidate {
+  content?: { parts?: GeminiPart[] };
+}
+
+interface GeminiResponse {
+  candidates?: GeminiCandidate[];
+  error?: { code?: number; message?: string };
+}
+
+interface CvUploadLean {
+  _id: string;
+  userId: string;
+  originalFileName: string;
+  fileSize: number;
+  mimeType: string;
+  storedFilePath: string;
+  localFilePath?: string;
+  cloudinaryPublicId?: string;
+  extractedText?: string;
+  extractionMethod?: string;
+  pageCount?: number;
+  templateId?: string;
+  isLatest: boolean;
+  uploadedAt: Date;
+}
+
+interface AnalysisLean {
+  _id: string;
+  userId: string;
+  cvUploadId: string;
+  jobDescription: string;
+  matchScore: number;
+  bm25RawScore?: number;
+  skillMatchRatio?: number;
+  overallFeedback?: string;
+  analyzedAt: Date;
+}
+
+interface InsightLean {
+  _id: string;
+  analysisId: string;
+  insightType: string;
+  content: string;
+  sortOrder: number;
+}
+
+interface SuggestionLean {
+  _id: string;
+  analysisId: string;
+  skillName: string;
+  reason: string;
+  sortOrder: number;
+}
+
+interface ResourceLean {
+  _id: string;
+  suggestionId: string;
+  name: string;
+  url: string;
+  resourceType: string;
+  platform: string;
+  sortOrder: number;
+}
+
+interface PdfParseData {
+  text: string;
+  numpages: number;
+}
 
 @Injectable()
 export class CvService {
@@ -92,8 +196,13 @@ export class CvService {
     }
 
     try {
-      const pdfParseLib = require('pdf-parse');
-      const pdfParse = pdfParseLib.default ?? pdfParseLib;
+      const pdfParse =
+        (
+          pdfParseLib as unknown as {
+            default?: (b: Buffer) => Promise<PdfParseData>;
+          }
+        ).default ??
+        (pdfParseLib as unknown as (b: Buffer) => Promise<PdfParseData>);
       const buffer = fs.readFileSync(filePath);
       const data = await pdfParse(buffer);
       if (data.text && data.text.trim().length > 30)
@@ -119,7 +228,7 @@ export class CvService {
     userId: string,
     file: Express.Multer.File,
     templateId: number,
-  ): Promise<any> {
+  ): Promise<CvUploadLean> {
     const { text, pageCount, method } = await this.extractTextFromPDF(
       file.path,
     );
@@ -142,9 +251,9 @@ export class CvService {
       originalFileName: file.originalname,
       fileSize: uploaded.bytes,
       mimeType: file.mimetype,
-      storedFilePath: uploaded.secureUrl, // ← Cloudinary URL (backup)
-      localFilePath: file.path, // ← local path để serve preview
-      cloudinaryPublicId: uploaded.publicId, // ← lưu để xóa sau này
+      storedFilePath: uploaded.secureUrl,
+      localFilePath: file.path,
+      cloudinaryPublicId: uploaded.publicId,
       extractedText: text,
       extractionMethod: method,
       pageCount,
@@ -154,11 +263,14 @@ export class CvService {
     });
 
     await cv.save();
-    return cv;
+    return cv as unknown as CvUploadLean;
   }
 
-  async getCVByUser(userId: string): Promise<any | null> {
-    return this.cvUploadModel.findOne({ userId, isLatest: true });
+  async getCVByUser(userId: string): Promise<CvUploadLean | null> {
+    return this.cvUploadModel.findOne({
+      userId,
+      isLatest: true,
+    }) as Promise<CvUploadLean | null>;
   }
 
   async updateCVText(userId: string, extractedText: string): Promise<void> {
@@ -168,13 +280,14 @@ export class CvService {
     this.tempTextStore.set(userId, extractedText);
   }
 
-  async analyzeCV(userId: string, jobDescription: string): Promise<any> {
+  async analyzeCV(userId: string, jobDescription: string): Promise<unknown> {
     const cv = await this.getCVByUser(userId);
     if (!cv)
       throw new NotFoundException('No CV found. Please upload your CV first.');
 
     const isTemporary = this.tempTextStore.has(userId);
-    const textToAnalyze = this.tempTextStore.get(userId) ?? cv.extractedText;
+    const textToAnalyze =
+      this.tempTextStore.get(userId) ?? cv.extractedText ?? '';
     if (isTemporary) this.tempTextStore.delete(userId);
 
     const scoreBreakdown = this.calculateBM25Score(
@@ -227,29 +340,29 @@ export class CvService {
   }
 
   // ── Lấy lịch sử analyze của user ─────────────────────────────
-  async getAnalysisHistory(userId: string): Promise<any[]> {
-    const analyses = await this.analysisModel
+  async getAnalysisHistory(userId: string): Promise<unknown[]> {
+    const analyses = (await this.analysisModel
       .find({ userId })
       .sort({ analyzedAt: -1 })
       .limit(20)
-      .lean();
+      .lean()) as AnalysisLean[];
 
     return Promise.all(
       analyses.map(async (a) => {
-        const insights = await this.insightModel
+        const insights = (await this.insightModel
           .find({ analysisId: a._id })
-          .lean();
-        const suggestions = await this.suggestionModel
+          .lean()) as InsightLean[];
+        const suggestions = (await this.suggestionModel
           .find({ analysisId: a._id })
           .sort({ sortOrder: 1 })
-          .lean();
+          .lean()) as SuggestionLean[];
 
         const suggestionsWithResources = await Promise.all(
           suggestions.map(async (s) => {
-            const resources = await this.resourceModel
+            const resources = (await this.resourceModel
               .find({ suggestionId: s._id })
               .sort({ sortOrder: 1 })
-              .lean();
+              .lean()) as ResourceLean[];
             return {
               skill: s.skillName,
               reason: s.reason,
@@ -293,11 +406,11 @@ export class CvService {
     cvUploadId: string;
     jobDescription: string;
     matchScore: number;
-    scoreBreakdown: any;
+    scoreBreakdown: ScoreBreakdown;
     cvSkills: string[];
     jdSkills: string[];
     missingSkills: string[];
-    aiAnalysis: any;
+    aiAnalysis: AiAnalysisResult;
   }): Promise<void> {
     try {
       const analysisId = uuidv4();
@@ -339,8 +452,9 @@ export class CvService {
       if (insights.length > 0) await this.insightModel.insertMany(insights);
 
       // 3. Save Suggestions + Learning Resources
-      for (let i = 0; i < (data.aiAnalysis?.suggestions ?? []).length; i++) {
-        const s = data.aiAnalysis.suggestions[i];
+      const suggestions = data.aiAnalysis?.suggestions ?? [];
+      for (let i = 0; i < suggestions.length; i++) {
+        const s = suggestions[i];
         const suggestionId = uuidv4();
 
         await this.suggestionModel.create({
@@ -351,32 +465,34 @@ export class CvService {
           sortOrder: i,
         });
 
-        const resources = (s.resources ?? []).map((r: any, j: number) => ({
-          _id: uuidv4(),
-          suggestionId,
-          name: r.name,
-          url: r.url,
-          resourceType: ['free', 'paid'].includes(r.type) ? r.type : 'free',
-          platform: ['Roadmap.sh', 'FreeCodeCamp', 'Udemy', 'YouTube'].includes(
-            r.platform,
-          )
-            ? r.platform
-            : 'Other',
-          sortOrder: j,
-        }));
+        const resources = (s.resources ?? []).map(
+          (r: LearningResourceItem, j: number) => ({
+            _id: uuidv4(),
+            suggestionId,
+            name: r.name,
+            url: r.url,
+            resourceType: ['free', 'paid'].includes(r.type) ? r.type : 'free',
+            platform: [
+              'Roadmap.sh',
+              'FreeCodeCamp',
+              'Udemy',
+              'YouTube',
+            ].includes(r.platform)
+              ? r.platform
+              : 'Other',
+            sortOrder: j,
+          }),
+        );
         if (resources.length > 0)
           await this.resourceModel.insertMany(resources);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       // Không throw — lỗi lưu history không nên block kết quả analyze trả về user
       console.error('Failed to save analysis to DB:', err);
     }
   }
 
-  private calculateBM25Score(
-    cvText: string,
-    jdText: string,
-  ): { total: number; bm25: number; skillMatch: number; depth: number } {
+  private calculateBM25Score(cvText: string, jdText: string): ScoreBreakdown {
     const k1 = 1.5,
       b = 0.75;
     const stopWords = new Set([
@@ -449,13 +565,13 @@ export class CvService {
     const cvTokens = tokenize(cvText);
     const jdTokens = tokenize(jdText);
     const tf = new Map<string, number>();
-    cvTokens.forEach((t) => tf.set(t, (tf.get(t) || 0) + 1));
+    cvTokens.forEach((t) => tf.set(t, (tf.get(t) ?? 0) + 1));
     const avgdl = cvTokens.length || 1;
 
     let score = 0;
     const uniqueJdTerms = [...new Set(jdTokens)];
     uniqueJdTerms.forEach((term) => {
-      const f = tf.get(term) || 0;
+      const f = tf.get(term) ?? 0;
       if (f > 0)
         score +=
           (f * (k1 + 1)) / (f + k1 * (1 - b + b * (cvTokens.length / avgdl)));
@@ -590,7 +706,7 @@ export class CvService {
     cvText: string,
     jdText: string,
     missingSkills: string[],
-  ): Promise<any> {
+  ): Promise<AiAnalysisResult> {
     const missingText =
       missingSkills.length > 0
         ? missingSkills.join(', ')
@@ -629,7 +745,7 @@ Rules: ALWAYS exactly 3 suggestions. Use real URLs. Be specific to this CV.`;
             }),
           },
         );
-        const data = await res.json();
+        const data = (await res.json()) as GeminiResponse;
         if (data?.error?.code === 503 && left > 1) {
           await new Promise((r) => setTimeout(r, 2000));
           return fetchGemini(left - 1);
@@ -654,7 +770,7 @@ Rules: ALWAYS exactly 3 suggestions. Use real URLs. Be specific to this CV.`;
       const s = cleaned.indexOf('{'),
         e = cleaned.lastIndexOf('}');
       if (s !== -1 && e !== -1) cleaned = cleaned.substring(s, e + 1);
-      const parsed = JSON.parse(cleaned);
+      const parsed = JSON.parse(cleaned) as AiAnalysisResult;
       if (!parsed.suggestions?.length)
         parsed.suggestions = this.buildFallbackSuggestions(missingSkills);
       return parsed;
@@ -701,7 +817,7 @@ Rules: ALWAYS exactly 3 suggestions. Use real URLs. Be specific to this CV.`;
           }),
         },
       );
-      const data = await res.json();
+      const data = (await res.json()) as GeminiResponse;
       if (data?.error) {
         console.error('Gemini Vision error:', data.error.message);
         return null;
@@ -709,15 +825,17 @@ Rules: ALWAYS exactly 3 suggestions. Use real URLs. Be specific to this CV.`;
       const extracted = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
       if (extracted)
         console.log(`✅ Gemini Vision extracted ${extracted.length} chars`);
-      return extracted;
-    } catch (err) {
+      return extracted ?? null;
+    } catch (err: unknown) {
       console.error('Gemini Vision failed:', err);
       return null;
     }
   }
 
-  private buildFallbackSuggestions(missingSkills: string[]): any[] {
-    const map: Record<string, any[]> = {
+  private buildFallbackSuggestions(
+    missingSkills: string[],
+  ): AiSuggestionItem[] {
+    const map: Record<string, LearningResourceItem[]> = {
       docker: [
         {
           name: 'Docker Roadmap',
@@ -799,7 +917,7 @@ Rules: ALWAYS exactly 3 suggestions. Use real URLs. Be specific to this CV.`;
         },
       ],
     };
-    const def = (s: string) => [
+    const def = (s: string): LearningResourceItem[] => [
       {
         name: `${s} Roadmap`,
         url: 'https://roadmap.sh',
@@ -827,7 +945,7 @@ Rules: ALWAYS exactly 3 suggestions. Use real URLs. Be specific to this CV.`;
       skill,
       reason:
         'This skill appears in the job description and would strengthen your application',
-      resources: map[skill] || def(skill),
+      resources: map[skill] ?? def(skill),
     }));
   }
 }

@@ -8,6 +8,14 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 
+interface UserDocument {
+  id: string;
+  fullName: string;
+  email: string;
+  password: string;
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,7 +32,7 @@ export class AuthService {
     password: string;
     gender: string;
   }) {
-    const user = await this.usersService.create(data);
+    const user = (await this.usersService.create(data)) as UserDocument;
     const token = this.generateToken(user.id, user.email);
     return {
       message: 'Account created successfully',
@@ -39,14 +47,16 @@ export class AuthService {
     password: string;
     rememberMe: boolean;
   }) {
-    const user = await this.usersService.findByEmailOrPhone(data.emailOrPhone);
+    const user = (await this.usersService.findByEmailOrPhone(
+      data.emailOrPhone,
+    )) as UserDocument | null;
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials');
 
-    const expiresIn: any = data.rememberMe
+    const expiresIn: string = data.rememberMe
       ? (this.configService.get<string>('JWT_REMEMBER_EXPIRES_IN') ?? '30d')
       : (this.configService.get<string>('JWT_EXPIRES_IN') ?? '7d');
 
@@ -60,9 +70,12 @@ export class AuthService {
 
   // ─── LẤY THÔNG TIN USER ──────────────────────────────────────
   async getMe(userId: string) {
-    const user = await this.usersService.findById(userId);
+    const user = (await this.usersService.findById(
+      userId,
+    )) as UserDocument | null;
     if (!user) throw new UnauthorizedException('User not found');
-    const { password, ...result } = user;
+    const { password: _password, ...result } = user;
+    void _password;
     return result;
   }
 
@@ -71,8 +84,12 @@ export class AuthService {
     userId: string,
     data: { fullName?: string; language?: string },
   ) {
-    const updated = await this.usersService.updateProfile(userId, data);
-    const { password, ...result } = updated;
+    const updated = (await this.usersService.updateProfile(
+      userId,
+      data,
+    )) as UserDocument;
+    const { password: _password, ...result } = updated;
+    void _password;
     return {
       message: 'Profile updated successfully',
       user: result,
@@ -84,7 +101,9 @@ export class AuthService {
     userId: string,
     data: { currentPassword: string; newPassword: string },
   ) {
-    const user = await this.usersService.findById(userId);
+    const user = (await this.usersService.findById(
+      userId,
+    )) as UserDocument | null;
     if (!user) throw new UnauthorizedException('User not found');
 
     const isValid = await bcrypt.compare(data.currentPassword, user.password);
@@ -105,13 +124,13 @@ export class AuthService {
   private generateToken(
     userId: string,
     email: string,
-    expiresIn: any = '100y',
+    expiresIn: string = '100y',
   ) {
     const payload = { sub: userId, email };
     return {
       accessToken: this.jwtService.sign(payload, {
         secret: this.configService.get<string>('JWT_SECRET') as string,
-        expiresIn,
+        expiresIn: expiresIn as `${number}${'y' | 'd' | 'h' | 'm' | 's'}`,
       }),
     };
   }

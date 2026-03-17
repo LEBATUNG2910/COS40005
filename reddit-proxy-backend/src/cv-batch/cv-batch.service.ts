@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { createHash } from 'crypto';
@@ -18,6 +14,75 @@ import {
 import { CvService } from '../cv/cv.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
+// ─── Internal type helpers ────────────────────────────────────────────────────
+
+export interface CandidateCvLean {
+  _id: string;
+  uploadedBy: string;
+  candidateName?: string;
+  originalFileName: string;
+  localFilePath: string;
+  cloudinaryPublicId?: string;
+  cloudinaryUrl?: string;
+  fileSize: number;
+  extractedText?: string;
+  extractionMethod?: string;
+  pageCount?: number;
+  textHash: string;
+  skillVector?: string;
+  uploadedAt: Date;
+}
+
+export interface BatchAnalysisLean {
+  _id: string;
+  candidateCvId: string;
+  uploadedBy: string;
+  jdHash: string;
+  jobDescription: string;
+  matchScore: number;
+  bm25Score?: number;
+  skillMatchRatio?: number;
+  depthScore?: number;
+  cvSkills?: string[];
+  missingSkills?: string[];
+  overallFeedback?: string | null;
+  analyzedAt: Date;
+}
+
+export interface DuplicatePairLean {
+  _id: string;
+  uploadedBy: string;
+  cvIdA: string;
+  cvIdB: string;
+  similarity: number;
+  duplicateType: string;
+  detectedAt: Date;
+}
+
+interface ScoreBreakdown {
+  total: number;
+  bm25: number;
+  skillMatch: number;
+  depth: number;
+}
+
+interface GeminiCandidate {
+  content?: {
+    parts?: Array<{ text?: string }>;
+  };
+}
+
+interface GeminiResponse {
+  candidates?: GeminiCandidate[];
+  error?: { message?: string };
+}
+
+// CvService private methods accessed via type-safe wrapper interface
+interface CvServiceInternal {
+  calculateBM25Score(text: string, jd: string): ScoreBreakdown;
+  extractSkills(text: string): string[];
+}
+
 @Injectable()
 export class CvBatchService {
   constructor(
@@ -31,19 +96,24 @@ export class CvBatchService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  // ─── CvService internal helper accessor ──────────────────────
+  private get cvServiceInternal(): CvServiceInternal {
+    return this.cvService as unknown as CvServiceInternal;
+  }
+
   // ─── Upload nhiều CV cùng lúc ─────────────────────────────────
   async uploadBatch(
     userId: string,
     files: Express.Multer.File[],
-  ): Promise<{ uploaded: number; duplicates: number; results: any[] }> {
-    const results: any[] = [];
+  ): Promise<{ uploaded: number; duplicates: number; results: unknown[] }> {
+    const results: unknown[] = [];
     let duplicateCount = 0;
 
     // Lấy tất cả hash hiện có của user để so sánh nhanh
-    const existingCVs = await this.candidateCvModel
+    const existingCVs = (await this.candidateCvModel
       .find({ uploadedBy: userId })
       .select('_id textHash originalFileName')
-      .lean();
+      .lean()) as CandidateCvLean[];
     const existingHashes = new Map(existingCVs.map((cv) => [cv.textHash, cv]));
 
     for (const file of files) {
@@ -122,7 +192,7 @@ export class CvBatchService {
           _id: cvId,
           textHash,
           originalFileName: file.originalname,
-        } as any);
+        } as CandidateCvLean);
 
         results.push({
           fileName: file.originalname,
@@ -131,17 +201,18 @@ export class CvBatchService {
           status: nearDups.length > 0 ? 'near_duplicate' : 'uploaded',
           nearDuplicates: nearDups,
         });
-      } catch (err) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
         results.push({
           fileName: file.originalname,
           status: 'error',
-          error: err.message,
+          error: message,
         });
       }
     }
 
     return {
-      uploaded: results.filter(
+      uploaded: (results as Array<{ status: string }>).filter(
         (r) => r.status === 'uploaded' || r.status === 'near_duplicate',
       ).length,
       duplicates: duplicateCount,
@@ -155,43 +226,46 @@ export class CvBatchService {
     jobDescription: string,
     topN: number = 10,
   ): Promise<{
-    rankings: any[];
+    rankings: unknown[];
     jdHash: string;
     total: number;
-    duplicateWarnings: any[];
+    duplicateWarnings: DuplicatePairLean[];
   }> {
     const jdHash = this.hashText(jobDescription);
 
     // Lấy tất cả CV của user
-    const allCVs = await this.candidateCvModel
+    const allCVs = (await this.candidateCvModel
       .find({ uploadedBy: userId })
-      .lean();
+      .lean()) as CandidateCvLean[];
     if (allCVs.length === 0)
       throw new NotFoundException(
         'No candidate CVs found. Please upload CVs first.',
       );
 
     // Check cache — CV nào đã score với JD này rồi thì lấy luôn
-    const cachedScores = await this.batchAnalysisModel
+    const cachedScores = (await this.batchAnalysisModel
       .find({ uploadedBy: userId, jdHash })
-      .lean();
+      .lean()) as BatchAnalysisLean[];
     const cachedMap = new Map(cachedScores.map((s) => [s.candidateCvId, s]));
 
     // Score song song (Promise.all) cho các CV chưa có cache
     const toScore = allCVs.filter((cv) => !cachedMap.has(cv._id));
-    const newScores = await Promise.all(
+    const newScoresRaw = await Promise.all(
       toScore.map((cv) => this.scoreOneCv(userId, cv, jobDescription, jdHash)),
+    );
+    const newScores = newScoresRaw.filter(
+      (s): s is BatchAnalysisLean => s !== null,
     );
 
     // Lưu scores mới vào DB
     if (newScores.length > 0) {
       await this.batchAnalysisModel
-        .insertMany(newScores.filter(Boolean), { ordered: false })
+        .insertMany(newScores, { ordered: false })
         .catch(() => {});
     }
 
     // Merge cached + new
-    const allScores = [...cachedScores, ...newScores.filter(Boolean)];
+    const allScores: BatchAnalysisLean[] = [...cachedScores, ...newScores];
 
     // Sort by score desc
     allScores.sort((a, b) => b.matchScore - a.matchScore);
@@ -216,9 +290,9 @@ export class CvBatchService {
     });
 
     // Lấy duplicate warnings
-    const duplicateWarnings = await this.duplicatePairModel
+    const duplicateWarnings = (await this.duplicatePairModel
       .find({ uploadedBy: userId })
-      .lean();
+      .lean()) as DuplicatePairLean[];
 
     return { rankings, jdHash, total: allCVs.length, duplicateWarnings };
   }
@@ -229,10 +303,14 @@ export class CvBatchService {
     cvIdA: string,
     cvIdB: string,
     jobDescription: string,
-  ): Promise<any> {
+  ): Promise<unknown> {
     const [cvA, cvB] = await Promise.all([
-      this.candidateCvModel.findOne({ _id: cvIdA, uploadedBy: userId }).lean(),
-      this.candidateCvModel.findOne({ _id: cvIdB, uploadedBy: userId }).lean(),
+      this.candidateCvModel
+        .findOne({ _id: cvIdA, uploadedBy: userId })
+        .lean() as Promise<CandidateCvLean | null>,
+      this.candidateCvModel
+        .findOne({ _id: cvIdB, uploadedBy: userId })
+        .lean() as Promise<CandidateCvLean | null>,
     ]);
 
     if (!cvA) throw new NotFoundException(`CV A (${cvIdA}) not found`);
@@ -254,22 +332,22 @@ export class CvBatchService {
     const uniqueToB = [...skillsB].filter((s) => !skillsA.has(s));
 
     // Check duplicate giữa 2 CV này
-    const dupPair = await this.duplicatePairModel
+    const dupPair = (await this.duplicatePairModel
       .findOne({
         $or: [
           { cvIdA, cvIdB },
           { cvIdA: cvIdB, cvIdB: cvIdA },
         ],
       })
-      .lean();
+      .lean()) as DuplicatePairLean | null;
 
     // Similarity score giữa 2 CV
     const similarity =
       cvA.textHash === cvB.textHash
         ? 1.0
         : this.cosineSimilarity(
-            JSON.parse(cvA.skillVector ?? '{}'),
-            JSON.parse(cvB.skillVector ?? '{}'),
+            JSON.parse(cvA.skillVector ?? '{}') as Record<string, number>,
+            JSON.parse(cvB.skillVector ?? '{}') as Record<string, number>,
           );
 
     const winner = scoreA.matchScore >= scoreB.matchScore ? 'A' : 'B';
@@ -310,17 +388,17 @@ export class CvBatchService {
   }
 
   // ─── Lấy danh sách CV của user ────────────────────────────────
-  async listCVs(userId: string): Promise<any[]> {
-    const cvs = await this.candidateCvModel
+  async listCVs(userId: string): Promise<unknown[]> {
+    const cvs = (await this.candidateCvModel
       .find({ uploadedBy: userId })
       .sort({ uploadedAt: -1 })
       .select('-extractedText -skillVector')
-      .lean();
+      .lean()) as CandidateCvLean[];
 
     // Lấy duplicate info
-    const dups = await this.duplicatePairModel
+    const dups = (await this.duplicatePairModel
       .find({ uploadedBy: userId })
-      .lean();
+      .lean()) as DuplicatePairLean[];
     const dupSet = new Set([
       ...dups.map((d) => d.cvIdA),
       ...dups.map((d) => d.cvIdB),
@@ -332,7 +410,7 @@ export class CvBatchService {
       fileName: cv.originalFileName,
       fileSize: cv.fileSize,
       uploadedAt: cv.uploadedAt,
-      isDuplicate: dupSet.has(cv._id as string),
+      isDuplicate: dupSet.has(cv._id),
     }));
   }
 
@@ -361,18 +439,18 @@ export class CvBatchService {
 
   private async scoreOneCv(
     userId: string,
-    cv: any,
+    cv: CandidateCvLean,
     jobDescription: string,
     jdHash: string,
-  ): Promise<any> {
+  ): Promise<BatchAnalysisLean | null> {
     try {
       if (!cv.extractedText) return null;
-      const scoreBreakdown = (this.cvService as any).calculateBM25Score(
+      const scoreBreakdown = this.cvServiceInternal.calculateBM25Score(
         cv.extractedText,
         jobDescription,
       );
-      const jdSkills = (this.cvService as any).extractSkills(jobDescription);
-      const cvSkills = (this.cvService as any).extractSkills(cv.extractedText);
+      const jdSkills = this.cvServiceInternal.extractSkills(jobDescription);
+      const cvSkills = this.cvServiceInternal.extractSkills(cv.extractedText);
       const missingSkills = jdSkills.filter(
         (s: string) => !cvSkills.includes(s),
       );
@@ -381,11 +459,10 @@ export class CvBatchService {
       // Gọi Gemini cho overallFeedback (optional — chỉ lấy feedback ngắn)
       let overallFeedback: string | null = null;
       try {
-        const ai = await this.callGeminiFeedback(
+        overallFeedback = await this.callGeminiFeedback(
           cv.extractedText,
           jobDescription,
         );
-        overallFeedback = ai;
       } catch {
         /* không block nếu Gemini fail */
       }
@@ -405,21 +482,22 @@ export class CvBatchService {
         overallFeedback,
         analyzedAt: new Date(),
       };
-    } catch (err) {
-      console.error(`Score failed for CV ${cv._id}:`, err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error(`Score failed for CV ${cv._id}:`, message);
       return null;
     }
   }
 
   private async getOrCreateScore(
     userId: string,
-    cv: any,
+    cv: CandidateCvLean,
     jobDescription: string,
     jdHash: string,
-  ): Promise<any> {
-    const cached = await this.batchAnalysisModel
+  ): Promise<BatchAnalysisLean> {
+    const cached = (await this.batchAnalysisModel
       .findOne({ candidateCvId: cv._id, jdHash })
-      .lean();
+      .lean()) as BatchAnalysisLean | null;
     if (cached) return cached;
     const score = await this.scoreOneCv(userId, cv, jobDescription, jdHash);
     if (score) {
@@ -427,10 +505,16 @@ export class CvBatchService {
       return score;
     }
     return {
+      _id: '',
+      candidateCvId: cv._id,
+      uploadedBy: userId,
+      jdHash,
+      jobDescription,
       matchScore: 0,
       cvSkills: [],
       missingSkills: [],
       overallFeedback: null,
+      analyzedAt: new Date(),
     };
   }
 
@@ -438,27 +522,27 @@ export class CvBatchService {
     userId: string,
     newCvId: string,
     newVector: Record<string, number>,
-    existingCVs: any[],
-  ): Promise<any[]> {
-    const nearDups: any[] = [];
+    existingCVs: CandidateCvLean[],
+  ): Promise<unknown[]> {
+    const nearDups: unknown[] = [];
     for (const existing of existingCVs) {
       if (!existing.skillVector) continue;
       try {
-        const existingVector = JSON.parse(existing.skillVector);
+        const existingVector = JSON.parse(existing.skillVector) as Record<
+          string,
+          number
+        >;
         const sim = this.cosineSimilarity(newVector, existingVector);
         if (sim >= 0.9) {
-          const pairId = [newCvId, existing._id].sort().join('_');
+          const sorted = [newCvId, existing._id].sort();
           await this.duplicatePairModel.updateOne(
-            {
-              cvIdA: [newCvId, existing._id].sort()[0],
-              cvIdB: [newCvId, existing._id].sort()[1],
-            },
+            { cvIdA: sorted[0], cvIdB: sorted[1] },
             {
               $setOnInsert: {
                 _id: uuidv4(),
                 uploadedBy: userId,
-                cvIdA: [newCvId, existing._id].sort()[0],
-                cvIdB: [newCvId, existing._id].sort()[1],
+                cvIdA: sorted[0],
+                cvIdB: sorted[1],
                 similarity: sim,
                 duplicateType: 'near',
                 detectedAt: new Date(),
@@ -479,7 +563,7 @@ export class CvBatchService {
     return nearDups;
   }
 
-  // ─── Hash text (SHA256, 16 chars prefix) ────────────────────
+  // ─── Hash text (SHA256, 32 chars prefix) ────────────────────
   private hashText(text: string): string {
     return createHash('sha256')
       .update(text.trim().toLowerCase())
@@ -489,7 +573,7 @@ export class CvBatchService {
 
   // ─── Build skill vector {skill: count} ──────────────────────
   private buildSkillVector(text: string): Record<string, number> {
-    const skills = (this.cvService as any).extractSkills(text);
+    const skills = this.cvServiceInternal.extractSkills(text);
     const vector: Record<string, number> = {};
     const lower = text.toLowerCase();
     for (const skill of skills) {
@@ -528,7 +612,7 @@ export class CvBatchService {
     // Thường dòng đầu là tên — check không phải email/phone/URL
     for (const line of lines.slice(0, 5)) {
       if (line.length < 3 || line.length > 60) continue;
-      if (/[@\/\d{4}]/.test(line)) continue;
+      if (/[@/\d{4}]/.test(line)) continue;
       if (/^(curriculum|resume|cv|profile)/i.test(line)) continue;
       return line;
     }
@@ -541,7 +625,7 @@ export class CvBatchService {
     jd: string,
   ): Promise<string | null> {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -559,7 +643,8 @@ export class CvBatchService {
         }),
       },
     );
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? null;
+    const data = (await response.json()) as GeminiResponse;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text ? text.trim() : null;
   }
 }

@@ -15,6 +15,11 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CvBatchService } from './cv-batch.service';
+import { JwtPayload } from '../common/decorators/current-user.decorator';
+
+interface RequestWithUser extends Request {
+  user: JwtPayload;
+}
 
 @Controller('cv-batch')
 export class CvBatchController {
@@ -27,7 +32,7 @@ export class CvBatchController {
   @UseInterceptors(FilesInterceptor('files', 20))
   async uploadBatch(
     @UploadedFiles() files: Express.Multer.File[],
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     if (!files || files.length === 0)
       throw new BadRequestException('No files uploaded');
@@ -38,7 +43,7 @@ export class CvBatchController {
   // Lấy danh sách tất cả CV ứng viên đã upload
   @Get('list')
   @UseGuards(JwtAuthGuard)
-  async listCVs(@Request() req) {
+  async listCVs(@Request() req: RequestWithUser) {
     return this.cvBatchService.listCVs(req.user.userId);
   }
 
@@ -47,7 +52,7 @@ export class CvBatchController {
   @Get('rank')
   @UseGuards(JwtAuthGuard)
   async rankCVs(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('jd') jobDescription: string,
     @Query('topN') topN: string,
   ) {
@@ -65,7 +70,7 @@ export class CvBatchController {
   @Get('compare')
   @UseGuards(JwtAuthGuard)
   async compareTwoCVs(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('cvA') cvIdA: string,
     @Query('cvB') cvIdB: string,
     @Query('jd') jobDescription: string,
@@ -88,7 +93,7 @@ export class CvBatchController {
   // Xóa 1 CV ứng viên
   @Delete(':cvId')
   @UseGuards(JwtAuthGuard)
-  async deleteCv(@Request() req, @Param('cvId') cvId: string) {
+  async deleteCv(@Request() req: RequestWithUser, @Param('cvId') cvId: string) {
     await this.cvBatchService.deleteCandidateCv(req.user.userId, cvId);
     return { message: 'CV deleted successfully' };
   }

@@ -70,6 +70,15 @@ const EMPTY_RESUME: ResumeData = {
   languages: [],
 };
 
+interface GeminiResumeResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{ text?: string }>;
+    };
+  }>;
+  error?: { code?: number; message?: string };
+}
+
 @Injectable()
 export class ResumeService {
   constructor(
@@ -80,7 +89,9 @@ export class ResumeService {
 
   /* ── Parse CV → structured JSON via Gemini ───────────────────── */
   async parseCV(userId: string): Promise<ResumeData> {
-    const cv = await this.cvService.getCVByUser(userId);
+    const cv = (await this.cvService.getCVByUser(userId)) as {
+      extractedText?: string;
+    } | null;
     if (!cv)
       throw new NotFoundException(
         'No CV uploaded. Please upload your CV first.',
@@ -90,7 +101,7 @@ export class ResumeService {
     const existing = await this.resumeModel.findOne({ userId });
     if (existing) return this.docToResumeData(existing);
 
-    const parsed = await this.callGeminiParse(cv.extractedText);
+    const parsed = await this.callGeminiParse(cv.extractedText ?? '');
     await this.upsertResumeData(userId, parsed);
     return parsed;
   }
@@ -211,17 +222,18 @@ Rules:
             }),
           },
         );
-        const data = await response.json();
+        const data = (await response.json()) as GeminiResumeResponse;
 
         if (data?.error?.code === 503 && attemptsLeft > 1) {
           await new Promise((r) => setTimeout(r, 2000));
           return fetchWithRetry(attemptsLeft - 1);
         }
         if (data?.error?.code === 429 && attemptsLeft > 1) {
-          const match = (data?.error?.message ?? '').match(
-            /retry in ([\d.]+)s/,
-          );
-          const waitMs = match ? Math.ceil(parseFloat(match[1])) * 1000 : 60000;
+          const errorMsg: string = data?.error?.message ?? '';
+          const match = errorMsg.match(/retry in ([\d.]+)s/);
+          const waitMs = match?.[1]
+            ? Math.ceil(parseFloat(match[1])) * 1000
+            : 60000;
           console.warn(`Gemini 429 — waiting ${waitMs / 1000}s`);
           await new Promise((r) => setTimeout(r, waitMs));
           return fetchWithRetry(attemptsLeft - 1);
@@ -260,7 +272,7 @@ Rules:
         certifications: parsed.certifications ?? [],
         languages: parsed.languages ?? [],
       };
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Resume parse error:', err);
       return { ...EMPTY_RESUME };
     }

@@ -18,7 +18,23 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { type Response } from 'express';
 import * as fs from 'fs';
-import * as path from 'path';
+import { JwtPayload } from '../common/decorators/current-user.decorator';
+
+interface RequestWithUser extends Request {
+  user: JwtPayload;
+}
+
+interface CvRecord {
+  fileName?: string;
+  originalFileName?: string;
+  templateId?: string;
+  extractedText?: string;
+  uploadedAt?: Date;
+  extractionMethod?: string;
+  localFilePath?: string;
+  pageCount?: number;
+  _id?: string;
+}
 
 @Controller('cv')
 export class CvController {
@@ -33,26 +49,28 @@ export class CvController {
   async uploadCV(
     @UploadedFile() file: Express.Multer.File,
     @Body('templateId') templateId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const record = await this.cvService.saveCV(
+    const record = (await this.cvService.saveCV(
       req.user.userId,
       file,
       parseInt(templateId) || 1,
-    );
+    )) as CvRecord;
     return {
       message: 'CV uploaded successfully',
       fileName: record.fileName,
       templateId: record.templateId,
-      textLength: record.extractedText.length,
+      textLength: record.extractedText?.length ?? 0,
     };
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getMyCV(@Request() req) {
-    const cv = await this.cvService.getCVByUser(req.user.userId);
+  async getMyCV(@Request() req: RequestWithUser) {
+    const cv = (await this.cvService.getCVByUser(
+      req.user.userId,
+    )) as CvRecord | null;
     if (!cv) return { hasCV: false };
     return {
       hasCV: true,
@@ -66,8 +84,13 @@ export class CvController {
 
   @Get('preview')
   @UseGuards(JwtAuthGuard)
-  async previewCV(@Request() req, @Res({ passthrough: false }) res: Response) {
-    const cv = await this.cvService.getCVByUser(req.user.userId);
+  async previewCV(
+    @Request() req: RequestWithUser,
+    @Res({ passthrough: false }) res: Response,
+  ) {
+    const cv = (await this.cvService.getCVByUser(
+      req.user.userId,
+    )) as CvRecord | null;
     if (!cv) throw new NotFoundException('No CV uploaded yet');
 
     // Serve local file trực tiếp — full PDF với định dạng gốc
@@ -79,7 +102,9 @@ export class CvController {
         `inline; filename="${cv.originalFileName}"`,
       );
       res.setHeader('Cache-Control', 'private, max-age=3600');
-      fs.createReadStream(localPath).pipe(res as any);
+      fs.createReadStream(localPath).pipe(
+        res as unknown as NodeJS.WritableStream,
+      );
       return;
     }
 
@@ -91,7 +116,7 @@ export class CvController {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename="${cv.originalFileName}"`);
         const { Readable } = await import('stream');
-        Readable.from(cloudinaryRes.body as any).pipe(res as any);
+        Readable.from(cloudinaryRes.body as NodeJS.ReadableStream).pipe(res as unknown as NodeJS.WritableStream);
         return;
       }
     }
@@ -103,7 +128,7 @@ export class CvController {
   @Patch('update-text')
   @UseGuards(JwtAuthGuard)
   async updateCVText(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body('extractedText') extractedText: string,
   ) {
     if (!extractedText?.trim())
@@ -115,7 +140,7 @@ export class CvController {
   @Post('analyze')
   @UseGuards(JwtAuthGuard)
   async analyzeCV(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body('jobDescription') jobDescription: string,
   ) {
     if (!jobDescription?.trim())
@@ -126,7 +151,7 @@ export class CvController {
   // GET /api/cv/history — lịch sử các lần analyze
   @Get('history')
   @UseGuards(JwtAuthGuard)
-  async getHistory(@Request() req) {
+  async getHistory(@Request() req: RequestWithUser) {
     return this.cvService.getAnalysisHistory(req.user.userId);
   }
 }

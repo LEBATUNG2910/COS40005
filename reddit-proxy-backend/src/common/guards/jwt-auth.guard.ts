@@ -4,17 +4,21 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Observable } from 'rxjs';
+import { JwtPayload } from '../decorators/current-user.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  canActivate(context: ExecutionContext) {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
-    if (err || !user) {
+  handleRequest<T = JwtPayload>(err: Error | null, user: T | false): T {
+    if (err ?? !user) {
       throw err ?? new UnauthorizedException('Invalid or expired token');
     }
-    return user;
+    return user as T;
   }
 }

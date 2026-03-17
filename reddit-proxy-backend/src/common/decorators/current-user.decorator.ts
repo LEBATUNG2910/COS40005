@@ -1,12 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-
-// Dùng trong controller: @CurrentUser() user: JwtPayload
-export const CurrentUser = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user;
-  },
-);
+import { Request } from 'express';
 
 export interface JwtPayload {
   userId: string;
@@ -14,3 +7,15 @@ export interface JwtPayload {
   iat?: number;
   exp?: number;
 }
+
+interface RequestWithUser extends Request {
+  user: JwtPayload;
+}
+
+// Dùng trong controller: @CurrentUser() user: JwtPayload
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): JwtPayload => {
+    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
+    return request.user;
+  },
+);

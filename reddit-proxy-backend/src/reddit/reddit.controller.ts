@@ -8,14 +8,16 @@ export class RedditController {
 
   // GET /api/reddit/hot?limit=25
   @Get('hot')
-  async getHotPosts(@Query('limit') limit: string) {
+  async getHotPosts(@Query('limit') limit: string): Promise<unknown> {
     const parsedLimit = parseInt(limit) || 25;
     return this.redditService.getHotPosts(parsedLimit);
   }
 
   // GET /api/reddit/post?permalink=/r/react/comments/abc123/...
   @Get('post')
-  async getPostDetails(@Query('permalink') permalink: string) {
+  async getPostDetails(
+    @Query('permalink') permalink: string,
+  ): Promise<unknown> {
     if (!permalink) {
       throw new BadRequestException('Missing permalink');
     }
