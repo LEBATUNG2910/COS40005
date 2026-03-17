@@ -18,6 +18,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { type Response } from 'express';
 import * as fs from 'fs';
+import * as path from 'path';
 import { JwtPayload } from '../common/decorators/current-user.decorator';
 
 interface RequestWithUser extends Request {
@@ -94,7 +95,9 @@ export class CvController {
     if (!cv) throw new NotFoundException('No CV uploaded yet');
 
     // Serve local file trực tiếp — full PDF với định dạng gốc
-    const localPath = cv.localFilePath;
+    const localPath = cv.localFilePath
+      ? path.resolve(process.cwd(), cv.localFilePath)
+      : null;
     if (localPath && fs.existsSync(localPath)) {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
