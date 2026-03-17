@@ -1,6 +1,12 @@
 import {
-  Controller, Post, Get, Put, Body,
-  UseGuards, Request, BadRequestException,
+  Controller,
+  Post,
+  Get,
+  Put,
+  Body,
+  UseGuards,
+  Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ResumeService } from './resume.service';
@@ -37,7 +43,8 @@ export class ResumeController {
   @Put('data')
   @UseGuards(JwtAuthGuard)
   async saveResumeData(@Request() req, @Body() body: ResumeData) {
-    if (!body?.personalInfo) throw new BadRequestException('Invalid resume data structure');
+    if (!body?.personalInfo)
+      throw new BadRequestException('Invalid resume data structure');
     await this.resumeService.saveResumeData(req.user.userId, body);
     return { message: 'Resume data saved successfully' };
   }

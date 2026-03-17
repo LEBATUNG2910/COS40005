@@ -4,8 +4,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import * as fs from 'fs';
 
 export interface CloudinaryUploadResult {
-  publicId: string;      // dùng để xóa sau này
-  secureUrl: string;     // URL truy cập file
+  publicId: string; // dùng để xóa sau này
+  secureUrl: string; // URL truy cập file
   bytes: number;
 }
 
@@ -14,17 +14,20 @@ export class CloudinaryService {
   constructor(private configService: ConfigService) {
     cloudinary.config({
       cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key:    this.configService.get<string>('CLOUDINARY_API_KEY'),
+      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
       api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
     });
   }
 
   // ─── Upload PDF lên Cloudinary ────────────────────────────────
-  async uploadPDF(filePath: string, userId: string): Promise<CloudinaryUploadResult> {
+  async uploadPDF(
+    filePath: string,
+    userId: string,
+  ): Promise<CloudinaryUploadResult> {
     try {
       const result = await cloudinary.uploader.upload(filePath, {
         folder: `hirewise/cvs/${userId}`,
-        resource_type: 'raw',       // raw = non-image files (PDF, DOCX...)
+        resource_type: 'raw', // raw = non-image files (PDF, DOCX...)
         format: 'pdf',
         use_filename: true,
         unique_filename: true,
@@ -32,13 +35,15 @@ export class CloudinaryService {
       });
 
       return {
-        publicId:  result.public_id,
+        publicId: result.public_id,
         secureUrl: result.secure_url,
-        bytes:     result.bytes,
+        bytes: result.bytes,
       };
     } catch (err) {
       console.error('Cloudinary upload error:', err);
-      throw new InternalServerErrorException('Failed to upload CV to cloud storage');
+      throw new InternalServerErrorException(
+        'Failed to upload CV to cloud storage',
+      );
     }
   }
 

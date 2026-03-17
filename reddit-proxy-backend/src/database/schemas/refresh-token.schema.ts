@@ -35,5 +35,11 @@ export class RefreshToken {
 
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
 
-RefreshTokenSchema.index({ userId: 1 }, { partialFilterExpression: { isRevoked: false } });
-RefreshTokenSchema.index({ token: 1 }, { partialFilterExpression: { isRevoked: false } });
+RefreshTokenSchema.index(
+  { userId: 1 },
+  { partialFilterExpression: { isRevoked: false } },
+);
+RefreshTokenSchema.index(
+  { token: 1 },
+  { partialFilterExpression: { isRevoked: false } },
+);

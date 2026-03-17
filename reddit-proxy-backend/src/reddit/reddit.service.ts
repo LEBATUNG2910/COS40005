@@ -30,12 +30,15 @@ export class RedditService {
 
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get(`/r/react/hot.json?limit=${limit}`)
+        this.httpService.get(`/r/react/hot.json?limit=${limit}`),
       );
       this.setCache(cacheKey, data);
       return data;
     } catch (error) {
-      throw new HttpException('Không thể lấy dữ liệu từ Reddit', error.response?.status || 500);
+      throw new HttpException(
+        'Không thể lấy dữ liệu từ Reddit',
+        error.response?.status || 500,
+      );
     }
   }
 
@@ -46,12 +49,15 @@ export class RedditService {
 
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get(`${permalink}.json`)
+        this.httpService.get(`${permalink}.json`),
       );
       this.setCache(cacheKey, data);
       return data;
     } catch (error) {
-      throw new HttpException('Không thể lấy chi tiết bài viết', error.response?.status || 500);
+      throw new HttpException(
+        'Không thể lấy chi tiết bài viết',
+        error.response?.status || 500,
+      );
     }
   }
 }

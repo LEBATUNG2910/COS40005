@@ -50,4 +50,3 @@ export class ResumeDataModel {
 }
 
 export const ResumeDataSchema = SchemaFactory.createForClass(ResumeDataModel);
-

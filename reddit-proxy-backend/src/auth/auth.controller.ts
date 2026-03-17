@@ -19,7 +19,8 @@ export class AuthController {
   // ─── POST /api/auth/register ──────────────────────────────
   @Post('register')
   async register(
-    @Body() body: {
+    @Body()
+    body: {
       fullName: string;
       email: string;
       phoneNumber: string;
@@ -34,7 +35,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
-    @Body() body: {
+    @Body()
+    body: {
       emailOrPhone: string;
       password: string;
       rememberMe: boolean;

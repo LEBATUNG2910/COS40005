@@ -80,7 +80,10 @@ export class UserSubscription {
   @Prop({ required: true, enum: ['monthly', 'yearly'] })
   billingCycle: string;
 
-  @Prop({ required: true, enum: ['active', 'cancelled', 'expired', 'past_due'] })
+  @Prop({
+    required: true,
+    enum: ['active', 'cancelled', 'expired', 'past_due'],
+  })
   status: string;
 
   @Prop({ required: true })
@@ -96,7 +99,8 @@ export class UserSubscription {
   createdAt: Date;
 }
 
-export const UserSubscriptionSchema = SchemaFactory.createForClass(UserSubscription);
+export const UserSubscriptionSchema =
+  SchemaFactory.createForClass(UserSubscription);
 UserSubscriptionSchema.index({ userId: 1, status: 1 });
 
 /* ─── Team Member ─────────────────────────────────────────────── */

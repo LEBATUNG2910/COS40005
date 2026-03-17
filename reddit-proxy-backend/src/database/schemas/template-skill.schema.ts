@@ -34,7 +34,8 @@ export class ResumeTemplate {
   createdAt: Date;
 }
 
-export const ResumeTemplateSchema = SchemaFactory.createForClass(ResumeTemplate);
+export const ResumeTemplateSchema =
+  SchemaFactory.createForClass(ResumeTemplate);
 
 /* ─── Skill ───────────────────────────────────────────────────── */
 export type SkillDocument = Skill & Document;

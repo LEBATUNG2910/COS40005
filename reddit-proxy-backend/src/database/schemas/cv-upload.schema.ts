@@ -38,7 +38,11 @@ export class CvUpload {
   @Prop({ type: String, default: null })
   extractedText: string | null;
 
-  @Prop({ type: String, default: null, enum: ['pdftotext', 'pdf-parse', 'gemini-vision', null] })
+  @Prop({
+    type: String,
+    default: null,
+    enum: ['pdftotext', 'pdf-parse', 'gemini-vision', null],
+  })
   extractionMethod: string | null;
 
   @Prop({ default: true })

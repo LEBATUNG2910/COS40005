@@ -1,6 +1,11 @@
 import {
-  Controller, Post, Body, UseGuards,
-  Request, Res, StreamableFile,
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ResumeExportService } from './resume-export.service';
@@ -8,7 +13,6 @@ import { type Response } from 'express';
 
 @Controller('resume')
 export class ResumeExportController {
-
   constructor(private readonly exportService: ResumeExportService) {}
 
   // POST /api/resume/export

@@ -6,9 +6,40 @@ import {
   ArrowLeft, Briefcase, Brain, BookOpen, CheckCircle,
   AlertTriangle, TrendingUp, ExternalLink, ChevronDown,
   Loader2, FileText, Target, Eye, Sparkles,
-  PenLine, X, Plus, RefreshCw, TrendingDown, RotateCcw
+  PenLine, X, Plus, RefreshCw, TrendingDown, RotateCcw, Check
 } from 'lucide-react'
 import { authService } from '../../services/authService'
+
+function StepNav({ currentStep }) {
+  const steps = [
+    { id: 1, name: 'Upload' },
+    { id: 2, name: 'Template' },
+    { id: 3, name: 'Analyze' },
+  ]
+  return (
+    <nav className="flex items-center justify-center gap-1 sm:gap-2">
+      {steps.map((step) => (
+        <div key={step.id} className="flex items-center gap-1 sm:gap-2">
+          <div className="flex flex-col items-center gap-1">
+            <motion.div
+              animate={{
+                scale: step.id === currentStep ? 1.1 : 1,
+                backgroundColor: step.id <= currentStep ? '#10B981' : '#D1D5DB'
+              }}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm"
+            >
+              {step.id < currentStep ? <Check className="w-3.5 h-3.5" /> : step.id}
+            </motion.div>
+            <span className={`text-xs font-medium hidden sm:block ${step.id === currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
+              {step.name}
+            </span>
+          </div>
+          {step.id < steps.length && <div className="w-8 sm:w-16 h-0.5 bg-gray-200" />}
+        </div>
+      ))}
+    </nav>
+  )
+}
 
 /* ─── Score Ring ─────────────────────────────────────────────── */
 function ScoreRing({ score }) {
@@ -382,6 +413,18 @@ export default function CvAnalyst() {
   const token = authService.getToken()
   const [showEditor, setShowEditor] = useState(false)
   const [prevScore, setPrevScore] = useState(null)   // lưu score trước khi re-analyze
+  const [hideHeader, setHideHeader] = useState(false)
+
+  useEffect(() => {
+    let lastScroll = 0
+    const handleScroll = () => {
+      const currentScroll = window.scrollY
+      setHideHeader(currentScroll > lastScroll && currentScroll > 80)
+      lastScroll = currentScroll
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const steps = [
     { id: 1, name: 'Upload' },
@@ -479,41 +522,28 @@ export default function CvAnalyst() {
   return (
     <div className="min-h-screen bg-white pb-20" style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}>
 
-      {/* ── Header / Step Indicator ── */}
-      <div className="max-w-5xl mx-auto px-6 pt-8 mb-8">
-        <div className="grid grid-cols-3 items-center">
-          <button
-            onClick={() => navigate('/selection')}
-            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors w-fit font-semibold"
-          >
-            <ArrowLeft className="w-5 h-5" /> Back
-          </button>
-
-          <nav className="flex items-center justify-center space-x-4">
-            {steps.map((step) => (
-              <div key={step.id} className="flex items-center gap-2">
-                <div className="flex flex-col items-center gap-1">
-                  <motion.div
-                    animate={{
-                      scale: step.id === currentStep ? 1.1 : 1,
-                      backgroundColor: step.id <= currentStep ? '#10B981' : '#D1D5DB'
-                    }}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                  >
-                    {step.id < currentStep ? <CheckCircle className="w-4 h-4" /> : step.id}
-                  </motion.div>
-                  <span className={`text-xs font-medium ${step.id === currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
-                    {step.name}
-                  </span>
-                </div>
-                {step.id < steps.length && <div className="w-16 h-0.5 bg-gray-200 mb-4" />}
-              </div>
-            ))}
-          </nav>
+      {/* ── Header / Step Indicator (Updated to match ResumeTemplateSelection structure) ── */}
+      <motion.div
+        initial={{ y: 0, opacity: 1 }}
+        animate={{ y: hideHeader ? -80 : 0, opacity: hideHeader ? 0 : 1 }}
+        className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <motion.button 
+              whileHover={{ x: -4 }} 
+              onClick={() => navigate('/selection')}
+              className="flex items-center gap-1.5 text-gray-600 hover:text-cyan-600 transition-colors font-medium text-sm sm:text-base"
+            >
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" /> Back
+            </motion.button>
+            <StepNav currentStep={3} />
+            <div className="w-14 sm:w-16" /> {/* Spacer for balance */}
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-5 pt-8">
 
         {/* ── CV Banner ── */}
         <motion.div

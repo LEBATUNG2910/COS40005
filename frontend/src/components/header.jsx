@@ -50,6 +50,7 @@ function Header() {
         { title: "Career Coaches", path: "/organize?tab=career-coaches" },
       ],
     },
+    {title: "Compare Resumes", path: "/compare"},
   ];
 
   return (

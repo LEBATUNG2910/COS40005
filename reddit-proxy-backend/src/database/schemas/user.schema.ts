@@ -23,7 +23,10 @@ export class User {
   @Prop({ required: true, enum: ['Male', 'Female', 'Other'] })
   gender: string;
 
-  @Prop({ enum: ['English', 'Spanish', 'French', 'German', 'Vietnamese'], default: 'English' })
+  @Prop({
+    enum: ['English', 'Spanish', 'French', 'German', 'Vietnamese'],
+    default: 'English',
+  })
   language: string;
 
   @Prop({ default: false })

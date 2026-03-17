@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
@@ -39,7 +43,8 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
-    if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
+    if (!isPasswordValid)
+      throw new UnauthorizedException('Invalid credentials');
 
     const expiresIn: any = data.rememberMe
       ? (this.configService.get<string>('JWT_REMEMBER_EXPIRES_IN') ?? '30d')
@@ -62,7 +67,10 @@ export class AuthService {
   }
 
   // ─── CẬP NHẬT PROFILE ────────────────────────────────────────
-  async updateProfile(userId: string, data: { fullName?: string; language?: string }) {
+  async updateProfile(
+    userId: string,
+    data: { fullName?: string; language?: string },
+  ) {
     const updated = await this.usersService.updateProfile(userId, data);
     const { password, ...result } = updated;
     return {
@@ -72,22 +80,33 @@ export class AuthService {
   }
 
   // ─── ĐỔI PASSWORD ────────────────────────────────────────────
-  async changePassword(userId: string, data: { currentPassword: string; newPassword: string }) {
+  async changePassword(
+    userId: string,
+    data: { currentPassword: string; newPassword: string },
+  ) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException('User not found');
 
     const isValid = await bcrypt.compare(data.currentPassword, user.password);
-    if (!isValid) throw new BadRequestException('Current password is incorrect');
+    if (!isValid)
+      throw new BadRequestException('Current password is incorrect');
 
     const isSame = await bcrypt.compare(data.newPassword, user.password);
-    if (isSame) throw new BadRequestException('New password must be different from current password');
+    if (isSame)
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
 
     await this.usersService.updatePassword(userId, data.newPassword);
     return { message: 'Password changed successfully' };
   }
 
   // ─── TẠO TOKEN ───────────────────────────────────────────────
-  private generateToken(userId: string, email: string, expiresIn: any = '100y') {
+  private generateToken(
+    userId: string,
+    email: string,
+    expiresIn: any = '100y',
+  ) {
     const payload = { sub: userId, email };
     return {
       accessToken: this.jwtService.sign(payload, {

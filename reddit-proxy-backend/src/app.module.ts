@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { CvBatchModule } from './cv-batch/cv-batch.module';
 
 @Module({
   imports: [
@@ -26,12 +27,13 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     ResumeModule,
     RedditModule,
     UsersModule,
+    CvBatchModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     // Global exception filter — áp dụng cho toàn app
-    // { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {}

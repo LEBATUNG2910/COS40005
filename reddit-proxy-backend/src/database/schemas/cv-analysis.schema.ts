@@ -56,9 +56,13 @@ export class CvAnalysisSkill {
   source: string;
 }
 
-export const CvAnalysisSkillSchema = SchemaFactory.createForClass(CvAnalysisSkill);
+export const CvAnalysisSkillSchema =
+  SchemaFactory.createForClass(CvAnalysisSkill);
 CvAnalysisSkillSchema.index({ analysisId: 1, source: 1 });
-CvAnalysisSkillSchema.index({ analysisId: 1, skillId: 1, source: 1 }, { unique: true });
+CvAnalysisSkillSchema.index(
+  { analysisId: 1, skillId: 1, source: 1 },
+  { unique: true },
+);
 
 /* ─── AI Insights ─────────────────────────────────────────────── */
 export type AiInsightDocument = AiInsight & Document;
@@ -128,12 +132,16 @@ export class LearningResource {
   @Prop({ enum: ['free', 'paid'], default: 'free' })
   resourceType: string;
 
-  @Prop({ required: true, enum: ['Roadmap.sh', 'FreeCodeCamp', 'Udemy', 'YouTube', 'Other'] })
+  @Prop({
+    required: true,
+    enum: ['Roadmap.sh', 'FreeCodeCamp', 'Udemy', 'YouTube', 'Other'],
+  })
   platform: string;
 
   @Prop({ default: 0 })
   sortOrder: number;
 }
 
-export const LearningResourceSchema = SchemaFactory.createForClass(LearningResource);
+export const LearningResourceSchema =
+  SchemaFactory.createForClass(LearningResource);
 LearningResourceSchema.index({ suggestionId: 1 });

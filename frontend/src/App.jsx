@@ -17,6 +17,7 @@ import CareerCenterPage from "./app/career-center/page";
 import { FileProvider } from "./context/FileContext";
 import ResumeBuilder from "./app/resume/page";
 import Dashboard from "./app/dashboard/page";
+import ComparePage from "./app/compare/page";
 
 function App() {
   const location = useLocation();
@@ -83,6 +84,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+            path="/compare"
+              element={
+                <PrivateRoute>
+                  <ComparePage />
                 </PrivateRoute>
               }
             />

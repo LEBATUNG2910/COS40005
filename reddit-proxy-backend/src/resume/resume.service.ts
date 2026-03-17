@@ -3,23 +3,42 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { CvService } from '../cv/cv.service';
-import { ResumeDataModel, ResumeDataDocument } from '../database/schemas/resume-data.schema';
+import {
+  ResumeDataModel,
+  ResumeDataDocument,
+} from '../database/schemas/resume-data.schema';
 
 /* ─── Data shapes ────────────────────────────────────────────── */
 export interface PersonalInfo {
-  name: string; email: string; phone: string; location: string;
-  linkedin: string; github: string; website: string;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+  github: string;
+  website: string;
 }
 export interface Experience {
-  title: string; company: string; location: string;
-  startDate: string; endDate: string; bullets: string[];
+  title: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  bullets: string[];
 }
 export interface Education {
-  degree: string; school: string; location: string;
-  startDate: string; endDate: string; gpa: string;
+  degree: string;
+  school: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  gpa: string;
 }
 export interface Project {
-  name: string; tech: string[]; description: string; url: string;
+  name: string;
+  tech: string[];
+  description: string;
+  url: string;
 }
 export interface ResumeData {
   personalInfo: PersonalInfo;
@@ -33,21 +52,39 @@ export interface ResumeData {
 }
 
 const EMPTY_RESUME: ResumeData = {
-  personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', github: '', website: '' },
-  summary: '', experience: [], education: [], skills: [], projects: [], certifications: [], languages: [],
+  personalInfo: {
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    linkedin: '',
+    github: '',
+    website: '',
+  },
+  summary: '',
+  experience: [],
+  education: [],
+  skills: [],
+  projects: [],
+  certifications: [],
+  languages: [],
 };
 
 @Injectable()
 export class ResumeService {
   constructor(
     private readonly cvService: CvService,
-    @InjectModel(ResumeDataModel.name) private resumeModel: Model<ResumeDataDocument>,
+    @InjectModel(ResumeDataModel.name)
+    private resumeModel: Model<ResumeDataDocument>,
   ) {}
 
   /* ── Parse CV → structured JSON via Gemini ───────────────────── */
   async parseCV(userId: string): Promise<ResumeData> {
     const cv = await this.cvService.getCVByUser(userId);
-    if (!cv) throw new NotFoundException('No CV uploaded. Please upload your CV first.');
+    if (!cv)
+      throw new NotFoundException(
+        'No CV uploaded. Please upload your CV first.',
+      );
 
     // Nếu đã có trong MongoDB thì trả về luôn
     const existing = await this.resumeModel.findOne({ userId });
@@ -77,33 +114,36 @@ export class ResumeService {
   }
 
   /* ── Upsert vào MongoDB ──────────────────────────────────────── */
-  private async upsertResumeData(userId: string, data: ResumeData): Promise<void> {
+  private async upsertResumeData(
+    userId: string,
+    data: ResumeData,
+  ): Promise<void> {
     await this.resumeModel.findOneAndUpdate(
       { userId },
       {
         $set: {
           userId,
           // personalInfo flat
-          name:     data.personalInfo?.name     ?? '',
-          email:    data.personalInfo?.email    ?? '',
-          phone:    data.personalInfo?.phone    ?? '',
+          name: data.personalInfo?.name ?? '',
+          email: data.personalInfo?.email ?? '',
+          phone: data.personalInfo?.phone ?? '',
           location: data.personalInfo?.location ?? '',
           linkedin: data.personalInfo?.linkedin ?? '',
-          github:   data.personalInfo?.github   ?? '',
-          website:  data.personalInfo?.website  ?? '',
+          github: data.personalInfo?.github ?? '',
+          website: data.personalInfo?.website ?? '',
           // sections
-          summary:        data.summary        ?? '',
-          experience:     data.experience     ?? [],
-          education:      data.education      ?? [],
-          skills:         data.skills         ?? [],
-          projects:       data.projects       ?? [],
+          summary: data.summary ?? '',
+          experience: data.experience ?? [],
+          education: data.education ?? [],
+          skills: data.skills ?? [],
+          projects: data.projects ?? [],
           certifications: data.certifications ?? [],
-          languages:      data.languages      ?? [],
+          languages: data.languages ?? [],
           updatedAt: new Date(),
         },
         $setOnInsert: { _id: uuidv4(), createdAt: new Date() },
       },
-      { upsert: true, returnDocument: "after" },
+      { upsert: true, returnDocument: 'after' },
     );
   }
 
@@ -111,21 +151,21 @@ export class ResumeService {
   private docToResumeData(doc: ResumeDataDocument): ResumeData {
     return {
       personalInfo: {
-        name:     doc.name     ?? '',
-        email:    doc.email    ?? '',
-        phone:    doc.phone    ?? '',
+        name: doc.name ?? '',
+        email: doc.email ?? '',
+        phone: doc.phone ?? '',
         location: doc.location ?? '',
         linkedin: doc.linkedin ?? '',
-        github:   doc.github   ?? '',
-        website:  doc.website  ?? '',
+        github: doc.github ?? '',
+        website: doc.website ?? '',
       },
-      summary:        doc.summary        ?? '',
-      experience:     (doc.experience     ?? []) as Experience[],
-      education:      (doc.education      ?? []) as Education[],
-      skills:         doc.skills         ?? [],
-      projects:       (doc.projects       ?? []) as Project[],
+      summary: doc.summary ?? '',
+      experience: (doc.experience ?? []) as Experience[],
+      education: (doc.education ?? []) as Education[],
+      skills: doc.skills ?? [],
+      projects: (doc.projects ?? []) as Project[],
       certifications: doc.certifications ?? [],
-      languages:      doc.languages      ?? [],
+      languages: doc.languages ?? [],
     };
   }
 
@@ -156,7 +196,9 @@ Rules:
 - Do NOT invent information not in the CV
 - Dates format: "Mon YYYY" or "YYYY"`;
 
-    const fetchWithRetry = async (attemptsLeft: number): Promise<string | null> => {
+    const fetchWithRetry = async (
+      attemptsLeft: number,
+    ): Promise<string | null> => {
       try {
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -167,25 +209,30 @@ Rules:
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: { temperature: 0.1, maxOutputTokens: 4000 },
             }),
-          }
+          },
         );
         const data = await response.json();
 
         if (data?.error?.code === 503 && attemptsLeft > 1) {
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise((r) => setTimeout(r, 2000));
           return fetchWithRetry(attemptsLeft - 1);
         }
         if (data?.error?.code === 429 && attemptsLeft > 1) {
-          const match = (data?.error?.message ?? '').match(/retry in ([\d.]+)s/);
+          const match = (data?.error?.message ?? '').match(
+            /retry in ([\d.]+)s/,
+          );
           const waitMs = match ? Math.ceil(parseFloat(match[1])) * 1000 : 60000;
           console.warn(`Gemini 429 — waiting ${waitMs / 1000}s`);
-          await new Promise(r => setTimeout(r, waitMs));
+          await new Promise((r) => setTimeout(r, waitMs));
           return fetchWithRetry(attemptsLeft - 1);
         }
 
         return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
       } catch {
-        if (attemptsLeft > 1) { await new Promise(r => setTimeout(r, 2000)); return fetchWithRetry(attemptsLeft - 1); }
+        if (attemptsLeft > 1) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return fetchWithRetry(attemptsLeft - 1);
+        }
         return null;
       }
     };
@@ -194,20 +241,24 @@ Rules:
       const rawText = await fetchWithRetry(3);
       if (!rawText) throw new Error('Gemini unavailable');
 
-      let cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
+      let cleaned = rawText
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      const s = cleaned.indexOf('{'),
+        e = cleaned.lastIndexOf('}');
       if (s !== -1 && e !== -1) cleaned = cleaned.substring(s, e + 1);
 
       const parsed = JSON.parse(cleaned) as ResumeData;
       return {
         personalInfo: { ...EMPTY_RESUME.personalInfo, ...parsed.personalInfo },
-        summary:        parsed.summary        ?? '',
-        experience:     parsed.experience     ?? [],
-        education:      parsed.education      ?? [],
-        skills:         parsed.skills         ?? [],
-        projects:       parsed.projects       ?? [],
+        summary: parsed.summary ?? '',
+        experience: parsed.experience ?? [],
+        education: parsed.education ?? [],
+        skills: parsed.skills ?? [],
+        projects: parsed.projects ?? [],
         certifications: parsed.certifications ?? [],
-        languages:      parsed.languages      ?? [],
+        languages: parsed.languages ?? [],
       };
     } catch (err) {
       console.error('Resume parse error:', err);
