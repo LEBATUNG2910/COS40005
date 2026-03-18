@@ -8,6 +8,7 @@ import {
   HttpStatus,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -48,6 +49,24 @@ export class AuthController {
     },
   ) {
     return this.authService.login(body);
+  }
+
+  // ─── POST /api/auth/refresh ───────────────────────────────
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() body: { refreshToken: string }) {
+    if (!body?.refreshToken) throw new BadRequestException('refreshToken is required');
+    return this.authService.refresh(body.refreshToken);
+  }
+
+  // ─── POST /api/auth/logout ────────────────────────────────
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Body() body: { refreshToken?: string }) {
+    if (body?.refreshToken) {
+      await this.authService.logout(body.refreshToken);
+    }
+    return { message: 'Logged out successfully' };
   }
 
   // ─── GET /api/auth/me ─────────────────────────────────────

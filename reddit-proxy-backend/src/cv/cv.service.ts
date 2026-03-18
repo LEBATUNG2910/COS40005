@@ -24,6 +24,8 @@ import {
   LearningResourceDocument,
 } from '../database/schemas/cv-analysis.schema';
 import * as pdfParseLib from 'pdf-parse';
+import { CandidateCv, CandidateCvDocument } from '../database/schemas/candidate-cv.schema';
+import { createHash } from 'crypto';
 
 type ExtractionMethod = 'pdftotext' | 'pdf-parse' | 'gemini-vision';
 
@@ -144,6 +146,7 @@ export class CvService {
     @InjectModel(LearningResource.name)
     private resourceModel: Model<LearningResourceDocument>,
     private readonly cloudinaryService: CloudinaryService,
+    @InjectModel(CandidateCv.name) private candidateCvModel: Model<CandidateCvDocument>,
   ) {}
 
   async extractTextFromPDF(
@@ -263,6 +266,55 @@ export class CvService {
     });
 
     await cv.save();
+
+    // Tự động sync sang candidateCVs để dùng trong trang Compare
+    try {
+      const textHash = createHash('sha256')
+        .update(text.trim().toLowerCase())
+        .digest('hex')
+        .substring(0, 32);
+
+      const skills = this.extractSkills(text);
+      const skillVector: Record<string, number> = {};
+      for (const skill of skills) {
+        skillVector[skill] = (text.toLowerCase().match(new RegExp(skill, 'gi')) ?? []).length;
+      }
+
+      // Lấy tên ứng viên từ đầu CV
+      const lines = text.split('\n').map((l: string) => l.trim()).filter(Boolean);
+      let candidateName: string | null = null;
+      for (const line of lines.slice(0, 5)) {
+        if (line.length >= 3 && line.length <= 60 && !/@|\/|\d{4}/.test(line) && !/^(curriculum|resume|cv|profile)/i.test(line)) {
+          candidateName = line; break;
+        }
+      }
+
+      await this.candidateCvModel.findOneAndUpdate(
+        { uploadedBy: userId, originalFileName: file.originalname },
+        {
+          $set: {
+            uploadedBy: userId,
+            candidateName,
+            originalFileName: file.originalname,
+            localFilePath: file.path,
+            cloudinaryPublicId: uploaded.publicId,
+            cloudinaryUrl: uploaded.secureUrl,
+            fileSize: file.size,
+            extractedText: text,
+            extractionMethod: method,
+            pageCount,
+            textHash,
+            skillVector: JSON.stringify(skillVector),
+            uploadedAt: new Date(),
+          },
+          $setOnInsert: { _id: uuidv4() },
+        },
+        { upsert: true },
+      );
+    } catch (err) {
+      console.warn('Auto-sync to candidateCVs failed:', (err as Error).message);
+    }
+
     return cv as unknown as CvUploadLean;
   }
 

@@ -11,14 +11,12 @@ export class RefreshToken {
   @Prop({ required: true })
   userId: string;
 
-  @Prop({ required: true, maxlength: 500 })
-  token: string;
+  // SHA256 hash của token — không lưu plain text
+  @Prop({ required: true, maxlength: 64 })
+  tokenHash: string;
 
   @Prop({ required: true })
   expiresAt: Date;
-
-  @Prop({ default: false })
-  rememberMe: boolean;
 
   @Prop({ type: String, default: null, maxlength: 500 })
   deviceInfo: string | null;
@@ -35,11 +33,7 @@ export class RefreshToken {
 
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
 
-RefreshTokenSchema.index(
-  { userId: 1 },
-  { partialFilterExpression: { isRevoked: false } },
-);
-RefreshTokenSchema.index(
-  { token: 1 },
-  { partialFilterExpression: { isRevoked: false } },
-);
+// TTL — MongoDB tự xóa khi hết hạn
+RefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+RefreshTokenSchema.index({ userId: 1, isRevoked: 1 });
+RefreshTokenSchema.index({ tokenHash: 1 }, { unique: true });

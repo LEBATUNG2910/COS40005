@@ -41,7 +41,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
   providers: [
     AppService,
     // Global exception filter
-    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    // { provide: APP_FILTER, useClass: AllExceptionsFilter },
     // Global rate limit guard
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],

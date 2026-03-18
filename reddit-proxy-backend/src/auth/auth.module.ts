@@ -7,18 +7,19 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
+import { DatabaseModule } from '../database/database.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
-    // ✅ Dùng registerAsync để đọc .env sau khi ConfigModule load xong
+    DatabaseModule,  // cung cấp RefreshToken model
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '100y' },
+        signOptions: { expiresIn: '7d' },
       }),
     }),
   ],

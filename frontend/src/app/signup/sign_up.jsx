@@ -65,7 +65,7 @@ export default function SignUp() {
     setIsLoading(true) // ✅ Bắt đầu loading
     try {
       const data = await authService.register(formData)
-      authService.saveToken(data.accessToken, false)
+      authService.saveToken(data.accessToken, data.refreshToken, false)
       setShowSuccessModal(true)
     } catch (err) {
       setErrors({ general: err.message })
