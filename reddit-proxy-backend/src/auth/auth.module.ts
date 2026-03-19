@@ -13,7 +13,7 @@ import { DatabaseModule } from '../database/database.module';
   imports: [
     UsersModule,
     PassportModule,
-    DatabaseModule,  // cung cấp RefreshToken model
+    DatabaseModule, // cung cấp RefreshToken model
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -55,7 +55,8 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() body: { refreshToken: string }) {
-    if (!body?.refreshToken) throw new BadRequestException('refreshToken is required');
+    if (!body?.refreshToken)
+      throw new BadRequestException('refreshToken is required');
     return this.authService.refresh(body.refreshToken);
   }
 

@@ -20,11 +20,13 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     ConfigModule.forRoot({ isGlobal: true }),
 
     // Rate limiting — tránh spam API
-    ThrottlerModule.forRoot([{
-      name: 'default',
-      ttl: 60000,   // 60 giây
-      limit: 60,    // tối đa 60 request/phút/IP
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000, // 60 giây
+        limit: 60, // tối đa 60 request/phút/IP
+      },
+    ]),
 
     // MongoDB connection + all schemas
     DatabaseModule,
@@ -41,7 +43,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
   providers: [
     AppService,
     // Global exception filter
-    // { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
     // Global rate limit guard
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],

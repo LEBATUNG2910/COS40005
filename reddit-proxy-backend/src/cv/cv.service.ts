@@ -24,7 +24,10 @@ import {
   LearningResourceDocument,
 } from '../database/schemas/cv-analysis.schema';
 import * as pdfParseLib from 'pdf-parse';
-import { CandidateCv, CandidateCvDocument } from '../database/schemas/candidate-cv.schema';
+import {
+  CandidateCv,
+  CandidateCvDocument,
+} from '../database/schemas/candidate-cv.schema';
 import { createHash } from 'crypto';
 
 type ExtractionMethod = 'pdftotext' | 'pdf-parse' | 'gemini-vision';
@@ -146,7 +149,8 @@ export class CvService {
     @InjectModel(LearningResource.name)
     private resourceModel: Model<LearningResourceDocument>,
     private readonly cloudinaryService: CloudinaryService,
-    @InjectModel(CandidateCv.name) private candidateCvModel: Model<CandidateCvDocument>,
+    @InjectModel(CandidateCv.name)
+    private candidateCvModel: Model<CandidateCvDocument>,
   ) {}
 
   async extractTextFromPDF(
@@ -277,15 +281,26 @@ export class CvService {
       const skills = this.extractSkills(text);
       const skillVector: Record<string, number> = {};
       for (const skill of skills) {
-        skillVector[skill] = (text.toLowerCase().match(new RegExp(skill, 'gi')) ?? []).length;
+        skillVector[skill] = (
+          text.toLowerCase().match(new RegExp(skill, 'gi')) ?? []
+        ).length;
       }
 
       // Lấy tên ứng viên từ đầu CV
-      const lines = text.split('\n').map((l: string) => l.trim()).filter(Boolean);
+      const lines = text
+        .split('\n')
+        .map((l: string) => l.trim())
+        .filter(Boolean);
       let candidateName: string | null = null;
       for (const line of lines.slice(0, 5)) {
-        if (line.length >= 3 && line.length <= 60 && !/@|\/|\d{4}/.test(line) && !/^(curriculum|resume|cv|profile)/i.test(line)) {
-          candidateName = line; break;
+        if (
+          line.length >= 3 &&
+          line.length <= 60 &&
+          !/@|\/|\d{4}/.test(line) &&
+          !/^(curriculum|resume|cv|profile)/i.test(line)
+        ) {
+          candidateName = line;
+          break;
         }
       }
 

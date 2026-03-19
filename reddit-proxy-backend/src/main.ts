@@ -13,11 +13,13 @@ async function bootstrap() {
   });
 
   // Global validation — tự động validate request body
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: false,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  );
 
   // Prefix tất cả route với /api
   app.setGlobalPrefix('api');
