@@ -23,10 +23,7 @@ export class User {
   @Prop({ required: true, enum: ['Male', 'Female', 'Other'] })
   gender: string;
 
-  @Prop({
-    enum: ['English', 'Spanish', 'French', 'German', 'Vietnamese'],
-    default: 'English',
-  })
+  @Prop({ enum: ['English', 'Spanish', 'French', 'German', 'Vietnamese'], default: 'English' })
   language: string;
 
   @Prop({ default: false })
@@ -41,6 +38,23 @@ export class User {
   @Prop({ default: false })
   isDeleted: boolean;
 
+  // ── Email Verification ────────────────────────────────────────
+  @Prop({ default: false })
+  isEmailVerified: boolean;
+
+  @Prop({ type: String, default: null })
+  emailVerificationToken: string | null;
+
+  @Prop({ type: Date, default: null })
+  emailVerificationExpires: Date | null;
+
+  // ── Forgot Password ───────────────────────────────────────────
+  @Prop({ type: String, default: null })
+  passwordResetToken: string | null;
+
+  @Prop({ type: Date, default: null })
+  passwordResetExpires: Date | null;
+
   @Prop({ default: () => new Date() })
   createdAt: Date;
 
@@ -49,5 +63,5 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
-// Indexes
+UserSchema.index({ emailVerificationToken: 1 }, { sparse: true });
+UserSchema.index({ passwordResetToken: 1 }, { sparse: true });

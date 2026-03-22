@@ -8,12 +8,15 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
 import { DatabaseModule } from '../database/database.module';
+import { EmailService } from '../email/email.service';
+import { GoogleStrategy } from './google.strategy';
+import { GoogleAuthGuard } from './google_auth_guard';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
-    DatabaseModule, // cung cấp RefreshToken model
+    DatabaseModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -24,7 +27,7 @@ import { DatabaseModule } from '../database/database.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, EmailService, GoogleStrategy, GoogleAuthGuard],
   exports: [JwtAuthGuard],
 })
 export class AuthModule {}

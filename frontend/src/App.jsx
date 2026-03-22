@@ -18,10 +18,14 @@ import { FileProvider } from "./context/FileContext";
 import ResumeBuilder from "./app/resume/page";
 import Dashboard from "./app/dashboard/page";
 import ComparePage from "./app/compare/page";
+import ForgotPassword from "./app/forgot/page";
+import VerifyEmail from "./app/verify-email/page";
+import ResetPassword from "./app/reset/page";
+import GoogleCallback from './app/auth/google/callback/google_callback'
 
 function App() {
   const location = useLocation();
-  const hideLayout = location.pathname === "/auth" || location.pathname === "/account";
+  const hideLayout = ["/auth", "/account", "/forgot", "/reset", "/reset-password", "/verify-email", "/auth/google/callback"].includes(location.pathname);
 
   return (
     <FileProvider>
@@ -38,6 +42,11 @@ function App() {
             <Route path="/organize" element={<ForOrganizations />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/career-center" element={<CareerCenterPage />} />
+            <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/reset" element={<ResetPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
             <Route
               path="/upload"

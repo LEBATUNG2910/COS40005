@@ -6,7 +6,7 @@ import {
   ArrowLeft, Briefcase, Brain, BookOpen, CheckCircle,
   AlertTriangle, TrendingUp, ExternalLink, ChevronDown,
   Loader2, FileText, Target, Eye, Sparkles,
-  PenLine, X, Plus, RefreshCw, TrendingDown, RotateCcw, Check
+  PenLine, X, Plus, RefreshCw, TrendingDown, RotateCcw, Check, Quote
 } from 'lucide-react'
 import { authService } from '../../services/authService'
 
@@ -526,7 +526,7 @@ export default function CvAnalyst() {
       <motion.div
         initial={{ y: 0, opacity: 1 }}
         animate={{ y: hideHeader ? -80 : 0, opacity: hideHeader ? 0 : 1 }}
-        className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100"
+        className="sticky top-0 z-100 bg-white/80 backdrop-blur-md border-b border-gray-100"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
@@ -798,6 +798,40 @@ export default function CvAnalyst() {
                 </div>
               </div>
 
+              {/* Skills Evidence — tìm thấy ở đâu trong CV */}
+              {result.aiAnalysis?.skillsEvidence?.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 }}
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <Quote className="w-4 h-4 text-cyan-500" />
+                    <h3 className="font-bold text-gray-900 text-sm">Skill Evidence</h3>
+                    <span className="text-xs text-gray-400 ml-1">— where AI found each skill in your CV</span>
+                  </div>
+                  <div className="space-y-2">
+                    {result.aiAnalysis.skillsEvidence.map((ev, i) => (
+                      <div key={i} className={`flex items-start gap-3 p-2.5 rounded-xl ${ev.found ? 'bg-emerald-50' : 'bg-gray-50'}`}>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${ev.found ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+                          {ev.found ? `✓ ×${ev.frequency ?? 1}` : '✗'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-semibold text-gray-700 capitalize">{ev.skill}</span>
+                          {ev.found && ev.quote && (
+                            <p className="text-xs text-gray-500 italic mt-0.5 truncate">"{ev.quote}"</p>
+                          )}
+                          {!ev.found && (
+                            <p className="text-xs text-gray-400 mt-0.5">Not found in CV</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
               {/* Low score warning — chỉ hiện khi score < 60 */}
               {result.matchScore < 60 && (
                 <motion.div
@@ -857,13 +891,28 @@ export default function CvAnalyst() {
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
                       <h3 className="font-bold text-gray-900 text-sm">Strengths</h3>
                     </div>
-                    <ul className="space-y-2.5">
-                      {result.aiAnalysis.strengths?.map((s, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          {s}
-                        </li>
-                      ))}
+                    <ul className="space-y-3">
+                      {result.aiAnalysis.strengths?.map((s, i) => {
+                        const point = typeof s === 'string' ? s : s.point
+                        const evidence = typeof s === 'object' ? s.evidence : null
+                        return (
+                          <li key={i} className="space-y-1">
+                            <div className="flex items-start gap-2.5 text-sm text-gray-700">
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                              {point}
+                            </div>
+                            {evidence?.quote && (
+                              <div className="ml-6 flex items-start gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
+                                <Quote className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-emerald-700 italic leading-relaxed">
+                                  "{evidence.quote}"
+                                  {evidence.location && <span className="text-emerald-400 not-italic"> — {evidence.location}</span>}
+                                </p>
+                              </div>
+                            )}
+                          </li>
+                        )
+                      })}
                     </ul>
                   </motion.div>
 
@@ -877,15 +926,30 @@ export default function CvAnalyst() {
                       <AlertTriangle className="w-4 h-4 text-orange-500" />
                       <h3 className="font-bold text-gray-900 text-sm">Areas to Improve</h3>
                     </div>
-                    <ul className="space-y-2.5">
-                      {result.aiAnalysis.weaknesses?.map((w, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                          <div className="w-3.5 h-3.5 rounded-full border border-orange-400 flex items-center justify-center mt-0.5 flex-shrink-0">
-                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                          </div>
-                          {w}
-                        </li>
-                      ))}
+                    <ul className="space-y-3">
+                      {result.aiAnalysis.weaknesses?.map((w, i) => {
+                        const point = typeof w === 'string' ? w : w.point
+                        const evidence = typeof w === 'object' ? w.evidence : null
+                        return (
+                          <li key={i} className="space-y-1">
+                            <div className="flex items-start gap-2.5 text-sm text-gray-700">
+                              <div className="w-3.5 h-3.5 rounded-full border border-orange-400 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                              </div>
+                              {point}
+                            </div>
+                            {evidence?.quote && (
+                              <div className="ml-6 flex items-start gap-1.5 bg-orange-50 border border-orange-100 rounded-lg px-2.5 py-1.5">
+                                <Quote className="w-3 h-3 text-orange-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-orange-700 italic leading-relaxed">
+                                  "{evidence.quote}"
+                                  {evidence.location && <span className="text-orange-400 not-italic"> — {evidence.location}</span>}
+                                </p>
+                              </div>
+                            )}
+                          </li>
+                        )
+                      })}
                     </ul>
                   </motion.div>
                 </div>

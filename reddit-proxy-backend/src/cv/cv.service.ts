@@ -12,6 +12,7 @@ import {
   CvUpload,
   CvUploadDocument,
 } from '../database/schemas/cv-upload.schema';
+import { Skill, SkillDocument } from '../database/schemas/template-skill.schema';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import {
   CvAnalysis,
@@ -138,9 +139,11 @@ interface PdfParseData {
 @Injectable()
 export class CvService {
   private tempTextStore = new Map<string, string>();
+  private skillsCache: string[] = []; // cache từ DB, load 1 lần
 
   constructor(
     @InjectModel(CvUpload.name) private cvUploadModel: Model<CvUploadDocument>,
+    @InjectModel(Skill.name) private skillModel: Model<SkillDocument>,
     @InjectModel(CvAnalysis.name)
     private analysisModel: Model<CvAnalysisDocument>,
     @InjectModel(AiInsight.name) private insightModel: Model<AiInsightDocument>,
@@ -152,6 +155,17 @@ export class CvService {
     @InjectModel(CandidateCv.name)
     private candidateCvModel: Model<CandidateCvDocument>,
   ) {}
+
+  // Load skills từ DB khi app start
+  async onModuleInit() {
+    try {
+      const skills = await this.skillModel.find({ isActive: true }).select('name').lean();
+      this.skillsCache = skills.map((s: any) => (s.name as string).toLowerCase());
+      console.log(`✅ Loaded ${this.skillsCache.length} skills from DB`);
+    } catch (err) {
+      console.warn('Failed to load skills from DB, using fallback:', err);
+    }
+  }
 
   async extractTextFromPDF(
     filePath: string,
@@ -680,95 +694,22 @@ export class CvService {
   }
 
   private extractSkills(text: string): string[] {
-    const skills = [
-      'javascript',
-      'typescript',
-      'python',
-      'java',
-      'c++',
-      'c#',
-      'go',
-      'rust',
-      'php',
-      'ruby',
-      'swift',
-      'kotlin',
-      'scala',
-      'react',
-      'vue',
-      'angular',
-      'nextjs',
-      'html',
-      'css',
-      'tailwind',
-      'sass',
-      'redux',
-      'graphql',
-      'webpack',
-      'vite',
-      'nodejs',
-      'nestjs',
-      'express',
-      'django',
-      'spring',
-      'fastapi',
-      'laravel',
-      'flask',
-      'postgresql',
-      'mysql',
-      'mongodb',
-      'redis',
-      'elasticsearch',
-      'sqlite',
-      'firebase',
-      'docker',
-      'kubernetes',
-      'aws',
-      'gcp',
-      'azure',
-      'terraform',
-      'ansible',
-      'jenkins',
-      'github actions',
-      'git',
-      'linux',
-      'rest api',
-      'microservices',
-      'agile',
-      'scrum',
-      'machine learning',
-      'deep learning',
-      'tensorflow',
-      'pytorch',
-      'pandas',
-      'numpy',
-      'figma',
-      'jira',
-      'postman',
-      'jest',
-      'cypress',
-      'swagger',
-      'fullstack',
-      'full-stack',
-      'restful',
-      'api documentation',
-      'oop',
-      'solid',
-      'design pattern',
-      'rabbitmq',
-      'kafka',
-      'apollo',
-      'serverless',
-      'lambda',
-      'cloud functions',
-      'ci/cd',
-      'continuous integration',
-      'continuous deployment',
+    // Dùng skills từ DB nếu đã load, fallback sang hardcode nếu chưa
+    const skillList = this.skillsCache.length > 0 ? this.skillsCache : [
+      'javascript','typescript','python','java','c++','c#','go','rust','php','ruby',
+      'swift','kotlin','scala','react','vue','angular','nextjs','html','css','tailwind',
+      'sass','redux','graphql','webpack','vite','nodejs','nestjs','express','django',
+      'spring','fastapi','laravel','flask','postgresql','mysql','mongodb','redis',
+      'elasticsearch','sqlite','firebase','docker','kubernetes','aws','gcp','azure',
+      'terraform','ansible','jenkins','github actions','git','linux','rest api',
+      'microservices','agile','scrum','machine learning','deep learning','tensorflow',
+      'pytorch','pandas','numpy','figma','jira','postman','jest','cypress','swagger',
+      'fullstack','full-stack','restful','oop','solid','design pattern','rabbitmq',
+      'kafka','apollo','serverless','lambda','cloud functions','ci/cd',
     ];
     const lower = text.toLowerCase();
-    return [...new Set(skills.filter((s) => lower.includes(s)))];
+    return [...new Set(skillList.filter((s) => lower.includes(s)))];
   }
-
   private async callGeminiAI(
     cvText: string,
     jdText: string,

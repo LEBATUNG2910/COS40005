@@ -2,25 +2,31 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UsersService } from '../users/users.service';
-import {
-  RefreshToken,
-  RefreshTokenDocument,
-} from '../database/schemas/refresh-token.schema';
+import { User, UserDocument } from '../database/schemas/user.schema';
+import { RefreshToken, RefreshTokenDocument } from '../database/schemas/refresh-token.schema';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from '@nestjs/config';
 
-interface UserDocument {
+interface UserDoc {
   id: string;
+  _id: string;
   fullName: string;
   email: string;
   password: string;
+  isEmailVerified?: boolean;
+  emailVerificationToken?: string | null;
+  emailVerificationExpires?: Date | null;
+  passwordResetToken?: string | null;
+  passwordResetExpires?: Date | null;
   [key: string]: unknown;
 }
 
@@ -30,186 +36,271 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
     @InjectModel(RefreshToken.name)
     private refreshTokenModel: Model<RefreshTokenDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
   ) {}
 
   // ─── ĐĂNG KÝ ─────────────────────────────────────────────────
   async register(data: {
-    fullName: string;
-    email: string;
-    phoneNumber: string;
-    password: string;
-    gender: string;
+    fullName: string; email: string; phoneNumber: string;
+    password: string; gender: string;
   }) {
-    const user = (await this.usersService.create(data)) as UserDocument;
-    const accessToken = this.generateAccessToken(user.id, user.email);
-    const refreshToken = await this.generateRefreshToken(user.id, false);
+    const user = (await this.usersService.create(data)) as UserDoc;
+    const userId = user.id ?? user._id;
+
+    // Tạo email verification token
+    const verifyToken = randomBytes(32).toString('hex');
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    await this.userModel.updateOne(
+      { _id: userId },
+      { emailVerificationToken: verifyToken, emailVerificationExpires: verifyExpires }
+    );
+
+    // Gửi email verification (non-blocking)
+    this.emailService.sendVerificationEmail(user.email, user.fullName, verifyToken)
+      .catch(e => console.warn('Verify email failed:', e));
+
+    const accessToken = this.generateAccessToken(userId, user.email);
+    const refreshToken = await this.generateRefreshToken(userId, false);
     return {
-      message: 'Account created successfully',
-      user: { id: user.id, fullName: user.fullName, email: user.email },
+      message: 'Account created successfully. Please check your email to verify your account.',
+      user: { id: userId, fullName: user.fullName, email: user.email, isEmailVerified: false },
       accessToken,
       refreshToken,
     };
   }
 
   // ─── ĐĂNG NHẬP ───────────────────────────────────────────────
-  async login(data: {
-    emailOrPhone: string;
-    password: string;
-    rememberMe: boolean;
-  }) {
-    const user = (await this.usersService.findByEmailOrPhone(
-      data.emailOrPhone,
-    )) as UserDocument | null;
+  async login(data: { emailOrPhone: string; password: string; rememberMe: boolean }) {
+    const user = (await this.usersService.findByEmailOrPhone(data.emailOrPhone)) as UserDoc | null;
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
-    if (!isPasswordValid)
-      throw new UnauthorizedException('Invalid credentials');
+    if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
 
-    const accessToken = this.generateAccessToken(user.id, user.email);
-    const refreshToken = await this.generateRefreshToken(
-      user.id,
-      data.rememberMe,
-    );
+    const userId = user.id ?? user._id;
+    const accessToken = this.generateAccessToken(userId, user.email);
+    const refreshToken = await this.generateRefreshToken(userId, data.rememberMe);
 
     return {
       message: 'Login successful',
-      user: { id: user.id, fullName: user.fullName, email: user.email },
+      user: { id: userId, fullName: user.fullName, email: user.email, isEmailVerified: user.isEmailVerified ?? false },
       accessToken,
       refreshToken,
     };
   }
 
-  // ─── REFRESH TOKEN → access token mới ────────────────────────
-  async refresh(
-    token: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const tokenHash = this.hashToken(token);
-
-    const stored = await this.refreshTokenModel.findOne({
-      tokenHash,
-      isRevoked: false,
-      expiresAt: { $gt: new Date() },
+  // ─── VERIFY EMAIL ─────────────────────────────────────────────
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() },
     });
+    if (!user) throw new BadRequestException('Invalid or expired verification link');
 
-    if (!stored)
-      throw new UnauthorizedException('Invalid or expired refresh token');
-
-    // Rotation — revoke token cũ, tạo token mới
-    await this.refreshTokenModel.updateOne(
-      { _id: stored._id },
-      { isRevoked: true },
+    await this.userModel.updateOne(
+      { _id: user._id },
+      {
+        isEmailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null,
+      }
     );
-
-    const user = (await this.usersService.findById(
-      stored.userId,
-    )) as UserDocument | null;
-    if (!user) throw new UnauthorizedException('User not found');
-
-    const newAccessToken = this.generateAccessToken(user.id, user.email);
-    const newRefreshToken = await this.generateRefreshToken(user.id, false);
-
-    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+    return { message: 'Email verified successfully' };
   }
 
-  // ─── LOGOUT — revoke refresh token ───────────────────────────
+  // ─── RESEND VERIFICATION EMAIL ────────────────────────────────
+  async resendVerificationEmail(userId: string): Promise<{ message: string }> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    if (user.isEmailVerified) throw new BadRequestException('Email already verified');
+
+    const verifyToken = randomBytes(32).toString('hex');
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await this.userModel.updateOne(
+      { _id: userId },
+      { emailVerificationToken: verifyToken, emailVerificationExpires: verifyExpires }
+    );
+
+    await this.emailService.sendVerificationEmail(user.email, user.fullName, verifyToken);
+    return { message: 'Verification email sent' };
+  }
+
+  // ─── FORGOT PASSWORD ──────────────────────────────────────────
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({ email });
+    // Luôn trả về success để tránh email enumeration attack
+    if (!user) return { message: 'If that email exists, a reset link has been sent' };
+
+    const resetToken = randomBytes(32).toString('hex');
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await this.userModel.updateOne(
+      { _id: user._id },
+      { passwordResetToken: resetToken, passwordResetExpires: resetExpires }
+    );
+
+    await this.emailService.sendPasswordResetEmail(user.email, user.fullName, resetToken);
+    return { message: 'If that email exists, a reset link has been sent' };
+  }
+
+  // ─── RESET PASSWORD ───────────────────────────────────────────
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() },
+    });
+    if (!user) throw new BadRequestException('Invalid or expired reset link');
+
+    if (newPassword.length < 8) throw new BadRequestException('Password must be at least 8 characters');
+
+    const hash = await bcrypt.hash(newPassword, 12);
+    await this.userModel.updateOne(
+      { _id: user._id },
+      {
+        passwordHash: hash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      }
+    );
+
+    // Revoke tất cả refresh token sau khi reset password
+    await this.refreshTokenModel.updateMany({ userId: String(user._id), isRevoked: false }, { isRevoked: true });
+
+    return { message: 'Password reset successfully. Please login with your new password.' };
+  }
+
+  // ─── REFRESH TOKEN ────────────────────────────────────────────
+  async refresh(token: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const tokenHash = this.hashToken(token);
+    const stored = await this.refreshTokenModel.findOne({
+      tokenHash, isRevoked: false, expiresAt: { $gt: new Date() },
+    });
+    if (!stored) throw new UnauthorizedException('Invalid or expired refresh token');
+
+    await this.refreshTokenModel.updateOne({ _id: stored._id }, { isRevoked: true });
+
+    const user = (await this.usersService.findById(stored.userId)) as UserDoc | null;
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const userId = user.id ?? user._id;
+    return {
+      accessToken: this.generateAccessToken(userId, user.email),
+      refreshToken: await this.generateRefreshToken(userId, false),
+    };
+  }
+
+  // ─── LOGOUT ───────────────────────────────────────────────────
   async logout(token: string): Promise<void> {
     const tokenHash = this.hashToken(token);
     await this.refreshTokenModel.updateOne({ tokenHash }, { isRevoked: true });
   }
 
-  // ─── LẤY THÔNG TIN USER ──────────────────────────────────────
+  // ─── GET ME ───────────────────────────────────────────────────
   async getMe(userId: string) {
-    const user = (await this.usersService.findById(
-      userId,
-    )) as UserDocument | null;
+    const user = (await this.usersService.findById(userId)) as UserDoc | null;
     if (!user) throw new UnauthorizedException('User not found');
-    const { password: _password, ...result } = user;
-    void _password;
+    const { password: _pw, ...result } = user;
+    void _pw;
     return result;
   }
 
-  // ─── CẬP NHẬT PROFILE ────────────────────────────────────────
-  async updateProfile(
-    userId: string,
-    data: { fullName?: string; language?: string },
-  ) {
-    const updated = (await this.usersService.updateProfile(
-      userId,
-      data,
-    )) as UserDocument;
-    const { password: _password, ...result } = updated;
-    void _password;
+  // ─── UPDATE PROFILE ───────────────────────────────────────────
+  async updateProfile(userId: string, data: { fullName?: string; language?: string }) {
+    const updated = (await this.usersService.updateProfile(userId, data)) as UserDoc;
+    const { password: _pw, ...result } = updated;
+    void _pw;
     return { message: 'Profile updated successfully', user: result };
   }
 
-  // ─── ĐỔI PASSWORD ────────────────────────────────────────────
-  async changePassword(
-    userId: string,
-    data: { currentPassword: string; newPassword: string },
-  ) {
-    const user = (await this.usersService.findById(
-      userId,
-    )) as UserDocument | null;
+  // ─── CHANGE PASSWORD ──────────────────────────────────────────
+  async changePassword(userId: string, data: { currentPassword: string; newPassword: string }) {
+    const user = (await this.usersService.findById(userId)) as UserDoc | null;
     if (!user) throw new UnauthorizedException('User not found');
 
     const isValid = await bcrypt.compare(data.currentPassword, user.password);
-    if (!isValid)
-      throw new BadRequestException('Current password is incorrect');
+    if (!isValid) throw new BadRequestException('Current password is incorrect');
 
     const isSame = await bcrypt.compare(data.newPassword, user.password);
-    if (isSame)
-      throw new BadRequestException(
-        'New password must be different from current password',
-      );
+    if (isSame) throw new BadRequestException('New password must be different');
 
     await this.usersService.updatePassword(userId, data.newPassword);
-
-    // Revoke tất cả refresh token khi đổi password
-    await this.refreshTokenModel.updateMany(
-      { userId, isRevoked: false },
-      { isRevoked: true },
-    );
-
+    await this.refreshTokenModel.updateMany({ userId, isRevoked: false }, { isRevoked: true });
     return { message: 'Password changed successfully' };
   }
 
-  // ─── Private: access token (ngắn hạn) ────────────────────────
-  private generateAccessToken(userId: string, email: string): string {
-    const expiresIn = (this.configService.get<string>('JWT_EXPIRES_IN') ??
-      '7d') as `${number}${'y' | 'd' | 'h' | 'm' | 's'}`;
-    const payload = { sub: userId, email };
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') as string,
-      expiresIn,
-    });
+  // ─── GOOGLE OAUTH ────────────────────────────────────────────
+  async googleLogin(googleUser: {
+    googleId: string; email: string; fullName: string;
+    firstName: string; lastName: string; avatar: string | null;
+  }): Promise<{ accessToken: string; refreshToken: string; isNewUser: boolean }> {
+    // 1. Tìm user theo email
+    let user = await this.userModel.findOne({ email: googleUser.email }).lean() as UserDoc | null;
+
+    if (user) {
+      // User đã tồn tại — update avatar nếu chưa có
+      if (!user.avatarUrl && googleUser.avatar) {
+        await this.userModel.updateOne({ _id: user._id }, { avatarUrl: googleUser.avatar });
+      }
+      // Tự động verify email nếu đăng nhập bằng Google
+      if (!user.isEmailVerified) {
+        await this.userModel.updateOne({ _id: user._id }, { isEmailVerified: true });
+      }
+    } else {
+      // User mới — tạo account tự động
+      const { v4: uuidv4 } = await import('uuid');
+      const bcrypt = await import('bcryptjs');
+      const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+
+      const newUser = await this.userModel.create({
+        _id: uuidv4(),
+        fullName: googleUser.fullName || googleUser.email.split('@')[0],
+        email: googleUser.email,
+        phoneNumber: `google_${googleUser.googleId}`, // placeholder
+        passwordHash: randomPassword,
+        gender: 'Other',
+        language: 'English',
+        newsletterOptIn: false,
+        avatarUrl: googleUser.avatar,
+        isActive: true,
+        isDeleted: false,
+        isEmailVerified: true, // Google đã verify email rồi
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      user = newUser.toObject() as unknown as UserDoc;
+    }
+
+    const userId = String(user._id);
+    const accessToken = this.generateAccessToken(userId, user.email);
+    const refreshToken = await this.generateRefreshToken(userId, false);
+
+    return { accessToken, refreshToken, isNewUser: !user.createdAt || (Date.now() - new Date(user.createdAt as unknown as Date).getTime()) < 5000 };
   }
 
-  // ─── Private: refresh token (dài hạn) ────────────────────────
-  private async generateRefreshToken(
-    userId: string,
-    rememberMe: boolean,
-  ): Promise<string> {
+  // ─── Private helpers ──────────────────────────────────────────
+  private generateAccessToken(userId: string, email: string): string {
+    const expiresIn = (this.configService.get<string>('JWT_EXPIRES_IN') ?? '7d') as `${number}${'y'|'d'|'h'|'m'|'s'}`;
+    return this.jwtService.sign(
+      { sub: userId, email },
+      { secret: this.configService.get<string>('JWT_SECRET') as string, expiresIn },
+    );
+  }
+
+  private async generateRefreshToken(userId: string, rememberMe: boolean): Promise<string> {
     const token = randomBytes(64).toString('hex');
     const tokenHash = this.hashToken(token);
     const days = rememberMe ? 30 : 7;
-    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-
     await this.refreshTokenModel.create({
-      _id: uuidv4(),
-      userId,
-      tokenHash,
-      expiresAt,
-      isRevoked: false,
-      createdAt: new Date(),
+      _id: uuidv4(), userId, tokenHash,
+      expiresAt: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
+      isRevoked: false, createdAt: new Date(),
     });
-
     return token;
   }
 
-  // ─── Private: hash token SHA256 ──────────────────────────────
   private hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
