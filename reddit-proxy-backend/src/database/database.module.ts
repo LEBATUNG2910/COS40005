@@ -83,12 +83,13 @@ export const ALL_SCHEMAS = MongooseModule.forFeature([
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        uri: config.get<string>(
-          'MONGODB_URI',
-          'mongodb://localhost:27017/HireWiseDB',
-        ),
-      }),
+      useFactory: (config: ConfigService) => {
+  const uri = config.get<string>('MONGODB_URI');
+  if (!uri) {
+    throw new Error('MONGODB_URI is not defined in environment variables!');
+  }
+  return { uri };
+},
     }),
     ALL_SCHEMAS,
   ],
