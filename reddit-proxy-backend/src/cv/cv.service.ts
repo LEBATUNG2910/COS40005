@@ -30,6 +30,7 @@ import {
   CandidateCvDocument,
 } from '../database/schemas/candidate-cv.schema';
 import { createHash } from 'crypto';
+import seedSkillsData from '../database/seed-data/skills.json';
 
 type ExtractionMethod = 'pdftotext' | 'pdf-parse' | 'gemini-vision';
 
@@ -156,14 +157,23 @@ export class CvService {
     private candidateCvModel: Model<CandidateCvDocument>,
   ) {}
 
-  // Load skills từ DB khi app start
   async onModuleInit() {
     try {
+      let count = await this.skillModel.countDocuments();
+      
+      if (count === 0) {
+        console.log('⚠️ [HireWise] Database skills trống. Đang khởi tạo dữ liệu mẫu...');
+        await this.skillModel.insertMany(seedSkillsData);
+        count = await this.skillModel.countDocuments();
+      }
+
       const skills = await this.skillModel.find({ isActive: true }).select('name').lean();
+      // Chuyển về lowercase để so khớp không phân biệt hoa thường
       this.skillsCache = skills.map((s: any) => (s.name as string).toLowerCase());
-      console.log(`✅ Loaded ${this.skillsCache.length} skills from DB`);
+      
+      console.log(`✅ [HireWise] Đã nạp thành công ${this.skillsCache.length} kỹ năng vào hệ thống.`);
     } catch (err) {
-      console.warn('Failed to load skills from DB, using fallback:', err);
+      console.error('❌ [HireWise] Lỗi khởi tạo Skills Service:', err);
     }
   }
 
@@ -694,22 +704,21 @@ export class CvService {
   }
 
   private extractSkills(text: string): string[] {
-    // Dùng skills từ DB nếu đã load, fallback sang hardcode nếu chưa
-    const skillList = this.skillsCache.length > 0 ? this.skillsCache : [
-      'javascript','typescript','python','java','c++','c#','go','rust','php','ruby',
-      'swift','kotlin','scala','react','vue','angular','nextjs','html','css','tailwind',
-      'sass','redux','graphql','webpack','vite','nodejs','nestjs','express','django',
-      'spring','fastapi','laravel','flask','postgresql','mysql','mongodb','redis',
-      'elasticsearch','sqlite','firebase','docker','kubernetes','aws','gcp','azure',
-      'terraform','ansible','jenkins','github actions','git','linux','rest api',
-      'microservices','agile','scrum','machine learning','deep learning','tensorflow',
-      'pytorch','pandas','numpy','figma','jira','postman','jest','cypress','swagger',
-      'fullstack','full-stack','restful','oop','solid','design pattern','rabbitmq',
-      'kafka','apollo','serverless','lambda','cloud functions','ci/cd',
-    ];
-    const lower = text.toLowerCase();
-    return [...new Set(skillList.filter((s) => lower.includes(s)))];
+    if (this.skillsCache.length === 0) return [];
+    
+    const lowerText = text.toLowerCase();
+    
+    const found = this.skillsCache.filter(skill => {
+      // Thoát các ký tự đặc biệt trong tên skill (như C++)
+      const escapedSkill = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Chỉ match nếu là từ nguyên vẹn (\b), không match nằm trong từ khác
+      const regex = new RegExp(`\\b${escapedSkill}\\b`, 'i');
+      return regex.test(lowerText);
+    });
+
+    return [...new Set(found)];
   }
+
   private async callGeminiAI(
     cvText: string,
     jdText: string,
