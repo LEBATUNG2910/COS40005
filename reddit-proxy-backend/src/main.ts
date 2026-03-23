@@ -2,8 +2,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import * as fs from 'fs';
 
 async function bootstrap() {
+  // Tạo thư mục uploads nếu chưa có (cần thiết khi deploy)
+  if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads', { recursive: true });
+  if (!fs.existsSync('./uploads/batch')) fs.mkdirSync('./uploads/batch', { recursive: true });
+
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
@@ -11,7 +16,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // 2. Global validation — tự động validate dữ liệu đầu vào (DTO)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -29,5 +33,4 @@ async function bootstrap() {
   console.log(`🔗 API Endpoint: http://localhost:${port}/api`);
 }
 
-// Khởi chạy ứng dụng
 void bootstrap();
