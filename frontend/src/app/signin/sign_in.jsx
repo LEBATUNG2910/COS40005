@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
-const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') ?? 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
 export default function SignIn() {
   const navigate = useNavigate();
