@@ -8,6 +8,8 @@ import { motion } from "framer-motion"
 import { useFileStore } from '../../context/FileContext'
 import { authService } from '../../services/authService'
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'
+
 /* ─── Shared Step Nav (same as analyst page) ─────────────────── */
 function StepNav({ currentStep }) {
   const steps = [
@@ -74,7 +76,7 @@ export default function CVUpload() {
       formData.append('templateId', String(selectedTemplateId || 1))
 
       const [res] = await Promise.all([
-        fetch('http://localhost:3001/api/cv/upload', {
+        fetch(`${API}/cv/upload`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData,

@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
-const API = 'http://localhost:3001/api'
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'
 
 export default function VerifyEmail() {
   const navigate = useNavigate()

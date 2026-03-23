@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Calendar, ExternalLink, MessageSquare, Loader2, X, User, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'
+
 const Resource = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [resources, setResources] = useState([]);
@@ -18,7 +20,7 @@ const Resource = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('http://localhost:3001/api/reddit/hot?limit=25');
+        const response = await fetch(`${API}/reddit/hot?limit=25`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch from Reddit');
@@ -84,9 +86,7 @@ const Resource = () => {
     setPostDetails(null);
     try {
       // Append .json to get the data format
-      const response = await fetch(
-  `http://localhost:3001/api/reddit/post?permalink=${encodeURIComponent(permalink)}`
-);
+      const response = await fetch(`${API}/reddit/post?permalink=${encodeURIComponent(permalink)}`);
       const json = await response.json();
 
       // Reddit API returns an array: [0] = post, [1] = comments

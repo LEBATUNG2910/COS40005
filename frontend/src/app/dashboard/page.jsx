@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { authService } from '../../services/authService'
 
-const API = 'http://localhost:3001/api'
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'

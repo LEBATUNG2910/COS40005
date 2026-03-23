@@ -6,6 +6,7 @@ import {
   LayoutDashboard, ChevronRight
 } from "lucide-react";
 import { authService } from "../../services/authService";
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
 function Account() {
   // ── User State ───────────────────────────────────────────
@@ -43,7 +44,7 @@ function Account() {
         const token = authService.getToken();
         if (!token) { window.location.href = '/auth'; return; }
 
-        const res = await fetch('http://localhost:3001/api/auth/me', {
+        const res = await fetch(`${API}/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -70,7 +71,7 @@ function Account() {
     setSaveSuccess(false);
     try {
       const token = authService.getToken();
-      const res = await fetch('http://localhost:3001/api/auth/profile', {
+      const res = await fetch(`${API}/auth/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ function Account() {
     setPasswordLoading(true);
     try {
       const token = authService.getToken();
-      const res = await fetch('http://localhost:3001/api/auth/change-password', {
+      const res = await fetch(`${API}/auth/change-password`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -296,7 +296,7 @@ function CVEditorDrawer({ onClose, onSaveAndReanalyze, missingSkills = [] }) {
     if (text.trim().length < 20) { alert('Please fill in at least one section'); return }
     setSaving(true)
     try {
-      const res = await fetch('http://localhost:3001/api/cv/update-text', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'}/cv/update-text`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ extractedText: text }),
@@ -437,7 +437,7 @@ export default function CvAnalyst() {
   useEffect(() => {
     const fetchCVInfo = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/cv/me', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'}/cv/me`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
@@ -475,7 +475,7 @@ export default function CvAnalyst() {
       try {
         // Thêm timestamp để bypass browser cache
         const ts = new Date(cvInfo.uploadedAt).getTime()
-        const res = await fetch(`http://localhost:3001/api/cv/preview?t=${ts}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'}/cv/preview?t=${ts}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) setPdfUrl(URL.createObjectURL(await res.blob()))
@@ -492,7 +492,7 @@ export default function CvAnalyst() {
     if (!jobDescription.trim()) { setError('Please paste a job description first'); return }
     setAnalyzing(true); setError(null)
     try {
-      const res = await fetch('http://localhost:3001/api/cv/analyze', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'}/cv/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ jobDescription }),

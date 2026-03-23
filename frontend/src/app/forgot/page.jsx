@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom' // Sử dụng Link từ react-router-do
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Mail, CheckCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react'
 
-const API = 'http://localhost:3001/api'
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
