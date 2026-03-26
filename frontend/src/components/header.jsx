@@ -39,7 +39,7 @@ function Header() {
 
   // Cập nhật cấu trúc navLinks có chứa dropdown
   const navLinks = [
-    { title: "Blog", path: "/resource" },
+    // { title: "Blog", path: "/resource" },
     { title: "Career Center", path: "/career-center" },
     { title: "Pricing", path: "/pricing" },
     {
