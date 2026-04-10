@@ -8,47 +8,40 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-interface HttpExceptionResponse {
-  message?: string | string[];
-  [key: string]: unknown;
-}
-
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost): void {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const res = ctx.getResponse<Response>();
-    const req = ctx.getRequest<Request>();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    let message: string | string[];
-    if (exception instanceof HttpException) {
-      const response = exception.getResponse() as
-        | HttpExceptionResponse
-        | string;
-      if (typeof response === 'string') {
-        message = response;
-      } else {
-        message = response.message ?? exception.message;
-      }
+    const message =
+      exception instanceof HttpException
+        ? exception.message
+        : 'Internal server error';
+
+    // ── Full error logging ──────────────────────────────────────
+    if (exception instanceof Error) {
+      this.logger.error(`[AllExceptionsFilter] ${request.method} ${request.url} → ${status}: "${message}"`);
+      this.logger.error(`Stack: ${exception.stack}`);
+      // Log tất cả properties của error object
+      this.logger.error(`Full error: ${JSON.stringify(exception, Object.getOwnPropertyNames(exception))}`);
     } else {
-      message = 'Internal server error';
+      this.logger.error(`[AllExceptionsFilter] ${request.method} ${request.url} → ${status}: "${message}"`);
+      this.logger.error(`Non-Error exception: ${JSON.stringify(exception)}`);
     }
 
-    this.logger.error(
-      `${req.method} ${req.url} → ${status}: ${JSON.stringify(message)}`,
-    );
-
-    res.status(status).json({
+    response.status(status).json({
       statusCode: status,
       message,
-      path: req.url,
+      path: request.url,
       timestamp: new Date().toISOString(),
     });
   }

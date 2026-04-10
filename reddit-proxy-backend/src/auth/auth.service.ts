@@ -236,8 +236,11 @@ export class AuthService {
     googleId: string; email: string; fullName: string;
     firstName: string; lastName: string; avatar: string | null;
   }): Promise<{ accessToken: string; refreshToken: string; isNewUser: boolean }> {
+    let isNewUser = false;
+
     // 1. Tìm user theo email
-    let user = await this.userModel.findOne({ email: googleUser.email }).lean() as UserDoc | null;
+    const rawUser = await this.userModel.findOne({ email: googleUser.email }).lean();
+    let user = rawUser ? { ...rawUser, password: (rawUser as any).passwordHash } as unknown as UserDoc : null;
 
     if (user) {
       // User đã tồn tại — update avatar nếu chưa có
@@ -250,8 +253,8 @@ export class AuthService {
       }
     } else {
       // User mới — tạo account tự động
-      const { v4: uuidv4 } = await import('uuid');
-      const bcrypt = await import('bcryptjs');
+      // Dùng static import bcrypt và uuidv4 đã có ở đầu file
+      isNewUser = true;
       const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
 
       const newUser = await this.userModel.create({
@@ -270,14 +273,16 @@ export class AuthService {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      user = newUser.toObject() as unknown as UserDoc;
+
+      const newUserObj = newUser.toObject() as any;
+      user = { ...newUserObj, password: newUserObj.passwordHash } as unknown as UserDoc;
     }
 
     const userId = String(user._id);
     const accessToken = this.generateAccessToken(userId, user.email);
     const refreshToken = await this.generateRefreshToken(userId, false);
 
-    return { accessToken, refreshToken, isNewUser: !user.createdAt || (Date.now() - new Date(user.createdAt as unknown as Date).getTime()) < 5000 };
+    return { accessToken, refreshToken, isNewUser };
   }
 
   // ─── Private helpers ──────────────────────────────────────────

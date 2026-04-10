@@ -1,7 +1,7 @@
 import {
   Controller, Post, Get, Patch, Body,
   HttpCode, HttpStatus, UseGuards, Request, Req, Res,
-  BadRequestException, Query,
+  BadRequestException, Query, Logger,
 } from '@nestjs/common';
 import { type Response } from 'express';
 import { GoogleAuthGuard } from './google_auth_guard';
@@ -15,6 +15,8 @@ interface RequestWithUser extends Request {
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   // POST /api/auth/register
@@ -119,17 +121,35 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req: any, @Res() res: Response) {
-    const googleUser = req.user as {
-      googleId: string; email: string; fullName: string;
-      firstName: string; lastName: string; avatar: string | null;
-    };
+    try {
+      this.logger.log('Google callback triggered');
+      this.logger.log('req.user from Google: ' + JSON.stringify(req.user));
 
-    const { accessToken, refreshToken } = await this.authService.googleLogin(googleUser);
+      const googleUser = req.user as {
+        googleId: string; email: string; fullName: string;
+        firstName: string; lastName: string; avatar: string | null;
+      };
 
-    // Redirect về frontend với tokens trong query params
-    const appUrl = process.env.APP_URL ?? 'http://localhost:5173';
-    return res.redirect(
-      `${appUrl}/auth/google/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
-    );
+      if (!googleUser || !googleUser.email) {
+        this.logger.error('Google user is missing or has no email', JSON.stringify(googleUser));
+        throw new BadRequestException('Invalid Google user data');
+      }
+
+      const { accessToken, refreshToken } = await this.authService.googleLogin(googleUser);
+
+      // Redirect về frontend với tokens trong query params
+      const appUrl = process.env.APP_URL ?? 'http://localhost:5173';
+      return res.redirect(
+        `${appUrl}/auth/google/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
+      );
+    } catch (error) {
+      this.logger.error('Google callback error:', error);
+      this.logger.error('Stack:', error?.stack);
+      this.logger.error('Message:', error?.message);
+
+      // Redirect về frontend với error thay vì crash
+      const appUrl = process.env.APP_URL ?? 'http://localhost:5173';
+      return res.redirect(`${appUrl}/auth/google/callback?error=${encodeURIComponent(error?.message ?? 'Unknown error')}`);
+    }
   }
 }
