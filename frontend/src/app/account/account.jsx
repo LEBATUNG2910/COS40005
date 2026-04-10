@@ -36,10 +36,8 @@ function Account() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
 
-  // ── Delete Account Modal ──────────────────────────────────
+  // ── Delete Account Modal (sửa: không cần password) ─────────
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [showDeletePw, setShowDeletePw] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -152,7 +150,7 @@ function Account() {
     setPasswordSuccess(false);
   };
 
-  // ── Xóa account ──────────────────────────────────────────
+  // ── Xóa account (sửa: không gửi password) ────────────────
   const handleDeleteAccount = async () => {
     setDeleteError(null);
 
@@ -170,7 +168,7 @@ function Account() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ password: deletePassword || undefined }),
+        body: JSON.stringify({}), // không gửi password
       });
 
       const data = await res.json();
@@ -187,7 +185,6 @@ function Account() {
 
   const closeDeleteModal = () => {
     setShowDeleteModal(false);
-    setDeletePassword("");
     setDeleteConfirmText("");
     setDeleteError(null);
   };
@@ -460,7 +457,7 @@ function Account() {
         </motion.div>
       </div>
 
-      {/* ── Change Password Modal ── */}
+      {/* ── Change Password Modal (giữ nguyên) ── */}
       <AnimatePresence>
         {showPasswordModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -568,7 +565,7 @@ function Account() {
         )}
       </AnimatePresence>
 
-      {/* ── Delete Account Modal ── */}
+      {/* ── Delete Account Modal (đã sửa: không có trường password) ── */}
       <AnimatePresence>
         {showDeleteModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -607,26 +604,7 @@ function Account() {
               </div>
 
               <div className="space-y-5">
-                {/* Password field — chỉ hiện nếu không phải Google-only user */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Confirm your password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showDeletePw ? 'text' : 'password'}
-                      value={deletePassword}
-                      onChange={(e) => setDeletePassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:ring-4 focus:ring-red-500/20 focus:border-red-400 outline-none pr-12 transition"
-                      placeholder="Enter your password"
-                    />
-                    <button type="button" onClick={() => setShowDeletePw(!showDeletePw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors">
-                      {showDeletePw ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Confirm text */}
+                {/* Ô xác nhận DELETE (không cần mật khẩu) */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Type <span className="font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded">DELETE</span> to confirm

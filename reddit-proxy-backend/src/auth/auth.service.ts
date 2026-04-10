@@ -231,17 +231,12 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  // ─── DELETE ACCOUNT ───────────────────────────────────────────
+  // ─── DELETE ACCOUNT (SỬA: KHÔNG CẦN MẬT KHẨU) ─────────────────
   async deleteAccount(userId: string, password?: string): Promise<{ message: string }> {
     const user = (await this.usersService.findById(userId)) as UserDoc | null;
     if (!user) throw new UnauthorizedException('User not found');
 
-    // Nếu user có password (không phải Google-only), yêu cầu xác nhận password
-    if (user.password) {
-      if (!password) throw new BadRequestException('Password is required to delete account');
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) throw new BadRequestException('Incorrect password');
-    }
+    // ĐÃ XÓA KIỂM TRA MẬT KHẨU — chỉ cần token hợp lệ và xác nhận "DELETE" ở frontend
 
     // Soft delete — đánh dấu isDeleted thay vì xóa thật
     await this.userModel.updateOne(
@@ -277,7 +272,6 @@ export class AuthService {
       }
     } else {
       // User mới — tạo account tự động
-      // Dùng static import bcrypt và uuidv4 đã có ở đầu file
       isNewUser = true;
       const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
 
