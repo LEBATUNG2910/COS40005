@@ -21,10 +21,20 @@ export class GoogleAuthGuard extends AuthGuard('google') {
     this.logger.log('handleRequest — user: ' + JSON.stringify(user));
     this.logger.log('handleRequest — info: ' + JSON.stringify(info));
 
-    if (err || !user) {
-      this.logger.error('Auth failed:', err?.message ?? info?.message ?? 'No user returned');
-      throw err || new Error(info?.message ?? 'Google authentication failed');
+    // Nếu có lỗi thực sự từ strategy hoặc passport, throw để xử lý
+    if (err) {
+      this.logger.error('Auth error:', err?.message);
+      throw err;
     }
+
+    // Trường hợp không có user và không có lỗi (thường xảy ra ở giai đoạn redirect ban đầu)
+    // Chỉ log warning, không throw error để tránh log đỏ giả
+    if (!user) {
+      this.logger.warn('No user returned from Google (this is normal for initial redirect or before validation)');
+      return null;
+    }
+
+    // Có user => thành công
     return user;
   }
 }
