@@ -36,6 +36,14 @@ function Account() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
 
+  // ── Delete Account Modal ──────────────────────────────────
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePw, setShowDeletePw] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
   // ── Fetch user khi mount ──────────────────────────────────
   useEffect(() => {
     const fetchUser = async () => {
@@ -144,6 +152,46 @@ function Account() {
     setPasswordSuccess(false);
   };
 
+  // ── Xóa account ──────────────────────────────────────────
+  const handleDeleteAccount = async () => {
+    setDeleteError(null);
+
+    if (deleteConfirmText !== 'DELETE') {
+      setDeleteError('Please type DELETE to confirm');
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const token = authService.getToken();
+      const res = await fetch(`${API}/auth/account`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: deletePassword || undefined }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to delete account');
+
+      // Logout và redirect sau khi xóa thành công
+      authService.logout();
+      window.location.href = '/auth';
+    } catch (err) {
+      setDeleteError(err.message);
+      setDeleteLoading(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletePassword("");
+    setDeleteConfirmText("");
+    setDeleteError(null);
+  };
+
   // ── Loading / Error screens ───────────────────────────────
   if (loading) {
     return (
@@ -208,7 +256,6 @@ function Account() {
               onClick={() => window.location.href = '/dashboard'}
               className="group relative bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer overflow-hidden shadow-lg border border-cyan-500/30 hover:shadow-cyan-500/20 transition-all duration-300"
             >
-              {/* Decorative abstract shape */}
               <div className="absolute -right-10 -top-24 w-64 h-64 bg-white/10 blur-3xl rounded-full group-hover:bg-white/20 transition-colors duration-500"></div>
 
               <div className="flex items-center gap-5 relative z-10">
@@ -398,7 +445,10 @@ function Account() {
                     >
                       <LogOut className="w-4 h-4" /> Sign Out
                     </button>
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-white text-red-600 hover:bg-red-50 rounded-xl text-sm font-semibold transition border border-red-100 shadow-sm">
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-white text-red-600 hover:bg-red-50 rounded-xl text-sm font-semibold transition border border-red-100 shadow-sm"
+                    >
                       <Trash2 className="w-4 h-4" /> Delete Account
                     </button>
                   </div>
@@ -513,6 +563,108 @@ function Account() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Delete Account Modal ── */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={closeDeleteModal}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 overflow-hidden border border-red-100"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800">Delete Account</h2>
+                    <p className="text-sm text-slate-500 mt-0.5">This action cannot be undone.</p>
+                  </div>
+                </div>
+                <button onClick={closeDeleteModal} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full transition text-slate-400">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Warning box */}
+              <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-6">
+                <p className="text-sm text-red-700 font-medium leading-relaxed">
+                  Deleting your account will permanently remove all your data including CV history, analysis results, and profile information.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Password field — chỉ hiện nếu không phải Google-only user */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Confirm your password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showDeletePw ? 'text' : 'password'}
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:ring-4 focus:ring-red-500/20 focus:border-red-400 outline-none pr-12 transition"
+                      placeholder="Enter your password"
+                    />
+                    <button type="button" onClick={() => setShowDeletePw(!showDeletePw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors">
+                      {showDeletePw ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm text */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Type <span className="font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded">DELETE</span> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:ring-4 focus:ring-red-500/20 focus:border-red-400 outline-none transition font-mono"
+                    placeholder="DELETE"
+                  />
+                </div>
+
+                {deleteError && (
+                  <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3.5 rounded-xl text-sm font-medium border border-red-100">
+                    <AlertCircle size={18} /> {deleteError}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={closeDeleteModal}
+                    className="flex-1 py-3.5 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteLoading || deleteConfirmText !== 'DELETE'}
+                    className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed text-white rounded-xl transition font-semibold flex items-center justify-center gap-2"
+                  >
+                    {deleteLoading
+                      ? <><Loader2 className="w-5 h-5 animate-spin" /> Deleting...</>
+                      : <><Trash2 className="w-4 h-4" /> Delete Account</>
+                    }
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

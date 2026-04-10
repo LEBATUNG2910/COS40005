@@ -231,6 +231,30 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
+  // ─── DELETE ACCOUNT ───────────────────────────────────────────
+  async deleteAccount(userId: string, password?: string): Promise<{ message: string }> {
+    const user = (await this.usersService.findById(userId)) as UserDoc | null;
+    if (!user) throw new UnauthorizedException('User not found');
+
+    // Nếu user có password (không phải Google-only), yêu cầu xác nhận password
+    if (user.password) {
+      if (!password) throw new BadRequestException('Password is required to delete account');
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) throw new BadRequestException('Incorrect password');
+    }
+
+    // Soft delete — đánh dấu isDeleted thay vì xóa thật
+    await this.userModel.updateOne(
+      { _id: userId },
+      { isDeleted: true, isActive: false, updatedAt: new Date() }
+    );
+
+    // Revoke tất cả refresh token
+    await this.refreshTokenModel.updateMany({ userId, isRevoked: false }, { isRevoked: true });
+
+    return { message: 'Account deleted successfully' };
+  }
+
   // ─── GOOGLE OAUTH ────────────────────────────────────────────
   async googleLogin(googleUser: {
     googleId: string; email: string; fullName: string;

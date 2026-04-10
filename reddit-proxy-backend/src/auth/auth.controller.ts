@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Get, Patch, Body,
+  Controller, Post, Get, Patch, Delete, Body,
   HttpCode, HttpStatus, UseGuards, Request, Req, Res,
   BadRequestException, Query, Logger,
 } from '@nestjs/common';
@@ -91,6 +91,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Request() req: RequestWithUser) {
     return this.authService.resendVerificationEmail(req.user.userId);
+  }
+
+  // DELETE /api/auth/account
+  @Delete('account')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteAccount(
+    @Request() req: RequestWithUser,
+    @Body() body: { password?: string },
+  ) {
+    return this.authService.deleteAccount(req.user.userId, body?.password);
   }
 
   // POST /api/auth/forgot-password
