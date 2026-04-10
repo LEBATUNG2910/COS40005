@@ -261,7 +261,7 @@ export class AuthService {
         _id: uuidv4(),
         fullName: googleUser.fullName || googleUser.email.split('@')[0],
         email: googleUser.email,
-        phoneNumber: `google_${googleUser.googleId}`, // placeholder
+        phoneNumber: `g_${googleUser.googleId.slice(-12)}`, // placeholder max 14 chars
         passwordHash: randomPassword,
         gender: 'Other',
         language: 'English',
