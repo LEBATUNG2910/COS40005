@@ -27,6 +27,8 @@ interface UserDoc {
   emailVerificationExpires?: Date | null;
   passwordResetToken?: string | null;
   passwordResetExpires?: Date | null;
+  isDeleted?: boolean;
+  isActive?: boolean;
   [key: string]: unknown;
 }
 
@@ -51,15 +53,13 @@ export class AuthService {
     const user = (await this.usersService.create(data)) as UserDoc;
     const userId = user.id ?? user._id;
 
-    // Tạo email verification token
     const verifyToken = randomBytes(32).toString('hex');
-    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await this.userModel.updateOne(
       { _id: userId },
       { emailVerificationToken: verifyToken, emailVerificationExpires: verifyExpires }
     );
 
-    // Gửi email verification (non-blocking)
     this.emailService.sendVerificationEmail(user.email, user.fullName, verifyToken)
       .catch(e => console.warn('Verify email failed:', e));
 
@@ -73,10 +73,20 @@ export class AuthService {
     };
   }
 
-  // ─── ĐĂNG NHẬP ───────────────────────────────────────────────
+  // ─── ĐĂNG NHẬP (có tự động kích hoạt lại tài khoản nếu bị xóa mềm) ──
   async login(data: { emailOrPhone: string; password: string; rememberMe: boolean }) {
-    const user = (await this.usersService.findByEmailOrPhone(data.emailOrPhone)) as UserDoc | null;
+    let user = (await this.usersService.findByEmailOrPhone(data.emailOrPhone)) as UserDoc | null;
     if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    // Reactivate nếu tài khoản bị soft delete
+    if (user.isDeleted) {
+      await this.userModel.updateOne(
+        { _id: user._id },
+        { isDeleted: false, isActive: true, updatedAt: new Date() }
+      );
+      user.isDeleted = false;
+      user.isActive = true;
+    }
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
@@ -132,11 +142,10 @@ export class AuthService {
   // ─── FORGOT PASSWORD ──────────────────────────────────────────
   async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
-    // Luôn trả về success để tránh email enumeration attack
     if (!user) return { message: 'If that email exists, a reset link has been sent' };
 
     const resetToken = randomBytes(32).toString('hex');
-    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
     await this.userModel.updateOne(
       { _id: user._id },
       { passwordResetToken: resetToken, passwordResetExpires: resetExpires }
@@ -166,7 +175,6 @@ export class AuthService {
       }
     );
 
-    // Revoke tất cả refresh token sau khi reset password
     await this.refreshTokenModel.updateMany({ userId: String(user._id), isRevoked: false }, { isRevoked: true });
 
     return { message: 'Password reset successfully. Please login with your new password.' };
@@ -231,47 +239,51 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  // ─── DELETE ACCOUNT (SỬA: KHÔNG CẦN MẬT KHẨU) ─────────────────
+  // ─── DELETE ACCOUNT (KHÔNG CẦN MẬT KHẨU) ──────────────────────
   async deleteAccount(userId: string, password?: string): Promise<{ message: string }> {
     const user = (await this.usersService.findById(userId)) as UserDoc | null;
     if (!user) throw new UnauthorizedException('User not found');
 
-    // ĐÃ XÓA KIỂM TRA MẬT KHẨU — chỉ cần token hợp lệ và xác nhận "DELETE" ở frontend
+    // Đã bỏ kiểm tra mật khẩu theo yêu cầu
 
-    // Soft delete — đánh dấu isDeleted thay vì xóa thật
     await this.userModel.updateOne(
       { _id: userId },
       { isDeleted: true, isActive: false, updatedAt: new Date() }
     );
 
-    // Revoke tất cả refresh token
     await this.refreshTokenModel.updateMany({ userId, isRevoked: false }, { isRevoked: true });
 
     return { message: 'Account deleted successfully' };
   }
 
-  // ─── GOOGLE OAUTH ────────────────────────────────────────────
+  // ─── GOOGLE OAUTH (có tự động kích hoạt lại nếu tài khoản bị xóa) ──
   async googleLogin(googleUser: {
     googleId: string; email: string; fullName: string;
     firstName: string; lastName: string; avatar: string | null;
   }): Promise<{ accessToken: string; refreshToken: string; isNewUser: boolean }> {
     let isNewUser = false;
 
-    // 1. Tìm user theo email
     const rawUser = await this.userModel.findOne({ email: googleUser.email }).lean();
     let user = rawUser ? { ...rawUser, password: (rawUser as any).passwordHash } as unknown as UserDoc : null;
 
     if (user) {
-      // User đã tồn tại — update avatar nếu chưa có
+      // Reactivate nếu tài khoản bị soft delete
+      if (user.isDeleted) {
+        await this.userModel.updateOne(
+          { _id: user._id },
+          { isDeleted: false, isActive: true, updatedAt: new Date() }
+        );
+        user.isDeleted = false;
+        user.isActive = true;
+      }
+
       if (!user.avatarUrl && googleUser.avatar) {
         await this.userModel.updateOne({ _id: user._id }, { avatarUrl: googleUser.avatar });
       }
-      // Tự động verify email nếu đăng nhập bằng Google
       if (!user.isEmailVerified) {
         await this.userModel.updateOne({ _id: user._id }, { isEmailVerified: true });
       }
     } else {
-      // User mới — tạo account tự động
       isNewUser = true;
       const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
 
@@ -279,7 +291,7 @@ export class AuthService {
         _id: uuidv4(),
         fullName: googleUser.fullName || googleUser.email.split('@')[0],
         email: googleUser.email,
-        phoneNumber: `g_${googleUser.googleId.slice(-12)}`, // placeholder max 14 chars
+        phoneNumber: `g_${googleUser.googleId.slice(-12)}`,
         passwordHash: randomPassword,
         gender: 'Other',
         language: 'English',
@@ -287,7 +299,7 @@ export class AuthService {
         avatarUrl: googleUser.avatar,
         isActive: true,
         isDeleted: false,
-        isEmailVerified: true, // Google đã verify email rồi
+        isEmailVerified: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
