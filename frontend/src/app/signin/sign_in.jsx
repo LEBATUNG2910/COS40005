@@ -166,41 +166,6 @@ export default function SignIn() {
             </svg>
             Continue with Google
           </a>
-
-          {/* Microsoft */}
-          <button type="button" className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: "0.65s" }}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#f25022" d="M1 1h10v10H1z" />
-              <path fill="#00a4ef" d="M13 1h10v10H13z" />
-              <path fill="#7fba00" d="M1 13h10v10H1z" />
-              <path fill="#ffb900" d="M13 13h10v10H13z" />
-            </svg>
-            Continue with Microsoft
-          </button>
-
-          {/* GitHub */}
-          <button type="button" className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: "0.7s" }}>
-            <svg className="w-5 h-5" fill="#181717" viewBox="0 0 24 24">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-            Continue with GitHub
-          </button>
-
-          {/* Apple */}
-          <button type="button" className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: "0.75s" }}>
-            <svg className="w-5 h-5" fill="#000" viewBox="0 0 24 24">
-              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
-            </svg>
-            Continue with Apple
-          </button>
-
-          {/* Facebook */}
-          <button type="button" className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 hover:border-cyan-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: "0.8s" }}>
-            <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            Continue with Facebook
-          </button>
         </div>
 
       </form>
